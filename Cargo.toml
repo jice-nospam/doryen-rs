@@ -1,0 +1,18 @@
+[package]
+name = "doryen-rs"
+version = "0.1.0"
+authors = ["jice <jice.nospam@gmail.com>"]
+
+[workspace]
+
+[dependencies]
+webgl = {path="../unrust/webgl"}
+uni-app = {path="../unrust/uni-app"}
+uni-glsl = {path="../unrust/uni-glsl"}
+
+[dependencies.image]
+version = "0.19.0"
+default-features = false
+features = ["png_codec","tga"]
+
+[features]
