@@ -40,5 +40,6 @@ impl MyRoguelike {
 
 fn main() {
     let mut app = App::new(CONSOLE_WIDTH, CONSOLE_HEIGHT, "my roguelike", "terminal8x8_aa_ro.png", 128, 128);
-    app.run(&mut MyRoguelike::new());
+    app.set_engine(Box::new(MyRoguelike::new()));
+    app.run();
 }

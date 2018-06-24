@@ -5,7 +5,6 @@ uniform sampler2D uFront;
 uniform sampler2D uBack;
 uniform float uFontCharsPerLine;
 uniform vec2 uFontCoef;
-uniform vec2 uTermSize;
 uniform vec2 uTermCoef;
 
 in vec2 vTextureCoord;

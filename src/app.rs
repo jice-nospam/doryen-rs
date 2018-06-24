@@ -31,6 +31,7 @@ pub struct App {
     con:Option<Console>,
     fps:FPS,
     input:Option<DoryenInput>,
+    engine:Option<Box<Engine>>,
 }
 
 impl App {
@@ -75,7 +76,11 @@ impl App {
             con:Some(Console::new(con_width,con_height)),
             fps:FPS::new(),
             input:Some(DoryenInput::new(screen_width,screen_height)),
+            engine:None,
         }
+    }
+    pub fn set_engine(&mut self, engine: Box<Engine>) {
+        self.engine=Some(engine);
     }
     fn load_font(&mut self) {
         match open_file(&self.font_path) {
@@ -94,6 +99,32 @@ impl App {
         }
     }
 
+    fn load_async_images(&mut self) {
+        if self.async_images.len() == 0 {
+            return;
+        }
+        let mut to_load = Vec::new();
+        let mut idx = 0;
+        for ref oasfile in self.async_images.iter() {
+            if let &&Some(ref asfile) = oasfile {
+                if asfile.1.is_ready() {
+                    to_load.push(idx);
+                }
+                idx += 1;
+            }
+        }
+        for idx in to_load.iter() {
+            let mut asfile = self.async_images[*idx].take().unwrap();
+            match asfile.1.read_binary() {
+                Ok(buf) => {
+                    self.load_font_bytes(&buf);
+                }
+                Err(e) => uni_app::App::print(format!("could not load async file {} : {}", asfile.0, e)),
+            }
+        }
+        self.async_images.retain(|f| f.is_some());
+    }
+
     fn load_font_bytes(&mut self, image_data: &[u8]) {
         let img = &image::load_from_memory(image_data).unwrap().to_rgba();
         self.gl.active_texture(0);
@@ -110,13 +141,15 @@ impl App {
         self.gl.unbind_texture();
     }
 
-    pub fn run(&mut self, engine:&mut Engine) {
+    pub fn run(mut self) {
         self.load_font();
         let app = self.app.take().unwrap();
         let mut con = self.con.take().unwrap();
         let mut input = self.input.take().unwrap();
+        let mut engine = self.engine.take().unwrap();
         app.run(move |app: &mut uni_app::App| {
             self.fps.step();
+            self.load_async_images();
             input.on_frame();
             for evt in app.events.borrow().iter() {
                 input.on_event(&evt);
