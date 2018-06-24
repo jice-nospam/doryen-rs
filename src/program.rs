@@ -11,14 +11,6 @@ use webgl::{AttributeSize, BufferKind, DataType, DrawMode, PixelFormat, PixelTyp
 
 use super::{Console,Color};
 
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub enum PrimitiveType {
-    ALL,
-    TRIANGLE,
-    SPRITE,
-    LINE,
-}
-
 #[derive(Debug)]
 pub struct PrimitiveData {
     pub count: usize,
@@ -26,7 +18,6 @@ pub struct PrimitiveData {
     pub color_data: Vec<f32>,
     pub pos_data: Vec<f32>,
     pub tex_data: Option<Vec<f32>>,
-    pub primitive_type: PrimitiveType,
     pub draw_mode: Primitives,
 }
 
@@ -38,7 +29,6 @@ impl PrimitiveData {
             color_data: Vec::new(),
             pos_data: Vec::new(),
             tex_data: None,
-            primitive_type: PrimitiveType::TRIANGLE,
             draw_mode: Primitives::Triangles,
         }
     }
