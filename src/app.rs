@@ -14,20 +14,17 @@ const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
 
 struct AsyncImage(String, uni_app::fs::File);
 
-struct FrameBufferContext {
-    texture: webgl::WebGLTexture,
-    data: PrimitiveData,
-}
-
 pub struct App {
     app: Option<uni_app::App>,
     gl: webgl::WebGLRenderingContext,
     async_images: Vec<Option<AsyncImage>>,
-    font: Rc<RefCell<FrameBufferContext>>,
+    font: webgl::WebGLTexture,
+    data: PrimitiveData,
     program: Program,
     font_width: u32,
     font_height: u32,
     con:Rc<RefCell<Console>>,
+    fps:FPS,
 }
 
 impl App {
@@ -54,20 +51,23 @@ impl App {
             webgl::BlendMode::SrcAlpha,
             webgl::BlendMode::OneMinusSrcAlpha,
         );
-        let font = Rc::new(RefCell::new(create_framebuffer(
+        let font = create_texture(
             &gl,
             (font_width, font_height),
-        )));
+        );
+        let data = create_primitive();
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
         Self {
             app: Some(app),
             gl,
             async_images: Vec::new(),
             font,
+            data,
             program,
             font_width,
             font_height,
             con:Rc::new(RefCell::new(Console::new(con_width,con_height))),
+            fps:FPS::new(),
         }
     }
     pub fn console(&mut self) -> Rc<RefCell<Console>> {
@@ -93,7 +93,7 @@ impl App {
     fn load_font_bytes(&mut self, image_data: &[u8]) {
         let img = &image::load_from_memory(image_data).unwrap().to_rgba();
         self.gl.active_texture(0);
-        self.gl.bind_texture(&self.font.borrow().texture);
+        self.gl.bind_texture(&self.font);
         self.gl.tex_image2d(
             webgl::TextureBindPoint::Texture2d, // target
             0,                                  // level
@@ -110,15 +110,15 @@ impl App {
         self.load_font(font);
         let app = self.app.take().unwrap();
         app.run(move |app: &mut uni_app::App| {
+            self.fps.step();
             for _evt in app.events.borrow().iter() {
                 // TODO
             }
             self.program
-                .set_texture(webgl::WebGLTexture(self.font.borrow().texture.0));
+                .set_texture(webgl::WebGLTexture(self.font.0));
             self.program.bind(&self.gl);
-            //self.program.set_uniforms(&self.gl, self.font_width, self.font_height, self.con.clone());
             self.program
-                .render_primitive(&self.gl, &self.font.borrow().data, self.font_width, self.font_height, self.con.clone());
+                .render_primitive(&self.gl, &self.data, self.font_width, self.font_height, self.con.clone());
         });
     }
 }
@@ -133,7 +133,7 @@ fn open_file(filename: &str) -> Result<uni_app::fs::File, std::io::Error> {
     uni_app::fs::FileSystem::open(&ffilename)
 }
 
-fn create_framebuffer(gl: &webgl::WebGLRenderingContext, size: (u32, u32)) -> FrameBufferContext {
+fn create_texture(gl: &webgl::WebGLRenderingContext, size: (u32, u32)) -> webgl::WebGLTexture {
     let tex = gl.create_texture();
 
     gl.active_texture(0);
@@ -148,7 +148,10 @@ fn create_framebuffer(gl: &webgl::WebGLRenderingContext, size: (u32, u32)) -> Fr
         &[],                                // data
     );
     set_texture_params(&gl);
+    tex
+}
 
+fn create_primitive() -> PrimitiveData {
     let mut data = PrimitiveData::new();
     data.pos_data.push(-1.0);
     data.pos_data.push(-1.0);
@@ -174,8 +177,35 @@ fn create_framebuffer(gl: &webgl::WebGLRenderingContext, size: (u32, u32)) -> Fr
     data.data_per_primitive = 1;
     data.draw_mode = webgl::Primitives::TriangleFan;
 
-    FrameBufferContext {
-        texture: tex,
-        data,
+    data
+}
+
+
+struct FPS {
+    counter: u32,
+    last: f64,
+    pub fps: u32,
+}
+
+impl FPS {
+    pub fn new() -> FPS {
+        let fps = FPS {
+            counter: 0,
+            last: uni_app::now(),
+            fps: 0,
+        };
+
+        fps
+    }
+
+    pub fn step(&mut self) {
+        self.counter += 1;
+        let curr = uni_app::now();
+        if curr - self.last > 1.0 {
+            self.last = curr;
+            self.fps = self.counter;
+            self.counter = 0;
+            println!("{}", self.fps)
+        }
     }
 }

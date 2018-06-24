@@ -1,6 +1,12 @@
 
 
 pub type Color = (u8,u8,u8,u8);
+pub const CHAR_CORNER_NW:u16=218;
+pub const CHAR_CORNER_SW:u16=192;
+pub const CHAR_CORNER_SE:u16=217;
+pub const CHAR_CORNER_NE:u16=191;
+pub const CHAR_LINE_H:u16=196;
+pub const CHAR_LINE_V:u16=179;
 
 pub struct Console {
     width: u32,
@@ -64,6 +70,60 @@ impl Console {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
             self.ascii[off] = ascii as u32;
+        }
+    }
+    pub fn rectangle(&mut self, x:i32, y:i32, w:u32, h:u32, fore:Color,back:Color, fill:Option<u16>) {
+        let right = x + (w as i32) - 1;
+        let down = y + (h as i32) -1;
+        self.cell(x,y,CHAR_CORNER_NW,fore,back);
+        self.cell(right, down, CHAR_CORNER_SE,fore,back);
+        self.cell(right,y,CHAR_CORNER_NE,fore,back);
+        self.cell(x,down,CHAR_CORNER_SW,fore,back);
+        if (y as u32) < self.height {
+            self.area(x+1,y,w-2,1,fore,back,Some(CHAR_LINE_H));
+        }
+        if (down as u32) < self.height {
+            self.area(x+1,down,w-2,1,fore,back,Some(CHAR_LINE_H));
+        }
+        if (x as u32) < self.width {
+            self.area(x,y+1,1,h-2,fore,back,Some(CHAR_LINE_V));
+        }
+        if (right as u32) < self.width {
+            self.area(right,y+1,1,h-2,fore,back,Some(CHAR_LINE_V));
+        }
+        if fill.is_some() {
+            self.area(x+1,y+1,w-2,h-2,fore,back,fill);
+        }
+    }
+    pub fn area(&mut self, x:i32, y:i32, w:u32, h:u32, fore:Color,back:Color, fill:Option<u16>) {
+        let right = x + (w as i32);
+        let down = y + (h as i32);
+        if let Some(fillchar) = fill {
+            for ix in x.max(0)..right.min(self.width as i32) {
+                for iy in y.max(0)..down.min(self.height as i32) {
+                    self.cell(ix,iy,fillchar,fore,back);
+                }
+            }
+        } else {
+            for ix in x.max(0)..right.min(self.width as i32) {
+                for iy in y.max(0)..down.min(self.height as i32) {
+                    self.fore(ix,iy,fore);
+                    self.back(ix,iy,back);
+                }
+            }
+        }
+    }
+    pub fn clear(&mut self, fore:Color,back:Color,fillchar:Option<u16>) {
+        let w=self.width;
+        let h=self.height;
+        self.area(0,0,w,h,fore,back,fillchar);
+    }
+    pub fn cell(&mut self, x:i32, y:i32, ascii:u16, fore: Color, back:Color) {
+        if self.check_coords(x, y) {
+            let off = self.offset(x, y);
+            self.ascii[off]=ascii as u32;
+            self.front[off]=fore;
+            self.back[off]=back;
         }
     }
     pub fn fore(&mut self, x: i32, y: i32, col: Color) {
