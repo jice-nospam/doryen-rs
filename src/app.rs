@@ -1,6 +1,4 @@
 use std;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 use webgl;
 use uni_app;
@@ -17,7 +15,7 @@ struct AsyncImage(String, uni_app::fs::File);
 
 pub trait Engine {
     fn update(&mut self, &mut InputApi);
-    fn render(&self, con: Rc<RefCell<Console>>);
+    fn render(&self, con: &mut Console);
 }
 
 pub struct App {
@@ -29,13 +27,14 @@ pub struct App {
     program: Program,
     font_width: u32,
     font_height: u32,
-    con:Rc<RefCell<Console>>,
+    font_path: String,
+    con:Option<Console>,
     fps:FPS,
-    input:DoryenInput,
+    input:Option<DoryenInput>,
 }
 
 impl App {
-    pub fn new(con_width: u32, con_height: u32, title: &str, font_width: u32, font_height: u32) -> Self {
+    pub fn new(con_width: u32, con_height: u32, title: &str, font_path: &str, font_width: u32, font_height: u32) -> Self {
         let char_width = font_width / 16;
         let char_height = font_height / 16;
         let screen_width=con_width * char_width;
@@ -60,7 +59,6 @@ impl App {
         );
         let font = create_texture(
             &gl,
-            (font_width, font_height),
         );
         let data = create_primitive();
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
@@ -71,30 +69,28 @@ impl App {
             font,
             data,
             program,
+            font_path: font_path.to_owned(),
             font_width,
             font_height,
-            con:Rc::new(RefCell::new(Console::new(con_width,con_height))),
+            con:Some(Console::new(con_width,con_height)),
             fps:FPS::new(),
-            input:DoryenInput::new((screen_width,screen_height)),
+            input:Some(DoryenInput::new(screen_width,screen_height)),
         }
     }
-    pub fn console(&mut self) -> Rc<RefCell<Console>> {
-        self.con.clone()
-    }
-    fn load_font(&mut self, font: &str) {
-        match open_file(&font) {
+    fn load_font(&mut self) {
+        match open_file(&self.font_path) {
             Ok(mut f) => {
                 if f.is_ready() {
                     match f.read_binary() {
                         Ok(buf) => self.load_font_bytes(&buf),
-                        Err(e) => panic!("Could not read file {} : {}\n", font, e),
+                        Err(e) => panic!("Could not read file {} : {}\n", self.font_path, e),
                     }
                 } else {
-                    uni_app::App::print(format!("loading async file {}\n", font));
-                    self.async_images.push(Some(AsyncImage(font.to_owned(), f)));
+                    uni_app::App::print(format!("loading async file {}\n", self.font_path));
+                    self.async_images.push(Some(AsyncImage(self.font_path.to_owned(), f)));
                 }
             }
-            Err(e) => panic!("Could not open file {} : {}\n", font, e),
+            Err(e) => panic!("Could not open file {} : {}\n", self.font_path, e),
         }
     }
 
@@ -114,22 +110,24 @@ impl App {
         self.gl.unbind_texture();
     }
 
-    pub fn run(&mut self, font: &str, engine:&mut Engine) {
-        self.load_font(font);
+    pub fn run(&mut self, engine:&mut Engine) {
+        self.load_font();
         let app = self.app.take().unwrap();
+        let mut con = self.con.take().unwrap();
+        let mut input = self.input.take().unwrap();
         app.run(move |app: &mut uni_app::App| {
             self.fps.step();
-            self.input.on_frame();
+            input.on_frame();
             for evt in app.events.borrow().iter() {
-                self.input.on_event(&evt);
+                input.on_event(&evt);
             }
-            engine.update(&mut self.input);
-            engine.render(self.con.clone());
+            engine.update(&mut input);
+            engine.render(&mut con);
             self.program
                 .set_texture(webgl::WebGLTexture(self.font.0));
             self.program.bind(&self.gl);
             self.program
-                .render_primitive(&self.gl, &self.data, self.font_width, self.font_height, self.con.clone());
+                .render_primitive(&self.gl, &self.data, self.font_width, self.font_height, &con);
         });
     }
 }
@@ -144,20 +142,10 @@ fn open_file(filename: &str) -> Result<uni_app::fs::File, std::io::Error> {
     uni_app::fs::FileSystem::open(&ffilename)
 }
 
-fn create_texture(gl: &webgl::WebGLRenderingContext, size: (u32, u32)) -> webgl::WebGLTexture {
+fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
     let tex = gl.create_texture();
-
     gl.active_texture(0);
     gl.bind_texture(&tex);
-    gl.tex_image2d(
-        webgl::TextureBindPoint::Texture2d, // target
-        0,                                  // level
-        size.0 as u16,                      // width
-        size.1 as u16,                      // height
-        webgl::PixelFormat::Rgba,           // format
-        webgl::PixelType::UnsignedByte,     // type
-        &[],                                // data
-    );
     set_texture_params(&gl);
     tex
 }

@@ -1,15 +1,12 @@
 extern crate doryen_rs;
 
-use std::cell::RefCell;
-use std::rc::Rc;
+use doryen_rs::{App, Engine, Console, InputApi};
 
-use doryen_rs::{App,Engine, Console, InputApi};
-
-const CONSOLE_WIDTH:u32=80;
-const CONSOLE_HEIGHT:u32=45;
+const CONSOLE_WIDTH: u32 = 80;
+const CONSOLE_HEIGHT: u32 = 45;
 
 struct MyRoguelike {
-    player_pos:(i32,i32)
+    player_pos: (i32, i32)
 }
 
 impl Engine for MyRoguelike {
@@ -25,8 +22,7 @@ impl Engine for MyRoguelike {
             self.player_pos.1 = (self.player_pos.1+1).min(CONSOLE_HEIGHT as i32-2);
         }
     }
-    fn render(&self, rccon: Rc<RefCell<Console>>) {
-        let mut con = rccon.borrow_mut();
+    fn render(&self, con: &mut Console) {
         con.rectangle(0,0,CONSOLE_WIDTH,CONSOLE_HEIGHT,(128,128,128,255),(0,0,0,255),Some('.' as u16));
         con.area(10,10,5,5,(255,64,64,255),(128,32,32,255),Some('&' as u16));
         con.ascii(self.player_pos.0,self.player_pos.1,'@' as u16);
@@ -37,12 +33,12 @@ impl Engine for MyRoguelike {
 impl MyRoguelike {
     pub fn new() -> Self {
         Self {
-            player_pos:(40,20)
+            player_pos:((CONSOLE_WIDTH/2) as i32,(CONSOLE_HEIGHT/2) as i32)
         }
     }
 }
 
 fn main() {
-    let mut app = App::new(CONSOLE_WIDTH, CONSOLE_HEIGHT, "my roguelike", 128, 128);
-    app.run("terminal8x8_aa_ro.png", &mut MyRoguelike::new());
+    let mut app = App::new(CONSOLE_WIDTH, CONSOLE_HEIGHT, "my roguelike", "terminal8x8_aa_ro.png", 128, 128);
+    app.run(&mut MyRoguelike::new());
 }

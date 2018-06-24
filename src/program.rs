@@ -1,7 +1,5 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::mem::size_of;
-use std::rc::Rc;
 use std::slice;
 
 use uni_app::App;
@@ -206,7 +204,7 @@ impl Program {
 
     pub fn render_primitive(&mut self, gl: &WebGLRenderingContext, primitive_data: &PrimitiveData, font_width: u32,
         font_height: u32,
-        rccon: Rc<RefCell<Console>>,) {
+        con: &Console,) {
         if primitive_data.count == 0 {
             return;
         }
@@ -255,7 +253,7 @@ impl Program {
                 gl.uniform_1i(sampler_location, 0);
             }
         }
-        self.set_uniforms(gl, font_width,font_height,rccon);
+        self.set_uniforms(gl, font_width,font_height,con);
         // if (this.beforeRenderCallback) {
         //     this.beforeRenderCallback();
         // }
@@ -273,9 +271,8 @@ impl Program {
         gl: &WebGLRenderingContext,
         font_width: u32,
         font_height: u32,
-        rccon: Rc<RefCell<Console>>,
+        con: &Console,
     ) {
-        let con = rccon.borrow();
         let con_width=con.get_width();
         let con_height=con.get_height();
         let pot_width=con.get_pot_width();

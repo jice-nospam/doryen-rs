@@ -26,7 +26,7 @@ pub struct DoryenInput {
 }
 
 impl DoryenInput {
-    pub fn new(screen_size: (u32,u32)) -> DoryenInput {
+    pub fn new(screen_width: u32, screen_height: u32) -> DoryenInput {
         DoryenInput {
             kdown: HashMap::new(),
             kpressed: HashMap::new(),
@@ -35,7 +35,7 @@ impl DoryenInput {
             mpressed: HashMap::new(),
             mreleased: HashMap::new(),
             mpos: (0.0, 0.0),
-            screen_size:(screen_size.0 as f32, screen_size.1 as f32),
+            screen_size:(screen_width as f32, screen_height as f32),
         }
     }
     fn on_key_down(&mut self, code: &str) {
