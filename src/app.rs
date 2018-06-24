@@ -14,7 +14,7 @@ const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
 struct AsyncImage(String, uni_app::fs::File);
 
 pub trait Engine {
-    fn update(&mut self, &mut InputApi);
+    fn update(&mut self, input: &mut InputApi);
     fn render(&self, con: &mut Console);
 }
 
