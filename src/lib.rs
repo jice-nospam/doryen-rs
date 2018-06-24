@@ -5,7 +5,10 @@ extern crate webgl;
 mod program;
 mod console;
 mod app;
+mod input;
 
 pub use self::console::*;
 pub use self::app::*;
+pub use self::input::InputApi;
+
 

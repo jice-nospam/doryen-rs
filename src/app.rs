@@ -8,11 +8,17 @@ use image;
 
 use program::{PrimitiveData, Program, set_texture_params};
 use console::Console;
+use input::{DoryenInput,InputApi};
 
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
 const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
 
 struct AsyncImage(String, uni_app::fs::File);
+
+pub trait Engine {
+    fn update(&mut self, &mut InputApi);
+    fn render(&self, con: Rc<RefCell<Console>>);
+}
 
 pub struct App {
     app: Option<uni_app::App>,
@@ -25,6 +31,7 @@ pub struct App {
     font_height: u32,
     con:Rc<RefCell<Console>>,
     fps:FPS,
+    input:DoryenInput,
 }
 
 impl App {
@@ -68,6 +75,7 @@ impl App {
             font_height,
             con:Rc::new(RefCell::new(Console::new(con_width,con_height))),
             fps:FPS::new(),
+            input:DoryenInput::new((screen_width,screen_height)),
         }
     }
     pub fn console(&mut self) -> Rc<RefCell<Console>> {
@@ -106,14 +114,17 @@ impl App {
         self.gl.unbind_texture();
     }
 
-    pub fn run(&mut self, font: &str) {
+    pub fn run(&mut self, font: &str, engine:&mut Engine) {
         self.load_font(font);
         let app = self.app.take().unwrap();
         app.run(move |app: &mut uni_app::App| {
             self.fps.step();
-            for _evt in app.events.borrow().iter() {
-                // TODO
+            self.input.on_frame();
+            for evt in app.events.borrow().iter() {
+                self.input.on_event(&evt);
             }
+            engine.update(&mut self.input);
+            engine.render(self.con.clone());
             self.program
                 .set_texture(webgl::WebGLTexture(self.font.0));
             self.program.bind(&self.gl);
