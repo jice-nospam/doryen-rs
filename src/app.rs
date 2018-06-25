@@ -227,7 +227,7 @@ fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
     let tex = gl.create_texture();
     gl.active_texture(0);
     gl.bind_texture(&tex);
-    set_texture_params(&gl, false);
+    set_texture_params(&gl, true);
     tex
 }
 
