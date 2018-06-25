@@ -60,8 +60,6 @@ fn main() {
         console_height: CONSOLE_HEIGHT,
         window_title: "my roguelike".to_owned(),
         font_path: "terminal8x8_aa_ro.png".to_owned(),
-        font_width: 128,
-        font_height: 128,
         vsync: true,
         fullscreen: false,
         show_cursor: false,

@@ -23,8 +23,6 @@ pub struct AppOptions {
     pub console_height: u32,
     pub window_title: String,
     pub font_path: String,
-    pub font_width: u32,
-    pub font_height: u32,
     pub vsync: bool,
     pub fullscreen: bool,
     pub show_cursor: bool,
@@ -32,33 +30,48 @@ pub struct AppOptions {
 
 pub struct App {
     app: Option<uni_app::App>,
-    gl: webgl::WebGLRenderingContext,
+    gl: Option<webgl::WebGLRenderingContext>,
     async_images: Vec<Option<AsyncImage>>,
-    font: webgl::WebGLTexture,
+    font: Option<webgl::WebGLTexture>,
     data: PrimitiveData,
-    program: Program,
-    font_width: u32,
-    font_height: u32,
-    font_path: String,
+    program: Option<Program>,
+    options: AppOptions,
     con: Option<Console>,
     fps: FPS,
     input: Option<DoryenInput>,
     engine: Option<Box<Engine>>,
+    font_width: u32,
+    font_height: u32,
 }
 
 impl App {
     pub fn new(options: AppOptions) -> Self {
-        let char_width = options.font_width / 16;
-        let char_height = options.font_height / 16;
-        let screen_width = options.console_width * char_width;
-        let screen_height = options.console_height * char_height;
+        let data = create_primitive();
+        let con = Console::new(options.console_width, options.console_height);
+        Self {
+            app: None,
+            gl: None,
+            async_images: Vec::new(),
+            font: None,
+            data,
+            program: None,
+            options,
+            con: Some(con),
+            fps: FPS::new(),
+            input: None,
+            engine: None,
+            font_width: 0,
+            font_height: 0,
+        }
+    }
+    fn create_window(&mut self, screen_width: u32, screen_height: u32) {
         let app = uni_app::App::new(uni_app::AppConfig {
             size: (screen_width, screen_height),
-            title: options.window_title.to_owned(),
-            vsync: options.vsync,
-            show_cursor: options.show_cursor,
+            title: self.options.window_title.to_owned(),
+            vsync: self.options.vsync,
+            show_cursor: self.options.show_cursor,
             headless: false,
-            fullscreen: options.fullscreen,
+            fullscreen: self.options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());
         gl.viewport(0, 0, screen_width, screen_height);
@@ -70,43 +83,31 @@ impl App {
             webgl::BlendMode::SrcAlpha,
             webgl::BlendMode::OneMinusSrcAlpha,
         );
-        let font = create_texture(&gl);
-        let data = create_primitive();
-        let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
-        Self {
-            app: Some(app),
-            gl,
-            async_images: Vec::new(),
-            font,
-            data,
-            program,
-            font_path: options.font_path.to_owned(),
-            font_width: options.font_width,
-            font_height: options.font_height,
-            con: Some(Console::new(options.console_width, options.console_height)),
-            fps: FPS::new(),
-            input: Some(DoryenInput::new(screen_width, screen_height)),
-            engine: None,
-        }
+        self.program = Some(Program::new(&gl, DORYEN_VS, DORYEN_FS));
+        self.app = Some(app);
+        self.input = Some(DoryenInput::new(screen_width, screen_height));
+        self.gl = Some(gl);
     }
     pub fn set_engine(&mut self, engine: Box<Engine>) {
         self.engine = Some(engine);
     }
     fn load_font(&mut self) {
-        match open_file(&self.font_path) {
+        match open_file(&self.options.font_path) {
             Ok(mut f) => {
                 if f.is_ready() {
                     match f.read_binary() {
                         Ok(buf) => self.load_font_bytes(&buf),
-                        Err(e) => panic!("Could not read file {} : {}\n", self.font_path, e),
+                        Err(e) => {
+                            panic!("Could not read file {} : {}\n", self.options.font_path, e)
+                        }
                     }
                 } else {
-                    uni_app::App::print(format!("loading async file {}\n", self.font_path));
+                    uni_app::App::print(format!("loading async file {}\n", self.options.font_path));
                     self.async_images
-                        .push(Some(AsyncImage(self.font_path.to_owned(), f)));
+                        .push(Some(AsyncImage(self.options.font_path.to_owned(), f)));
                 }
             }
-            Err(e) => panic!("Could not open file {} : {}\n", self.font_path, e),
+            Err(e) => panic!("Could not open file {} : {}\n", self.options.font_path, e),
         }
     }
 
@@ -140,18 +141,29 @@ impl App {
 
     fn load_font_bytes(&mut self, image_data: &[u8]) {
         let img = &image::load_from_memory(image_data).unwrap().to_rgba();
-        self.gl.active_texture(0);
-        self.gl.bind_texture(&self.font);
-        self.gl.tex_image2d(
-            webgl::TextureBindPoint::Texture2d, // target
-            0,                                  // level
-            img.width() as u16,                 // width
-            img.height() as u16,                // height
-            webgl::PixelFormat::Rgba,           // format
-            webgl::PixelType::UnsignedByte,     // type
-            &*img,                              // data
-        );
-        self.gl.unbind_texture();
+        self.font_width = img.width() as u32;
+        self.font_height = img.height() as u32;
+        let char_width = img.width() as u32 / 16;
+        let char_height = img.height() as u32 / 16;
+        let screen_width = self.options.console_width * char_width;
+        let screen_height = self.options.console_height * char_height;
+        self.create_window(screen_width, screen_height);
+        if let Some(ref gl) = self.gl {
+            let font = create_texture(&gl);
+            gl.active_texture(0);
+            gl.bind_texture(&font);
+            self.font = Some(font);
+            gl.tex_image2d(
+                webgl::TextureBindPoint::Texture2d, // target
+                0,                                  // level
+                img.width() as u16,                 // width
+                img.height() as u16,                // height
+                webgl::PixelFormat::Rgba,           // format
+                webgl::PixelType::UnsignedByte,     // type
+                &*img,                              // data
+            );
+            gl.unbind_texture();
+        }
     }
 
     pub fn run(mut self) {
@@ -160,6 +172,8 @@ impl App {
         let mut con = self.con.take().unwrap();
         let mut input = self.input.take().unwrap();
         let mut engine = self.engine.take().unwrap();
+        let mut program = self.program.take().unwrap();
+        let gl = self.gl.take().unwrap();
         app.run(move |app: &mut uni_app::App| {
             self.fps.step();
             self.load_async_images();
@@ -169,15 +183,11 @@ impl App {
             }
             engine.update(&mut input);
             engine.render(&mut con);
-            self.program.set_texture(webgl::WebGLTexture(self.font.0));
-            self.program.bind(&self.gl);
-            self.program.render_primitive(
-                &self.gl,
-                &self.data,
-                self.font_width,
-                self.font_height,
-                &con,
-            );
+            if let Some(ref font) = self.font {
+                program.set_texture(webgl::WebGLTexture(font.0));
+                program.bind(&gl);
+                program.render_primitive(&gl, &self.data, self.font_width, self.font_height, &con);
+            }
         });
     }
 }
