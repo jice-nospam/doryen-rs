@@ -40,7 +40,6 @@ impl DoryenInput {
     }
     fn on_key_down(&mut self, code: &str) {
         if !self.key(code) {
-            println!("pressed {}", code);
             self.kpressed.insert(code.to_owned(), true);
             self.kdown.insert(code.to_owned(), true);
         }

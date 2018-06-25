@@ -8,8 +8,14 @@ use console::Console;
 use input::{DoryenInput, InputApi};
 use program::{set_texture_params, PrimitiveData, Program};
 
+// shaders
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
 const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
+
+// fps
+pub const MAX_FRAMESKIP: i32 = 5;
+pub const TICKS_PER_SECOND: f64 = 60.0;
+pub const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
 struct AsyncImage(String, uni_app::fs::File);
 
@@ -174,15 +180,25 @@ impl App {
         let mut engine = self.engine.take().unwrap();
         let mut program = self.program.take().unwrap();
         let gl = self.gl.take().unwrap();
+        let mut next_tick: f64 = uni_app::now();
         app.run(move |app: &mut uni_app::App| {
-            self.fps.step();
-            self.load_async_images();
             input.on_frame();
             for evt in app.events.borrow().iter() {
                 input.on_event(&evt);
             }
-            engine.update(&mut input);
+            let mut skipped_frames: i32 = -1;
+            let time = uni_app::now();
+            while time > next_tick && skipped_frames < MAX_FRAMESKIP {
+                self.load_async_images();
+                engine.update(&mut input);
+                next_tick += SKIP_TICKS;
+                skipped_frames += 1;
+            }
+            if skipped_frames == MAX_FRAMESKIP {
+                next_tick = time + SKIP_TICKS;
+            }
             engine.render(&mut con);
+            self.fps.step();
             if let Some(ref font) = self.font {
                 program.set_texture(webgl::WebGLTexture(font.0));
                 program.bind(&gl);
