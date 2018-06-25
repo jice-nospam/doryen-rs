@@ -80,7 +80,6 @@ impl App {
             fullscreen: self.options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());
-        gl.viewport(0, 0, screen_width, screen_height);
         gl.enable(webgl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(webgl::BufferBit::Color);
@@ -184,6 +183,12 @@ impl App {
         app.run(move |app: &mut uni_app::App| {
             input.on_frame();
             for evt in app.events.borrow().iter() {
+                match evt {
+                    &uni_app::AppEvent::Resized(size) => {
+                        gl.viewport(0, 0, size.0, size.1);
+                    }
+                    _ => (),
+                }
                 input.on_event(&evt);
             }
             let mut skipped_frames: i32 = -1;
@@ -222,7 +227,7 @@ fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
     let tex = gl.create_texture();
     gl.active_texture(0);
     gl.bind_texture(&tex);
-    set_texture_params(&gl);
+    set_texture_params(&gl, false);
     tex
 }
 

@@ -317,7 +317,7 @@ impl Program {
                 PixelType::UnsignedByte,            // type
                 u32_to_u8(&con.borrow_ascii()[..]), // data
             );
-            set_texture_params(&gl);
+            set_texture_params(&gl, true);
             gl.uniform_1i(location, 1);
         }
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Foreground) {
@@ -332,7 +332,7 @@ impl Program {
                 PixelType::UnsignedByte,                   // type
                 color_to_u8(&con.borrow_foreground()[..]), // data
             );
-            set_texture_params(&gl);
+            set_texture_params(&gl, true);
             gl.uniform_1i(location, 2);
         }
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Background) {
@@ -347,7 +347,7 @@ impl Program {
                 PixelType::UnsignedByte,                   // type
                 color_to_u8(&con.borrow_background()[..]), // data
             );
-            set_texture_params(&gl);
+            set_texture_params(&gl, true);
             gl.uniform_1i(location, 3);
         }
     }
@@ -384,16 +384,24 @@ fn color_to_u8(v: &[Color]) -> &[u8] {
     unsafe { slice::from_raw_parts(v.as_ptr() as *const u8, v.len() * size_of::<Color>()) }
 }
 
-pub fn set_texture_params(gl: &WebGLRenderingContext) {
+pub fn set_texture_params(gl: &WebGLRenderingContext, nearest: bool) {
     gl.tex_parameteri(
         TextureKind::Texture2d,
         TextureParameter::TextureMagFilter,
-        TextureMagFilter::Nearest as i32,
+        if nearest {
+            TextureMagFilter::Nearest
+        } else {
+            TextureMagFilter::Linear
+        } as i32,
     );
     gl.tex_parameteri(
         TextureKind::Texture2d,
         TextureParameter::TextureMinFilter,
-        TextureMinFilter::Nearest as i32,
+        if nearest {
+            TextureMinFilter::Nearest
+        } else {
+            TextureMinFilter::Linear
+        } as i32,
     );
     let wrap = TextureWrap::ClampToEdge as i32;
     gl.tex_parameteri(TextureKind::Texture2d, TextureParameter::TextureWrapS, wrap);
