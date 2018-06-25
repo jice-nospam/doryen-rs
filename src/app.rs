@@ -1,12 +1,12 @@
 use std;
 
-use webgl;
-use uni_app;
 use image;
+use uni_app;
+use webgl;
 
-use program::{PrimitiveData, Program, set_texture_params};
 use console::Console;
-use input::{DoryenInput,InputApi};
+use input::{DoryenInput, InputApi};
+use program::{set_texture_params, PrimitiveData, Program};
 
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
 const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
@@ -16,6 +16,18 @@ struct AsyncImage(String, uni_app::fs::File);
 pub trait Engine {
     fn update(&mut self, input: &mut InputApi);
     fn render(&self, con: &mut Console);
+}
+
+pub struct AppOptions {
+    pub console_width: u32,
+    pub console_height: u32,
+    pub window_title: String,
+    pub font_path: String,
+    pub font_width: u32,
+    pub font_height: u32,
+    pub vsync: bool,
+    pub fullscreen: bool,
+    pub show_cursor: bool,
 }
 
 pub struct App {
@@ -28,25 +40,25 @@ pub struct App {
     font_width: u32,
     font_height: u32,
     font_path: String,
-    con:Option<Console>,
-    fps:FPS,
-    input:Option<DoryenInput>,
-    engine:Option<Box<Engine>>,
+    con: Option<Console>,
+    fps: FPS,
+    input: Option<DoryenInput>,
+    engine: Option<Box<Engine>>,
 }
 
 impl App {
-    pub fn new(con_width: u32, con_height: u32, title: &str, font_path: &str, font_width: u32, font_height: u32) -> Self {
-        let char_width = font_width / 16;
-        let char_height = font_height / 16;
-        let screen_width=con_width * char_width;
-        let screen_height=con_height*char_height;
+    pub fn new(options: AppOptions) -> Self {
+        let char_width = options.font_width / 16;
+        let char_height = options.font_height / 16;
+        let screen_width = options.console_width * char_width;
+        let screen_height = options.console_height * char_height;
         let app = uni_app::App::new(uni_app::AppConfig {
             size: (screen_width, screen_height),
-            title: title.to_owned(),
-            vsync: true,
-            show_cursor: false,
+            title: options.window_title.to_owned(),
+            vsync: options.vsync,
+            show_cursor: options.show_cursor,
             headless: false,
-            fullscreen: false,
+            fullscreen: options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());
         gl.viewport(0, 0, screen_width, screen_height);
@@ -58,9 +70,7 @@ impl App {
             webgl::BlendMode::SrcAlpha,
             webgl::BlendMode::OneMinusSrcAlpha,
         );
-        let font = create_texture(
-            &gl,
-        );
+        let font = create_texture(&gl);
         let data = create_primitive();
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
         Self {
@@ -70,17 +80,17 @@ impl App {
             font,
             data,
             program,
-            font_path: font_path.to_owned(),
-            font_width,
-            font_height,
-            con:Some(Console::new(con_width,con_height)),
-            fps:FPS::new(),
-            input:Some(DoryenInput::new(screen_width,screen_height)),
-            engine:None,
+            font_path: options.font_path.to_owned(),
+            font_width: options.font_width,
+            font_height: options.font_height,
+            con: Some(Console::new(options.console_width, options.console_height)),
+            fps: FPS::new(),
+            input: Some(DoryenInput::new(screen_width, screen_height)),
+            engine: None,
         }
     }
     pub fn set_engine(&mut self, engine: Box<Engine>) {
-        self.engine=Some(engine);
+        self.engine = Some(engine);
     }
     fn load_font(&mut self) {
         match open_file(&self.font_path) {
@@ -92,7 +102,8 @@ impl App {
                     }
                 } else {
                     uni_app::App::print(format!("loading async file {}\n", self.font_path));
-                    self.async_images.push(Some(AsyncImage(self.font_path.to_owned(), f)));
+                    self.async_images
+                        .push(Some(AsyncImage(self.font_path.to_owned(), f)));
                 }
             }
             Err(e) => panic!("Could not open file {} : {}\n", self.font_path, e),
@@ -119,7 +130,9 @@ impl App {
                 Ok(buf) => {
                     self.load_font_bytes(&buf);
                 }
-                Err(e) => uni_app::App::print(format!("could not load async file {} : {}", asfile.0, e)),
+                Err(e) => {
+                    uni_app::App::print(format!("could not load async file {} : {}", asfile.0, e))
+                }
             }
         }
         self.async_images.retain(|f| f.is_some());
@@ -156,11 +169,15 @@ impl App {
             }
             engine.update(&mut input);
             engine.render(&mut con);
-            self.program
-                .set_texture(webgl::WebGLTexture(self.font.0));
+            self.program.set_texture(webgl::WebGLTexture(self.font.0));
             self.program.bind(&self.gl);
-            self.program
-                .render_primitive(&self.gl, &self.data, self.font_width, self.font_height, &con);
+            self.program.render_primitive(
+                &self.gl,
+                &self.data,
+                self.font_width,
+                self.font_height,
+                &con,
+            );
         });
     }
 }
@@ -211,7 +228,6 @@ fn create_primitive() -> PrimitiveData {
 
     data
 }
-
 
 struct FPS {
     counter: u32,

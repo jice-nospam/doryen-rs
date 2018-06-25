@@ -35,7 +35,7 @@ impl DoryenInput {
             mpressed: HashMap::new(),
             mreleased: HashMap::new(),
             mpos: (0.0, 0.0),
-            screen_size:(screen_width as f32, screen_height as f32),
+            screen_size: (screen_width as f32, screen_height as f32),
         }
     }
     fn on_key_down(&mut self, code: &str) {
