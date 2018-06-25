@@ -15,6 +15,7 @@ install:
   - rustup target add $TARGET; true
 
 script:
+  - chmod +x ./ci/install_cargo_web.sh
   - ./ci/install_cargo_web.sh
   - cargo build --target $TARGET --verbose
   - cargo build --target $TARGET --verbose --examples
