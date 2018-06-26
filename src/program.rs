@@ -256,9 +256,7 @@ impl Program {
             }
         }
         self.set_uniforms(gl, font_width, font_height, con);
-        // if (this.beforeRenderCallback) {
-        //     this.beforeRenderCallback();
-        // }
+
         gl.draw_arrays(
             primitive_data.draw_mode,
             primitive_data.count * primitive_data.data_per_primitive,

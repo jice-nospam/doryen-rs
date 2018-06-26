@@ -27,6 +27,8 @@ pub trait Engine {
 pub struct AppOptions {
     pub console_width: u32,
     pub console_height: u32,
+    pub screen_width: u32,
+    pub screen_height: u32,
     pub window_title: String,
     pub font_path: String,
     pub vsync: bool,
@@ -54,30 +56,13 @@ impl App {
     pub fn new(options: AppOptions) -> Self {
         let data = create_primitive();
         let con = Console::new(options.console_width, options.console_height);
-        Self {
-            app: None,
-            gl: None,
-            async_images: Vec::new(),
-            font: None,
-            data,
-            program: None,
-            options,
-            con: Some(con),
-            fps: FPS::new(),
-            input: None,
-            engine: None,
-            font_width: 0,
-            font_height: 0,
-        }
-    }
-    fn create_window(&mut self, screen_width: u32, screen_height: u32) {
         let app = uni_app::App::new(uni_app::AppConfig {
-            size: (screen_width, screen_height),
-            title: self.options.window_title.to_owned(),
-            vsync: self.options.vsync,
-            show_cursor: self.options.show_cursor,
+            size: (options.screen_width, options.screen_height),
+            title: options.window_title.to_owned(),
+            vsync: options.vsync,
+            show_cursor: options.show_cursor,
             headless: false,
-            fullscreen: self.options.fullscreen,
+            fullscreen: options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());
         gl.enable(webgl::Flag::Blend as i32);
@@ -88,10 +73,24 @@ impl App {
             webgl::BlendMode::SrcAlpha,
             webgl::BlendMode::OneMinusSrcAlpha,
         );
-        self.program = Some(Program::new(&gl, DORYEN_VS, DORYEN_FS));
-        self.app = Some(app);
-        self.input = Some(DoryenInput::new(screen_width, screen_height));
-        self.gl = Some(gl);
+        gl.viewport(0, 0, options.screen_width, options.screen_height);
+        let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
+        let input = DoryenInput::new(options.screen_width, options.screen_height);
+        Self {
+            app: Some(app),
+            gl: Some(gl),
+            async_images: Vec::new(),
+            font: None,
+            data,
+            program: Some(program),
+            options,
+            con: Some(con),
+            fps: FPS::new(),
+            input: Some(input),
+            engine: None,
+            font_width: 0,
+            font_height: 0,
+        }
     }
     pub fn set_engine(&mut self, engine: Box<Engine>) {
         self.engine = Some(engine);
@@ -148,11 +147,6 @@ impl App {
         let img = &image::load_from_memory(image_data).unwrap().to_rgba();
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
-        let char_width = img.width() as u32 / 16;
-        let char_height = img.height() as u32 / 16;
-        let screen_width = self.options.console_width * char_width;
-        let screen_height = self.options.console_height * char_height;
-        self.create_window(screen_width, screen_height);
         if let Some(ref gl) = self.gl {
             let font = create_texture(&gl);
             gl.active_texture(0);
@@ -181,6 +175,9 @@ impl App {
         let gl = self.gl.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
         app.run(move |app: &mut uni_app::App| {
+            if self.font.is_none() {
+                self.load_async_images();
+            }
             input.on_frame();
             for evt in app.events.borrow().iter() {
                 match evt {
@@ -194,7 +191,6 @@ impl App {
             let mut skipped_frames: i32 = -1;
             let time = uni_app::now();
             while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                self.load_async_images();
                 engine.update(&mut input);
                 next_tick += SKIP_TICKS;
                 skipped_frames += 1;

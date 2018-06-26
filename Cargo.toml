@@ -13,6 +13,6 @@ uni-glsl = {git="https://github.com/unrust/uni-glsl"}
 [dependencies.image]
 version = "0.19.0"
 default-features = false
-features = ["png_codec","tga"]
+features = ["png_codec"]
 
 [features]
