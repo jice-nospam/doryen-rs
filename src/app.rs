@@ -38,11 +38,11 @@ pub struct AppOptions {
 
 pub struct App {
     app: Option<uni_app::App>,
-    gl: Option<webgl::WebGLRenderingContext>,
+    gl: webgl::WebGLRenderingContext,
     async_images: Vec<Option<AsyncImage>>,
-    font: Option<webgl::WebGLTexture>,
+    font: webgl::WebGLTexture,
     data: PrimitiveData,
-    program: Option<Program>,
+    program: Program,
     options: AppOptions,
     con: Option<Console>,
     fps: FPS,
@@ -65,6 +65,7 @@ impl App {
             fullscreen: options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());
+        gl.viewport(0, 0, options.screen_width, options.screen_height);
         gl.enable(webgl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(webgl::BufferBit::Color);
@@ -73,16 +74,16 @@ impl App {
             webgl::BlendMode::SrcAlpha,
             webgl::BlendMode::OneMinusSrcAlpha,
         );
-        gl.viewport(0, 0, options.screen_width, options.screen_height);
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
         let input = DoryenInput::new(options.screen_width, options.screen_height);
+        let font = create_texture(&gl);
         Self {
             app: Some(app),
-            gl: Some(gl),
+            gl,
             async_images: Vec::new(),
-            font: None,
+            font,
             data,
-            program: Some(program),
+            program,
             options,
             con: Some(con),
             fps: FPS::new(),
@@ -147,22 +148,18 @@ impl App {
         let img = &image::load_from_memory(image_data).unwrap().to_rgba();
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
-        if let Some(ref gl) = self.gl {
-            let font = create_texture(&gl);
-            gl.active_texture(0);
-            gl.bind_texture(&font);
-            self.font = Some(font);
-            gl.tex_image2d(
-                webgl::TextureBindPoint::Texture2d, // target
-                0,                                  // level
-                img.width() as u16,                 // width
-                img.height() as u16,                // height
-                webgl::PixelFormat::Rgba,           // format
-                webgl::PixelType::UnsignedByte,     // type
-                &*img,                              // data
-            );
-            gl.unbind_texture();
-        }
+        self.gl.active_texture(0);
+        self.gl.bind_texture(&self.font);
+        self.gl.tex_image2d(
+            webgl::TextureBindPoint::Texture2d, // target
+            0,                                  // level
+            img.width() as u16,                 // width
+            img.height() as u16,                // height
+            webgl::PixelFormat::Rgba,           // format
+            webgl::PixelType::UnsignedByte,     // type
+            &*img,                              // data
+        );
+        self.gl.unbind_texture();
     }
 
     pub fn run(mut self) {
@@ -171,18 +168,14 @@ impl App {
         let mut con = self.con.take().unwrap();
         let mut input = self.input.take().unwrap();
         let mut engine = self.engine.take().unwrap();
-        let mut program = self.program.take().unwrap();
-        let gl = self.gl.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
         app.run(move |app: &mut uni_app::App| {
-            if self.font.is_none() {
-                self.load_async_images();
-            }
+            self.load_async_images();
             input.on_frame();
             for evt in app.events.borrow().iter() {
                 match evt {
                     &uni_app::AppEvent::Resized(size) => {
-                        gl.viewport(0, 0, size.0, size.1);
+                        self.gl.viewport(0, 0, size.0, size.1);
                     }
                     _ => (),
                 }
@@ -200,11 +193,9 @@ impl App {
             }
             engine.render(&mut con);
             self.fps.step();
-            if let Some(ref font) = self.font {
-                program.set_texture(webgl::WebGLTexture(font.0));
-                program.bind(&gl);
-                program.render_primitive(&gl, &self.data, self.font_width, self.font_height, &con);
-            }
+            self.program.set_texture(webgl::WebGLTexture(self.font.0));
+            self.program.bind(&self.gl);
+            self.program.render_primitive(&self.gl, &self.data, self.font_width, self.font_height, &con);
         });
     }
 }
