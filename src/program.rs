@@ -16,9 +16,8 @@ use super::{Color, Console};
 pub struct PrimitiveData {
     pub count: usize,
     pub data_per_primitive: usize,
-    pub color_data: Vec<f32>,
     pub pos_data: Vec<f32>,
-    pub tex_data: Option<Vec<f32>>,
+    pub tex_data: Vec<f32>,
     pub draw_mode: Primitives,
 }
 
@@ -27,9 +26,8 @@ impl PrimitiveData {
         PrimitiveData {
             count: 0,
             data_per_primitive: 0,
-            color_data: Vec::new(),
             pos_data: Vec::new(),
-            tex_data: None,
+            tex_data: Vec::new(),
             draw_mode: Primitives::Triangles,
         }
     }
@@ -51,16 +49,15 @@ pub struct Program {
     program: WebGLProgram,
     vao: WebGLVertexArray,
     vertex_pos_location: Option<u32>,
-    vertex_col_location: Option<u32>,
     vertex_uv_location: Option<u32>,
     vertex_pos_buffer: Option<WebGLBuffer>,
-    vertex_col_buffer: Option<WebGLBuffer>,
     vertex_uv_buffer: Option<WebGLBuffer>,
     font: Option<WebGLTexture>,
     ascii: WebGLTexture,
     foreground: WebGLTexture,
     background: WebGLTexture,
     uniform_locations: HashMap<DoryenUniforms, Option<WebGLUniformLocation>>,
+    data: PrimitiveData,
 }
 
 trait IntoBytes {
@@ -90,7 +87,7 @@ fn compile_shader(
 
 impl Program {
     pub fn new(gl: &WebGLRenderingContext, vertex_source: &str, fragment_source: &str) -> Program {
-        // Create a vertex shader object
+        let data = create_primitive();
         App::print(format!("compiling VS\n"));
         let vert_shader = if IS_GL_ES {
             compile_shader(
@@ -127,11 +124,6 @@ impl Program {
         let vao = gl.create_vertex_array();
         let vertex_pos_location = gl.get_attrib_location(&shader_program, "aVertexPosition");
         let vertex_pos_buffer = match vertex_pos_location {
-            None => None,
-            Some(_) => Some(gl.create_buffer()),
-        };
-        let vertex_col_location = gl.get_attrib_location(&shader_program, "aVertexColor");
-        let vertex_col_buffer = match vertex_col_location {
             None => None,
             Some(_) => Some(gl.create_buffer()),
         };
@@ -174,109 +166,64 @@ impl Program {
             gl.get_uniform_location(&shader_program, "uTermSize"),
         );
 
+
         Program {
             program: shader_program,
             vao,
             vertex_pos_location,
-            vertex_col_location,
             vertex_uv_location,
             vertex_pos_buffer,
-            vertex_col_buffer,
             vertex_uv_buffer,
             font: None,
             ascii: gl.create_texture(),
             foreground: gl.create_texture(),
             background: gl.create_texture(),
             uniform_locations,
+            data,
         }
     }
 
-    pub fn set_texture(&mut self, font: WebGLTexture) {
+    pub fn set_texture(&mut self, gl: &WebGLRenderingContext, font: WebGLTexture) {
+        if let Some(&Some(ref sampler_location)) =
+            self.uniform_locations.get(&DoryenUniforms::Font)
+        {
+            gl.active_texture(0);
+            gl.bind_texture(&font);
+            gl.uniform_1i(sampler_location, 0);
+        }
         self.font = Some(font);
     }
 
-    pub fn bind(&self, gl: &WebGLRenderingContext) {
+    pub fn bind(&self, gl: &WebGLRenderingContext, con: &Console, font_width: u32,
+        font_height: u32,) {
         gl.use_program(&self.program);
-    }
-
-    pub fn render_primitive(
-        &mut self,
-        gl: &WebGLRenderingContext,
-        primitive_data: &PrimitiveData,
-        font_width: u32,
-        font_height: u32,
-        con: &Console,
-    ) {
-        if primitive_data.count == 0 {
-            return;
-        }
         gl.bind_vertex_array(&self.vao);
         if let Some(ref buf) = self.vertex_pos_buffer {
             if let Some(ref loc) = self.vertex_pos_location {
-                self.set_buffer_data(
+                set_buffer_data(
                     gl,
                     &buf,
-                    Some(primitive_data.pos_data.clone()),
+                    Some(self.data.pos_data.clone()),
                     *loc,
                     AttributeSize::Two,
                 );
             }
         }
-        if let Some(ref buf) = self.vertex_col_buffer {
-            if let Some(ref loc) = self.vertex_col_location {
-                self.set_buffer_data(
+        if let Some(ref buf) = self.vertex_uv_buffer {
+            if let Some(ref loc) = self.vertex_uv_location {
+                set_buffer_data(
                     gl,
                     &buf,
-                    Some(primitive_data.color_data.clone()),
+                    Some(self.data.tex_data.clone()),
                     *loc,
-                    AttributeSize::Three,
+                    AttributeSize::Two,
                 );
             }
         }
-        if let Some(ref buf) = self.vertex_uv_buffer {
-            if let Some(ref loc) = self.vertex_uv_location {
-                if let Some(ref tex_data) = primitive_data.tex_data {
-                    self.set_buffer_data(
-                        gl,
-                        &buf,
-                        Some(tex_data.clone()),
-                        *loc,
-                        AttributeSize::Two,
-                    );
-                }
-            }
-        }
-        if let Some(ref tex) = self.font {
-            if let Some(&Some(ref sampler_location)) =
-                self.uniform_locations.get(&DoryenUniforms::Font)
-            {
-                gl.active_texture(0);
-                gl.bind_texture(&tex);
-                gl.uniform_1i(sampler_location, 0);
-            }
-        }
-        self.set_uniforms(gl, font_width, font_height, con);
-
-        gl.draw_arrays(
-            primitive_data.draw_mode,
-            primitive_data.count * primitive_data.data_per_primitive,
-        );
-        gl.unbind_buffer(BufferKind::Array);
-        gl.unbind_texture();
-        gl.unbind_vertex_array(&self.vao);
-    }
-
-    pub fn set_uniforms(
-        &mut self,
-        gl: &WebGLRenderingContext,
-        font_width: u32,
-        font_height: u32,
-        con: &Console,
-    ) {
-        let con_width = con.get_width();
-        let con_height = con.get_height();
         let pot_width = con.get_pot_width();
         let pot_height = con.get_pot_height();
+        let con_width = con.get_width();
+        let con_height = con.get_height();
         let pot_font_width = get_pot_value(font_width);
         let pot_font_height = get_pot_value(font_height);
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::TermSize) {
@@ -303,6 +250,29 @@ impl Program {
                 ),
             );
         }
+
+    }
+
+    pub fn render_primitive(
+        &mut self,
+        gl: &WebGLRenderingContext,
+        con: &Console,
+    ) {
+        self.set_uniforms(gl, con);
+
+        gl.draw_arrays(
+            self.data.draw_mode,
+            self.data.count * self.data.data_per_primitive,
+        );
+    }
+
+    pub fn set_uniforms(
+        &mut self,
+        gl: &WebGLRenderingContext,
+        con: &Console,
+    ) {
+        let pot_width = con.get_pot_width();
+        let pot_height = con.get_pot_height();
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Ascii) {
             gl.active_texture(1);
             gl.bind_texture(&self.ascii);
@@ -350,28 +320,28 @@ impl Program {
         }
     }
 
-    fn set_buffer_data(
-        &self,
-        gl: &WebGLRenderingContext,
-        buffer: &WebGLBuffer,
-        data: Option<Vec<f32>>,
-        attribute_location: u32,
-        count_per_vertex: AttributeSize,
-    ) {
-        gl.bind_buffer(BufferKind::Array, buffer);
-        gl.enable_vertex_attrib_array(attribute_location);
-        if let Some(v) = data {
-            gl.buffer_data(BufferKind::Array, &v.into_bytes(), DrawMode::Stream);
-        }
-        gl.vertex_attrib_pointer(
-            attribute_location,
-            count_per_vertex,
-            DataType::Float,
-            false,
-            0,
-            0,
-        );
+}
+
+fn set_buffer_data(
+    gl: &WebGLRenderingContext,
+    buffer: &WebGLBuffer,
+    data: Option<Vec<f32>>,
+    attribute_location: u32,
+    count_per_vertex: AttributeSize,
+) {
+    gl.bind_buffer(BufferKind::Array, buffer);
+    gl.enable_vertex_attrib_array(attribute_location);
+    if let Some(v) = data {
+        gl.buffer_data(BufferKind::Array, &v.into_bytes(), DrawMode::Stream);
     }
+    gl.vertex_attrib_pointer(
+        attribute_location,
+        count_per_vertex,
+        DataType::Float,
+        false,
+        0,
+        0,
+    );
 }
 
 fn u32_to_u8(v: &[u32]) -> &[u8] {
@@ -412,4 +382,31 @@ fn get_pot_value(value: u32) -> u32 {
         pot_value *= 2;
     }
     pot_value
+}
+
+fn create_primitive() -> PrimitiveData {
+    let mut data = PrimitiveData::new();
+    data.pos_data.push(-1.0);
+    data.pos_data.push(-1.0);
+    data.pos_data.push(-1.0);
+    data.pos_data.push(1.0);
+    data.pos_data.push(1.0);
+    data.pos_data.push(1.0);
+    data.pos_data.push(1.0);
+    data.pos_data.push(-1.0);
+
+    data.tex_data.push(0.0);
+    data.tex_data.push(1.0);
+    data.tex_data.push(0.0);
+    data.tex_data.push(0.0);
+    data.tex_data.push(1.0);
+    data.tex_data.push(0.0);
+    data.tex_data.push(1.0);
+    data.tex_data.push(1.0);
+
+    data.count = 4;
+    data.data_per_primitive = 1;
+    data.draw_mode = Primitives::TriangleFan;
+
+    data
 }

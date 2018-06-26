@@ -22,7 +22,7 @@ impl Engine for MyRoguelike {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
     }
-    fn render(&self, con: &mut Console) {
+    fn render(&mut self, con: &mut Console) {
         con.rectangle(
             0,
             0,

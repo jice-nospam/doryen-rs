@@ -6,7 +6,7 @@ use webgl;
 
 use console::Console;
 use input::{DoryenInput, InputApi};
-use program::{set_texture_params, PrimitiveData, Program};
+use program::{set_texture_params, Program};
 
 // shaders
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
@@ -21,7 +21,7 @@ struct AsyncImage(String, uni_app::fs::File);
 
 pub trait Engine {
     fn update(&mut self, input: &mut InputApi);
-    fn render(&self, con: &mut Console);
+    fn render(&mut self, con: &mut Console);
 }
 
 pub struct AppOptions {
@@ -41,7 +41,6 @@ pub struct App {
     gl: webgl::WebGLRenderingContext,
     async_images: Vec<Option<AsyncImage>>,
     font: webgl::WebGLTexture,
-    data: PrimitiveData,
     program: Program,
     options: AppOptions,
     con: Option<Console>,
@@ -54,7 +53,6 @@ pub struct App {
 
 impl App {
     pub fn new(options: AppOptions) -> Self {
-        let data = create_primitive();
         let con = Console::new(options.console_width, options.console_height);
         let app = uni_app::App::new(uni_app::AppConfig {
             size: (options.screen_width, options.screen_height),
@@ -82,7 +80,6 @@ impl App {
             gl,
             async_images: Vec::new(),
             font,
-            data,
             program,
             options,
             con: Some(con),
@@ -116,9 +113,9 @@ impl App {
         }
     }
 
-    fn load_async_images(&mut self) {
+    fn load_font_async(&mut self) -> bool {
         if self.async_images.len() == 0 {
-            return;
+            return true;
         }
         let mut to_load = Vec::new();
         let mut idx = 0;
@@ -135,6 +132,7 @@ impl App {
             match asfile.1.read_binary() {
                 Ok(buf) => {
                     self.load_font_bytes(&buf);
+                    return true;
                 }
                 Err(e) => {
                     uni_app::App::print(format!("could not load async file {} : {}", asfile.0, e))
@@ -142,6 +140,7 @@ impl App {
             }
         }
         self.async_images.retain(|f| f.is_some());
+        return false;
     }
 
     fn load_font_bytes(&mut self, image_data: &[u8]) {
@@ -159,7 +158,6 @@ impl App {
             webgl::PixelType::UnsignedByte,     // type
             &*img,                              // data
         );
-        self.gl.unbind_texture();
     }
 
     pub fn run(mut self) {
@@ -169,33 +167,37 @@ impl App {
         let mut input = self.input.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
+        let mut font_loaded=false;
         app.run(move |app: &mut uni_app::App| {
-            self.load_async_images();
-            input.on_frame();
-            for evt in app.events.borrow().iter() {
-                match evt {
-                    &uni_app::AppEvent::Resized(size) => {
-                        self.gl.viewport(0, 0, size.0, size.1);
+            if ! font_loaded && self.load_font_async() {
+                self.program.bind(&self.gl, &con, self.font_width, self.font_height);
+                self.program.set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
+                font_loaded=true;
+            } else {
+                input.on_frame();
+                for evt in app.events.borrow().iter() {
+                    match evt {
+                        &uni_app::AppEvent::Resized(size) => {
+                            self.gl.viewport(0, 0, size.0, size.1);
+                        }
+                        _ => (),
                     }
-                    _ => (),
+                    input.on_event(&evt);
                 }
-                input.on_event(&evt);
+                let mut skipped_frames: i32 = -1;
+                let time = uni_app::now();
+                while time > next_tick && skipped_frames < MAX_FRAMESKIP {
+                    engine.update(&mut input);
+                    next_tick += SKIP_TICKS;
+                    skipped_frames += 1;
+                }
+                if skipped_frames == MAX_FRAMESKIP {
+                    next_tick = time + SKIP_TICKS;
+                }
+                engine.render(&mut con);
+                self.fps.step();
+                self.program.render_primitive(&self.gl, &con);
             }
-            let mut skipped_frames: i32 = -1;
-            let time = uni_app::now();
-            while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                engine.update(&mut input);
-                next_tick += SKIP_TICKS;
-                skipped_frames += 1;
-            }
-            if skipped_frames == MAX_FRAMESKIP {
-                next_tick = time + SKIP_TICKS;
-            }
-            engine.render(&mut con);
-            self.fps.step();
-            self.program.set_texture(webgl::WebGLTexture(self.font.0));
-            self.program.bind(&self.gl);
-            self.program.render_primitive(&self.gl, &self.data, self.font_width, self.font_height, &con);
         });
     }
 }
@@ -216,35 +218,6 @@ fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
     gl.bind_texture(&tex);
     set_texture_params(&gl, true);
     tex
-}
-
-fn create_primitive() -> PrimitiveData {
-    let mut data = PrimitiveData::new();
-    data.pos_data.push(-1.0);
-    data.pos_data.push(-1.0);
-    data.pos_data.push(-1.0);
-    data.pos_data.push(1.0);
-    data.pos_data.push(1.0);
-    data.pos_data.push(1.0);
-    data.pos_data.push(1.0);
-    data.pos_data.push(-1.0);
-
-    let mut tex_data = Vec::new();
-    tex_data.push(0.0);
-    tex_data.push(1.0);
-    tex_data.push(0.0);
-    tex_data.push(0.0);
-    tex_data.push(1.0);
-    tex_data.push(0.0);
-    tex_data.push(1.0);
-    tex_data.push(1.0);
-    data.tex_data = Some(tex_data);
-
-    data.count = 4;
-    data.data_per_primitive = 1;
-    data.draw_mode = webgl::Primitives::TriangleFan;
-
-    data
 }
 
 struct FPS {

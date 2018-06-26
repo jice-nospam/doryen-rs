@@ -84,16 +84,16 @@ impl Console {
         y: i32,
         w: u32,
         h: u32,
-        fore: Color,
-        back: Color,
+        fore: Option<Color>,
+        back: Option<Color>,
         fill: Option<u16>,
     ) {
         let right = x + (w as i32) - 1;
         let down = y + (h as i32) - 1;
-        self.cell(x, y, CHAR_CORNER_NW, fore, back);
-        self.cell(right, down, CHAR_CORNER_SE, fore, back);
-        self.cell(right, y, CHAR_CORNER_NE, fore, back);
-        self.cell(x, down, CHAR_CORNER_SW, fore, back);
+        self.cell(x, y, Some(CHAR_CORNER_NW), fore, back);
+        self.cell(right, down, Some(CHAR_CORNER_SE), fore, back);
+        self.cell(right, y, Some(CHAR_CORNER_NE), fore, back);
+        self.cell(x, down, Some(CHAR_CORNER_SW), fore, back);
         if (y as u32) < self.height {
             self.area(x + 1, y, w - 2, 1, fore, back, Some(CHAR_LINE_H));
         }
@@ -116,38 +116,51 @@ impl Console {
         y: i32,
         w: u32,
         h: u32,
-        fore: Color,
-        back: Color,
-        fill: Option<u16>,
+        fore: Option<Color>,
+        back: Option<Color>,
+        fillchar: Option<u16>,
     ) {
         let right = x + (w as i32);
         let down = y + (h as i32);
-        if let Some(fillchar) = fill {
-            for ix in x.max(0)..right.min(self.width as i32) {
-                for iy in y.max(0)..down.min(self.height as i32) {
-                    self.cell(ix, iy, fillchar, fore, back);
+        if let Some(fillchar) = fillchar {
+            for iy in y.max(0)..down.min(self.height as i32) {
+                for ix in x.max(0)..right.min(self.width as i32) {
+                    self.ascii(ix,iy,fillchar);
                 }
             }
-        } else {
-            for ix in x.max(0)..right.min(self.width as i32) {
-                for iy in y.max(0)..down.min(self.height as i32) {
-                    self.fore(ix, iy, fore);
-                    self.back(ix, iy, back);
+        }
+        if let Some(fore) = fore {
+            for iy in y.max(0)..down.min(self.height as i32) {
+                for ix in x.max(0)..right.min(self.width as i32) {
+                    self.fore(ix,iy,fore);
+                }
+            }
+        }
+        if let Some(back) = back {
+            for iy in y.max(0)..down.min(self.height as i32) {
+                for ix in x.max(0)..right.min(self.width as i32) {
+                    self.back(ix,iy,back);
                 }
             }
         }
     }
-    pub fn clear(&mut self, fore: Color, back: Color, fillchar: Option<u16>) {
+    pub fn clear(&mut self, fore: Option<Color>, back: Option<Color>, fillchar: Option<u16>) {
         let w = self.width;
         let h = self.height;
         self.area(0, 0, w, h, fore, back, fillchar);
     }
-    pub fn cell(&mut self, x: i32, y: i32, ascii: u16, fore: Color, back: Color) {
+    pub fn cell(&mut self, x: i32, y: i32, ascii: Option<u16>, fore: Option<Color>, back: Option<Color>) {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
-            self.ascii[off] = ascii as u32;
-            self.front[off] = fore;
-            self.back[off] = back;
+            if let Some(ascii) = ascii {
+                self.ascii[off] = ascii as u32;
+            }
+            if let Some(fore) = fore {
+                self.front[off] = fore;
+            }
+            if let Some(back) = back {
+                self.back[off] = back;
+            }
         }
     }
     pub fn fore(&mut self, x: i32, y: i32, col: Color) {
