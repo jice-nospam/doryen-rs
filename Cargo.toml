@@ -6,9 +6,9 @@ authors = ["jice <jice.nospam@gmail.com>"]
 [workspace]
 
 [dependencies]
-webgl = {git="https://github.com/jice-nospam/webgl"}
-uni-app = {git="https://github.com/jice-nospam/uni-app"}
-uni-glsl = {git="https://github.com/jice-nospam/uni-glsl"}
+webgl = {git="https://github.com/unrust/webgl"}
+uni-app = {git="https://github.com/unrust/uni-app"}
+uni-glsl = {git="https://github.com/unrust/uni-glsl"}
 
 [dependencies.image]
 version = "0.19.0"
