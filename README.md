@@ -8,6 +8,12 @@ Uses the webgl, uni-app and uni-glsl crates from the [unrust](http://github.com/
 Demos :
 * [Basic real-time walking @](http://roguecentral.org/~jice/doryen-rs/basic/)
 
+![basic](http://roguecentral.org/~jice/doryen-rs/basic.png)
+
+* [Performance test](http://roguecentral.org/~jice/doryen-rs/perf/)
+
+![perf](http://roguecentral.org/~jice/doryen-rs/perf.png)
+
 # usage
 * add dependency to Cargo.toml :
 
