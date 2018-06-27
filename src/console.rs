@@ -6,6 +6,12 @@ pub const CHAR_CORNER_NE: u16 = 191;
 pub const CHAR_LINE_H: u16 = 196;
 pub const CHAR_LINE_V: u16 = 179;
 
+pub enum TextAlign {
+    Left,
+    Right,
+    Center,
+}
+
 pub struct Console {
     width: u32,
     height: u32,
@@ -14,13 +20,13 @@ pub struct Console {
     pot_height: u32,
     ascii: Vec<u32>,
     back: Vec<Color>,
-    front: Vec<Color>,
+    fore: Vec<Color>,
 }
 
 impl Console {
     pub fn new(width: u32, height: u32) -> Self {
         let mut back = Vec::new();
-        let mut front = Vec::new();
+        let mut fore = Vec::new();
         let mut ascii = Vec::new();
         let mut pot_width = 1;
         let mut pot_height = 1;
@@ -32,7 +38,7 @@ impl Console {
         }
         for _ in 0..(pot_width * pot_height) as usize {
             back.push((0, 0, 0, 255));
-            front.push((255, 255, 255, 255));
+            fore.push((255, 255, 255, 255));
             ascii.push(0);
         }
         Self {
@@ -40,7 +46,7 @@ impl Console {
             height,
             ascii,
             back,
-            front,
+            fore,
             pot_width,
             pot_height,
         }
@@ -61,7 +67,7 @@ impl Console {
         &self.ascii
     }
     pub fn borrow_foreground(&self) -> &Vec<Color> {
-        &self.front
+        &self.fore
     }
     pub fn borrow_background(&self) -> &Vec<Color> {
         &self.back
@@ -76,6 +82,37 @@ impl Console {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
             self.ascii[off] = ascii as u32;
+        }
+    }
+    pub fn print(
+        &mut self,
+        x: i32,
+        y: i32,
+        text: &str,
+        align: TextAlign,
+        fore: Option<Color>,
+        back: Option<Color>,
+    ) {
+        let stext = text.to_owned();
+        let mut str_len = stext.len() as i32;
+        let mut start = 0;
+        let mut ix = match align {
+            TextAlign::Left => x,
+            TextAlign::Right => (x - str_len + 1),
+            TextAlign::Center => (x - str_len / 2),
+        };
+        if ix < 0 {
+            str_len += ix;
+            start -= ix;
+            ix = 0;
+        }
+        if ix + str_len > self.width as i32 {
+            str_len = self.width as i32 - ix;
+        }
+        let mut chars = stext.chars().skip(start as usize);
+        for _ in 0..str_len {
+            self.cell(ix, y, Some(chars.next().unwrap() as u16), fore, back);
+            ix += 1;
         }
     }
     pub fn rectangle(
@@ -124,22 +161,25 @@ impl Console {
         let down = y + (h as i32);
         if let Some(fillchar) = fillchar {
             for iy in y.max(0)..down.min(self.height as i32) {
+                let off = iy * self.pot_width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
-                    self.ascii(ix,iy,fillchar);
+                    self.ascii[(off + ix) as usize] = fillchar as u32;
                 }
             }
         }
         if let Some(fore) = fore {
             for iy in y.max(0)..down.min(self.height as i32) {
+                let off = iy * self.pot_width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
-                    self.fore(ix,iy,fore);
+                    self.fore[(off + ix) as usize] = fore;
                 }
             }
         }
         if let Some(back) = back {
             for iy in y.max(0)..down.min(self.height as i32) {
+                let off = iy * self.pot_width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
-                    self.back(ix,iy,back);
+                    self.back[(off + ix) as usize] = back;
                 }
             }
         }
@@ -149,14 +189,21 @@ impl Console {
         let h = self.height;
         self.area(0, 0, w, h, fore, back, fillchar);
     }
-    pub fn cell(&mut self, x: i32, y: i32, ascii: Option<u16>, fore: Option<Color>, back: Option<Color>) {
+    pub fn cell(
+        &mut self,
+        x: i32,
+        y: i32,
+        ascii: Option<u16>,
+        fore: Option<Color>,
+        back: Option<Color>,
+    ) {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
             if let Some(ascii) = ascii {
                 self.ascii[off] = ascii as u32;
             }
             if let Some(fore) = fore {
-                self.front[off] = fore;
+                self.fore[off] = fore;
             }
             if let Some(back) = back {
                 self.back[off] = back;
@@ -166,7 +213,7 @@ impl Console {
     pub fn fore(&mut self, x: i32, y: i32, col: Color) {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
-            self.front[off] = col;
+            self.fore[off] = col;
         }
     }
     pub fn back(&mut self, x: i32, y: i32, col: Color) {
