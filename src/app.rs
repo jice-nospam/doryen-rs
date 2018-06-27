@@ -1,4 +1,3 @@
-use std;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -6,9 +5,10 @@ use image;
 use uni_app;
 use webgl;
 
-use console::Console;
+use console::{Console};
 use input::{DoryenInput, InputApi};
 use program::{set_texture_params, Program};
+use font::FontLoader;
 
 // shaders
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
@@ -19,13 +19,13 @@ pub const MAX_FRAMESKIP: i32 = 5;
 pub const TICKS_PER_SECOND: f64 = 60.0;
 pub const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
-struct AsyncImage(String, uni_app::fs::File);
 
 pub trait DoryenApi {
     fn con(&mut self) -> &mut Console;
     fn input(&mut self) -> &mut InputApi;
     fn fps(&self) -> u32;
     fn average_fps(&self) -> u32;
+    fn set_font_path(&mut self, font_path: &str);
 }
 
 pub struct DoryenApiImpl {
@@ -33,6 +33,7 @@ pub struct DoryenApiImpl {
     input: DoryenInput,
     fps: u32,
     average_fps: u32,
+    font_path:Option<String>,
 }
 
 impl DoryenApi for DoryenApiImpl {
@@ -47,6 +48,15 @@ impl DoryenApi for DoryenApiImpl {
     }
     fn average_fps(&self) -> u32 {
         self.average_fps
+    }
+    fn set_font_path(&mut self, font_path: &str) {
+        self.font_path=Some(font_path.to_owned());
+    }
+}
+
+impl DoryenApiImpl {
+    pub fn clear_font_path(&mut self) {
+        self.font_path=None;
     }
 }
 
@@ -70,8 +80,8 @@ pub struct AppOptions {
 pub struct App {
     app: Option<uni_app::App>,
     gl: webgl::WebGLRenderingContext,
-    async_images: Vec<Option<AsyncImage>>,
     font: webgl::WebGLTexture,
+    font_loader: FontLoader,
     program: Program,
     options: AppOptions,
     fps: FPS,
@@ -108,7 +118,7 @@ impl App {
         Self {
             app: Some(app),
             gl,
-            async_images: Vec::new(),
+            font_loader: FontLoader::new(),
             font,
             program,
             options,
@@ -117,6 +127,7 @@ impl App {
                 con: con,
                 fps: 0,
                 average_fps: 0,
+                font_path:None,
             },
             fps: FPS::new(),
             engine: None,
@@ -127,60 +138,14 @@ impl App {
     pub fn set_engine(&mut self, engine: Box<Engine>) {
         self.engine = Some(engine);
     }
-    fn load_font(&mut self) {
-        match open_file(&self.options.font_path) {
-            Ok(mut f) => {
-                if f.is_ready() {
-                    match f.read_binary() {
-                        Ok(buf) => self.load_font_bytes(&buf),
-                        Err(e) => {
-                            panic!("Could not read file {} : {}\n", self.options.font_path, e)
-                        }
-                    }
-                } else {
-                    uni_app::App::print(format!("loading async file {}\n", self.options.font_path));
-                    self.async_images
-                        .push(Some(AsyncImage(self.options.font_path.to_owned(), f)));
-                }
-            }
-            Err(e) => panic!("Could not open file {} : {}\n", self.options.font_path, e),
-        }
-    }
 
-    fn load_font_async(&mut self) -> bool {
-        if self.async_images.len() == 0 {
-            return true;
-        }
-        let mut to_load = Vec::new();
-        let mut idx = 0;
-        for ref oasfile in self.async_images.iter() {
-            if let &&Some(ref asfile) = oasfile {
-                if asfile.1.is_ready() {
-                    to_load.push(idx);
-                }
-                idx += 1;
-            }
-        }
-        for idx in to_load.iter() {
-            let mut asfile = self.async_images[*idx].take().unwrap();
-            match asfile.1.read_binary() {
-                Ok(buf) => {
-                    self.load_font_bytes(&buf);
-                    return true;
-                }
-                Err(e) => {
-                    uni_app::App::print(format!("could not load async file {} : {}", asfile.0, e))
-                }
-            }
-        }
-        self.async_images.retain(|f| f.is_some());
-        return false;
-    }
-
-    fn load_font_bytes(&mut self, image_data: &[u8]) {
-        let img = &image::load_from_memory(image_data).unwrap().to_rgba();
+    fn load_font_bytes(&mut self) {
+        let file_data = &self.font_loader.image_data.take().unwrap()[..];
+        let img = &mut image::load_from_memory(file_data).unwrap().to_rgba();
+        self.process_image(img);
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
+        uni_app::App::print(format!("font size: {:?}\n",(self.font_width,self.font_height)));
         self.gl.active_texture(0);
         self.gl.bind_texture(&self.font);
         self.gl.tex_image2d(
@@ -192,6 +157,25 @@ impl App {
             webgl::PixelType::UnsignedByte,     // type
             &*img,                              // data
         );
+    }
+
+    fn process_image(&mut self, img: &mut image::RgbaImage) {
+        let pixel=img.get_pixel(0,0).data;
+        let alpha = pixel[3];
+        if alpha == 255 {
+            let transparent_color=(pixel[0],pixel[1],pixel[2]);
+            uni_app::App::print(format!("transparent color: {:?}\n",transparent_color));
+            let (width,height)=img.dimensions();
+            for y in 0..height {
+                for x in 0..width {
+                    let p = img.get_pixel_mut(x,y);
+                    let pixel = p.data;
+                    if (pixel[0],pixel[1],pixel[2]) == transparent_color {
+                        p.data[3] = 0;
+                    }
+                }
+            }
+        }
     }
 
     fn handle_input(&mut self, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
@@ -208,13 +192,21 @@ impl App {
     }
 
     pub fn run(mut self) {
-        self.load_font();
+        let font_path = &self.options.font_path.clone();
+        self.font_loader.load_font(font_path);
         let app = self.app.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
         let mut font_loaded = false;
         app.run(move |app: &mut uni_app::App| {
-            if !font_loaded && self.load_font_async() {
+            if self.api.font_path.is_some() {
+                let font_path = self.api.font_path.clone().unwrap();
+                self.api.clear_font_path();
+                self.font_loader.load_font(&font_path);
+                font_loaded = false;
+            }
+            if !font_loaded && self.font_loader.load_font_async() {
+                self.load_font_bytes();
                 self.program
                     .bind(&self.gl, &self.api.con, self.font_width, self.font_height);
                 self.program
@@ -240,16 +232,6 @@ impl App {
             }
         });
     }
-}
-
-fn open_file(filename: &str) -> Result<uni_app::fs::File, std::io::Error> {
-    let ffilename =
-        if cfg!(not(target_arch = "wasm32")) && &filename[0..1] != "/" && &filename[1..2] != ":" {
-            "static/".to_owned() + filename
-        } else {
-            filename.to_owned()
-        };
-    uni_app::fs::FileSystem::open(&ffilename)
 }
 
 fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {

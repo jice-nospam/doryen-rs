@@ -14,6 +14,10 @@ Demos :
 
 ![perf](http://roguecentral.org/~jice/doryen-rs/perf.png)
 
+* [Fonts demo](http://roguecentral.org/~jice/doryen-rs/fonts/)
+
+![fonts](http://roguecentral.org/~jice/doryen-rs/fonts.png)
+
 # usage
 * add dependency to Cargo.toml :
 

@@ -227,8 +227,8 @@ impl Program {
             gl.uniform_2f(
                 location,
                 (
-                    (font_width as f32) / (pot_font_width as f32 * 16.0),
-                    (font_height as f32) / (pot_font_height as f32 * 16.0),
+                    1.0 / 16.0,
+                    1.0 / 16.0,
                 ),
             );
         }

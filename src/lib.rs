@@ -6,6 +6,7 @@ mod program;
 mod console;
 mod app;
 mod input;
+mod font;
 
 pub use self::console::*;
 pub use self::app::*;
