@@ -234,15 +234,20 @@ fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
 
 struct FPS {
     counter: u32,
+    start: f64,
     last: f64,
+    total_frames: u64,
     pub fps: u32,
 }
 
 impl FPS {
     pub fn new() -> FPS {
+        let now = uni_app::now();
         let fps = FPS {
             counter: 0,
-            last: uni_app::now(),
+            total_frames: 0,
+            start: now,
+            last: now,
             fps: 0,
         };
 
@@ -251,12 +256,19 @@ impl FPS {
 
     pub fn step(&mut self) {
         self.counter += 1;
+        self.total_frames += 1;
         let curr = uni_app::now();
         if curr - self.last > 1.0 {
             self.last = curr;
             self.fps = self.counter;
             self.counter = 0;
-            println!("{}", self.fps)
+            println!("fps {} average {}", self.fps, self.average());
         }
+    }
+    pub fn average(&self) -> u32 {
+        if self.last == self.start {
+            return 0;
+        }
+        (self.total_frames as f64 / (self.last - self.start)) as u32
     }
 }
