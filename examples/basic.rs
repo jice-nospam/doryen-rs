@@ -28,8 +28,8 @@ impl Engine for MyRoguelike {
             0,
             CONSOLE_WIDTH,
             CONSOLE_HEIGHT,
-            (128, 128, 128, 255),
-            (0, 0, 0, 255),
+            Some((128, 128, 128, 255)),
+            None,
             Some('.' as u16),
         );
         con.area(
@@ -37,8 +37,8 @@ impl Engine for MyRoguelike {
             10,
             5,
             5,
-            (255, 64, 64, 255),
-            (128, 32, 32, 255),
+            Some((255, 64, 64, 255)),
+            Some((128, 32, 32, 255)),
             Some('&' as u16),
         );
         con.ascii(self.player_pos.0, self.player_pos.1, '@' as u16);
