@@ -21,9 +21,38 @@ pub const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
 struct AsyncImage(String, uni_app::fs::File);
 
+pub trait DoryenApi {
+    fn con(&mut self) -> &mut Console;
+    fn input(&mut self) -> &mut InputApi;
+    fn fps(&self) -> u32;
+    fn average_fps(&self) -> u32;
+}
+
+pub struct DoryenApiImpl {
+    con: Console,
+    input: DoryenInput,
+    fps: u32,
+    average_fps: u32,
+}
+
+impl DoryenApi for DoryenApiImpl {
+    fn con(&mut self) -> &mut Console {
+        &mut self.con
+    }
+    fn input(&mut self) -> &mut InputApi {
+        &mut self.input
+    }
+    fn fps(&self) -> u32 {
+        self.fps
+    }
+    fn average_fps(&self) -> u32 {
+        self.average_fps
+    }
+}
+
 pub trait Engine {
-    fn update(&mut self, input: &mut InputApi);
-    fn render(&mut self, con: &mut Console);
+    fn update(&mut self, api: &mut DoryenApi);
+    fn render(&mut self, api: &mut DoryenApi);
 }
 
 pub struct AppOptions {
@@ -45,9 +74,8 @@ pub struct App {
     font: webgl::WebGLTexture,
     program: Program,
     options: AppOptions,
-    con: Option<Console>,
     fps: FPS,
-    input: Option<DoryenInput>,
+    api: DoryenApiImpl,
     engine: Option<Box<Engine>>,
     font_width: u32,
     font_height: u32,
@@ -84,9 +112,13 @@ impl App {
             font,
             program,
             options,
-            con: Some(con),
+            api: DoryenApiImpl {
+                input: input,
+                con: con,
+                fps: 0,
+                average_fps: 0,
+            },
             fps: FPS::new(),
-            input: Some(input),
             engine: None,
             font_width: 0,
             font_height: 0,
@@ -162,12 +194,8 @@ impl App {
         );
     }
 
-    fn handle_input(
-        &mut self,
-        input: &mut DoryenInput,
-        events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
-    ) {
-        input.on_frame();
+    fn handle_input(&mut self, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
+        self.api.input.on_frame();
         for evt in events.borrow().iter() {
             match evt {
                 &uni_app::AppEvent::Resized(size) => {
@@ -175,40 +203,40 @@ impl App {
                 }
                 _ => (),
             }
-            input.on_event(&evt);
+            self.api.input.on_event(&evt);
         }
     }
 
     pub fn run(mut self) {
         self.load_font();
         let app = self.app.take().unwrap();
-        let mut con = self.con.take().unwrap();
-        let mut input = self.input.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
         let mut font_loaded = false;
         app.run(move |app: &mut uni_app::App| {
             if !font_loaded && self.load_font_async() {
                 self.program
-                    .bind(&self.gl, &con, self.font_width, self.font_height);
+                    .bind(&self.gl, &self.api.con, self.font_width, self.font_height);
                 self.program
                     .set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
                 font_loaded = true;
             } else {
-                self.handle_input(&mut input, app.events.clone());
+                self.handle_input(app.events.clone());
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                    engine.update(&mut input);
+                    engine.update(&mut self.api);
                     next_tick += SKIP_TICKS;
                     skipped_frames += 1;
                 }
                 if skipped_frames == MAX_FRAMESKIP {
                     next_tick = time + SKIP_TICKS;
                 }
-                engine.render(&mut con);
+                engine.render(&mut self.api);
                 self.fps.step();
-                self.program.render_primitive(&self.gl, &con);
+                self.api.fps = self.fps.fps();
+                self.api.average_fps = self.fps.average();
+                self.program.render_primitive(&self.gl, &self.api.con);
             }
         });
     }
@@ -237,7 +265,8 @@ struct FPS {
     start: f64,
     last: f64,
     total_frames: u64,
-    pub fps: u32,
+    fps: u32,
+    average: u32,
 }
 
 impl FPS {
@@ -249,9 +278,13 @@ impl FPS {
             start: now,
             last: now,
             fps: 0,
+            average: 0,
         };
 
         fps
+    }
+    pub fn fps(&self) -> u32 {
+        self.fps
     }
 
     pub fn step(&mut self) {
@@ -262,13 +295,10 @@ impl FPS {
             self.last = curr;
             self.fps = self.counter;
             self.counter = 0;
-            println!("fps {} average {}", self.fps, self.average());
+            self.average = (self.total_frames as f64 / (self.last - self.start)) as u32;
         }
     }
     pub fn average(&self) -> u32 {
-        if self.last == self.start {
-            return 0;
-        }
-        (self.total_frames as f64 / (self.last - self.start)) as u32
+        self.average
     }
 }

@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, Console, Engine, InputApi};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine};
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -10,7 +10,8 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn update(&mut self, input: &mut InputApi) {
+    fn update(&mut self, api: &mut DoryenApi) {
+        let input = api.input();
         if input.key("ArrowLeft") {
             self.player_pos.0 = (self.player_pos.0 - 1).max(1);
         } else if input.key("ArrowRight") {
@@ -22,7 +23,8 @@ impl Engine for MyRoguelike {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
     }
-    fn render(&mut self, con: &mut Console) {
+    fn render(&mut self, api: &mut DoryenApi) {
+        let con = api.con();
         con.rectangle(
             0,
             0,
