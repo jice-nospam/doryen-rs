@@ -1,4 +1,6 @@
 use std;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use image;
 use uni_app;
@@ -160,6 +162,23 @@ impl App {
         );
     }
 
+    fn handle_input(
+        &mut self,
+        input: &mut DoryenInput,
+        events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
+    ) {
+        input.on_frame();
+        for evt in events.borrow().iter() {
+            match evt {
+                &uni_app::AppEvent::Resized(size) => {
+                    self.gl.viewport(0, 0, size.0, size.1);
+                }
+                _ => (),
+            }
+            input.on_event(&evt);
+        }
+    }
+
     pub fn run(mut self) {
         self.load_font();
         let app = self.app.take().unwrap();
@@ -167,23 +186,16 @@ impl App {
         let mut input = self.input.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
-        let mut font_loaded=false;
+        let mut font_loaded = false;
         app.run(move |app: &mut uni_app::App| {
-            if ! font_loaded && self.load_font_async() {
-                self.program.bind(&self.gl, &con, self.font_width, self.font_height);
-                self.program.set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
-                font_loaded=true;
+            if !font_loaded && self.load_font_async() {
+                self.program
+                    .bind(&self.gl, &con, self.font_width, self.font_height);
+                self.program
+                    .set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
+                font_loaded = true;
             } else {
-                input.on_frame();
-                for evt in app.events.borrow().iter() {
-                    match evt {
-                        &uni_app::AppEvent::Resized(size) => {
-                            self.gl.viewport(0, 0, size.0, size.1);
-                        }
-                        _ => (),
-                    }
-                    input.on_event(&evt);
-                }
+                self.handle_input(&mut input, app.events.clone());
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {

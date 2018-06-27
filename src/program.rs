@@ -33,7 +33,7 @@ impl PrimitiveData {
     }
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
 enum DoryenUniforms {
     Font,
     Ascii,
@@ -85,87 +85,65 @@ fn compile_shader(
     shader
 }
 
+fn compile_shader_wasm_native(
+    gl: &WebGLRenderingContext,
+    shader_kind: ShaderKind,
+    source: &str,
+) -> WebGLShader {
+    if IS_GL_ES {
+        compile_shader(
+            &gl,
+            shader_kind,
+            &("#version 300 es\n".to_string() + source),
+        )
+    } else {
+        compile_shader(&gl, shader_kind, &("#version 150\n".to_string() + source))
+    }
+}
+
+fn create_program(
+    gl: &WebGLRenderingContext,
+    vertex_source: &str,
+    fragment_source: &str,
+) -> WebGLProgram {
+    App::print(format!("compiling VS\n"));
+    let vert_shader = compile_shader_wasm_native(&gl, ShaderKind::Vertex, vertex_source);
+    App::print(format!("compiling FS\n"));
+    let frag_shader = compile_shader_wasm_native(&gl, ShaderKind::Fragment, fragment_source);
+    App::print(format!("linking\n"));
+    let shader_program = gl.create_program();
+    gl.attach_shader(&shader_program, &vert_shader);
+    gl.attach_shader(&shader_program, &frag_shader);
+    gl.link_program(&shader_program);
+    shader_program
+}
+
 impl Program {
     pub fn new(gl: &WebGLRenderingContext, vertex_source: &str, fragment_source: &str) -> Program {
         let data = create_primitive();
-        App::print(format!("compiling VS\n"));
-        let vert_shader = if IS_GL_ES {
-            compile_shader(
-                &gl,
-                ShaderKind::Vertex,
-                &("#version 300 es\n".to_string() + vertex_source),
-            )
-        } else {
-            compile_shader(
-                &gl,
-                ShaderKind::Vertex,
-                &("#version 150\n".to_string() + vertex_source),
-            )
-        };
-        App::print(format!("compiling FS\n"));
-        let frag_shader = if IS_GL_ES {
-            compile_shader(
-                &gl,
-                ShaderKind::Fragment,
-                &("#version 300 es\nprecision highp float;\n".to_string() + fragment_source),
-            )
-        } else {
-            compile_shader(
-                &gl,
-                ShaderKind::Fragment,
-                &("#version 150\n".to_string() + fragment_source),
-            )
-        };
-        App::print(format!("linking\n"));
-        let shader_program = gl.create_program();
-        gl.attach_shader(&shader_program, &vert_shader);
-        gl.attach_shader(&shader_program, &frag_shader);
-        gl.link_program(&shader_program);
+        let shader_program = create_program(gl, vertex_source, fragment_source);
         let vao = gl.create_vertex_array();
         let vertex_pos_location = gl.get_attrib_location(&shader_program, "aVertexPosition");
-        let vertex_pos_buffer = match vertex_pos_location {
-            None => None,
-            Some(_) => Some(gl.create_buffer()),
-        };
+        let vertex_pos_buffer = vertex_pos_location.and(Some(gl.create_buffer()));
         let vertex_uv_location = gl.get_attrib_location(&shader_program, "aTextureCoord");
-        let vertex_uv_buffer = match vertex_uv_location {
-            None => None,
-            Some(_) => Some(gl.create_buffer()),
-        };
+        let vertex_uv_buffer = vertex_uv_location.and(Some(gl.create_buffer()));
         let mut uniform_locations = HashMap::new();
-        uniform_locations.insert(
-            DoryenUniforms::Font,
-            gl.get_uniform_location(&shader_program, "uFont"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::Ascii,
-            gl.get_uniform_location(&shader_program, "uAscii"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::Background,
-            gl.get_uniform_location(&shader_program, "uBack"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::Foreground,
-            gl.get_uniform_location(&shader_program, "uFront"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::FontCharsPerLine,
-            gl.get_uniform_location(&shader_program, "uFontCharsPerLine"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::FontCoef,
-            gl.get_uniform_location(&shader_program, "uFontCoef"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::TermCoef,
-            gl.get_uniform_location(&shader_program, "uTermCoef"),
-        );
-        uniform_locations.insert(
-            DoryenUniforms::TermSize,
-            gl.get_uniform_location(&shader_program, "uTermSize"),
-        );
-
+        for uniform in [
+            (DoryenUniforms::Font, "uFont"),
+            (DoryenUniforms::Ascii, "uAscii"),
+            (DoryenUniforms::Background, "uBack"),
+            (DoryenUniforms::Foreground, "uFront"),
+            (DoryenUniforms::FontCharsPerLine, "uFontCharsPerLine"),
+            (DoryenUniforms::FontCoef, "uFontCoef"),
+            (DoryenUniforms::TermCoef, "uTermCoef"),
+            (DoryenUniforms::TermSize, "uTermSize"),
+        ].iter()
+        {
+            uniform_locations.insert(
+                uniform.0,
+                gl.get_uniform_location(&shader_program, uniform.1),
+            );
+        }
 
         Program {
             program: shader_program,
@@ -184,8 +162,7 @@ impl Program {
     }
 
     pub fn set_texture(&mut self, gl: &WebGLRenderingContext, font: WebGLTexture) {
-        if let Some(&Some(ref sampler_location)) =
-            self.uniform_locations.get(&DoryenUniforms::Font)
+        if let Some(&Some(ref sampler_location)) = self.uniform_locations.get(&DoryenUniforms::Font)
         {
             gl.active_texture(0);
             gl.bind_texture(&font);
@@ -194,8 +171,13 @@ impl Program {
         self.font = Some(font);
     }
 
-    pub fn bind(&self, gl: &WebGLRenderingContext, con: &Console, font_width: u32,
-        font_height: u32,) {
+    pub fn bind(
+        &self,
+        gl: &WebGLRenderingContext,
+        con: &Console,
+        font_width: u32,
+        font_height: u32,
+    ) {
         gl.use_program(&self.program);
         gl.bind_vertex_array(&self.vao);
         if let Some(ref buf) = self.vertex_pos_buffer {
@@ -250,14 +232,9 @@ impl Program {
                 ),
             );
         }
-
     }
 
-    pub fn render_primitive(
-        &mut self,
-        gl: &WebGLRenderingContext,
-        con: &Console,
-    ) {
+    pub fn render_primitive(&mut self, gl: &WebGLRenderingContext, con: &Console) {
         self.set_uniforms(gl, con);
 
         gl.draw_arrays(
@@ -266,60 +243,67 @@ impl Program {
         );
     }
 
-    pub fn set_uniforms(
+    fn update_uniform_texture(
         &mut self,
         gl: &WebGLRenderingContext,
-        con: &Console,
+        uniform: DoryenUniforms,
+        tex_num: u32,
+        tex: &WebGLTexture,
+        data: &[u8],
+        pot_width: u32,
+        pot_height: u32,
     ) {
-        let pot_width = con.get_pot_width();
-        let pot_height = con.get_pot_height();
-        if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Ascii) {
-            gl.active_texture(1);
-            gl.bind_texture(&self.ascii);
+        if let Some(&Some(ref location)) = self.uniform_locations.get(&uniform) {
+            gl.active_texture(tex_num);
+            gl.bind_texture(tex);
             gl.tex_image2d(
-                TextureBindPoint::Texture2d,        // target
-                0,                                  // level
-                pot_width as u16,                   // width
-                pot_height as u16,                  // height
-                PixelFormat::Rgba,                  // format
-                PixelType::UnsignedByte,            // type
-                u32_to_u8(&con.borrow_ascii()[..]), // data
+                TextureBindPoint::Texture2d, // target
+                0,                           // level
+                pot_width as u16,            // width
+                pot_height as u16,           // height
+                PixelFormat::Rgba,           // format
+                PixelType::UnsignedByte,     // type
+                data,                        // data
             );
             set_texture_params(&gl, true);
-            gl.uniform_1i(location, 1);
-        }
-        if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Foreground) {
-            gl.active_texture(2);
-            gl.bind_texture(&self.foreground);
-            gl.tex_image2d(
-                TextureBindPoint::Texture2d,               // target
-                0,                                         // level
-                pot_width as u16,                          // width
-                pot_height as u16,                         // height
-                PixelFormat::Rgba,                         // format
-                PixelType::UnsignedByte,                   // type
-                color_to_u8(&con.borrow_foreground()[..]), // data
-            );
-            set_texture_params(&gl, true);
-            gl.uniform_1i(location, 2);
-        }
-        if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::Background) {
-            gl.active_texture(3);
-            gl.bind_texture(&self.background);
-            gl.tex_image2d(
-                TextureBindPoint::Texture2d,               // target
-                0,                                         // level
-                pot_width as u16,                          // width
-                pot_height as u16,                         // height
-                PixelFormat::Rgba,                         // format
-                PixelType::UnsignedByte,                   // type
-                color_to_u8(&con.borrow_background()[..]), // data
-            );
-            set_texture_params(&gl, true);
-            gl.uniform_1i(location, 3);
+            gl.uniform_1i(location, tex_num as i32);
         }
     }
 
+    pub fn set_uniforms(&mut self, gl: &WebGLRenderingContext, con: &Console) {
+        let pot_width = con.get_pot_width();
+        let pot_height = con.get_pot_height();
+        let ascii_tex = WebGLTexture(self.ascii.0);
+        self.update_uniform_texture(
+            gl,
+            DoryenUniforms::Ascii,
+            1,
+            &ascii_tex,
+            u32_to_u8(&con.borrow_ascii()[..]),
+            pot_width,
+            pot_height,
+        );
+        let fore_tex = WebGLTexture(self.foreground.0);
+        self.update_uniform_texture(
+            gl,
+            DoryenUniforms::Foreground,
+            2,
+            &fore_tex,
+            color_to_u8(&con.borrow_foreground()[..]),
+            pot_width,
+            pot_height,
+        );
+        let back_tex = WebGLTexture(self.background.0);
+        self.update_uniform_texture(
+            gl,
+            DoryenUniforms::Background,
+            3,
+            &back_tex,
+            color_to_u8(&con.borrow_background()[..]),
+            pot_width,
+            pot_height,
+        );
+    }
 }
 
 fn set_buffer_data(
