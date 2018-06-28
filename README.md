@@ -23,7 +23,7 @@ Demos :
 
 ```toml
 [dependencies]
-doryen-rs { git = "https://github.com/jice-nospam/doryen-rs" }
+doryen-rs={ git = "https://github.com/jice-nospam/doryen-rs" }
 ```
 
 Check the examples for more information.
