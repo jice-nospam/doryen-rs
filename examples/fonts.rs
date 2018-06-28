@@ -5,9 +5,26 @@ use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 const CONSOLE_WIDTH: u32 = 40;
 const CONSOLE_HEIGHT: u32 = 25;
 
-const FONTS:[&str;15] = ["terminal8x8_aa_ro.png","720x225_SmoothWalls.png","Aesomatica_16x16.png","Bisasam_20x20.png","Buddy--graphical.png",
-    "Cheepicus_8x8.png","Cheepicus_15x15.png","Cheepicus_16x16.png","Herrbdog_144.png","Kein_400x125.png",
-    "Mkv_curses_480x150.png","Runeset_24x24.png","Teeto_K_18x18.png","Terbert_7x7.png","Yayo_tunur_1040x325.png"];
+const FONTS: [&str; 18] = [
+    "terminal8x8_aa_ro.png",
+    "terminal8x12_gs_ro.png",
+    "terminal10x16_gs_ro.png",
+    "terminal12x12_gs_ro.png",
+    "720x225_SmoothWalls.png",
+    "Aesomatica_16x16.png",
+    "Bisasam_20x20.png",
+    "Buddy--graphical.png",
+    "Cheepicus_8x8.png",
+    "Cheepicus_15x15.png",
+    "Cheepicus_16x16.png",
+    "Herrbdog_144.png",
+    "Kein_400x125.png",
+    "Mkv_curses_480x150.png",
+    "Runeset_24x24.png",
+    "Teeto_K_18x18.png",
+    "Terbert_7x7.png",
+    "Yayo_tunur_1040x325.png",
+];
 
 struct MyRoguelike {
     cur_font: usize,
@@ -16,18 +33,18 @@ struct MyRoguelike {
 
 impl Engine for MyRoguelike {
     fn update(&mut self, api: &mut DoryenApi) {
-        let mut font_path=None;
+        let mut font_path = None;
         {
             let input = api.input();
             if input.key_released("PageDown") {
                 self.cur_font = (self.cur_font + 1) % FONTS.len();
-                font_path=Some(FONTS[self.cur_font]);
+                font_path = Some(FONTS[self.cur_font]);
             } else if input.key_released("PageUp") {
                 self.cur_font = (self.cur_font + FONTS.len() - 1) % FONTS.len();
-                font_path=Some(FONTS[self.cur_font]);
+                font_path = Some(FONTS[self.cur_font]);
             }
         }
-        if let Some(font_path)=font_path {
+        if let Some(font_path) = font_path {
             self.cur_font_name = font_path.to_owned();
             api.set_font_path(font_path);
         }
@@ -52,8 +69,16 @@ impl Engine for MyRoguelike {
             Some((128, 32, 32, 255)),
             Some('&' as u16),
         );
-        con.ascii((CONSOLE_WIDTH/2) as i32, (CONSOLE_HEIGHT/2-10) as i32, '@' as u16);
-        con.fore((CONSOLE_WIDTH/2) as i32, (CONSOLE_HEIGHT/2-10) as i32, (255, 255, 255, 255));
+        con.ascii(
+            (CONSOLE_WIDTH / 2) as i32,
+            (CONSOLE_HEIGHT / 2 - 10) as i32,
+            '@' as u16,
+        );
+        con.fore(
+            (CONSOLE_WIDTH / 2) as i32,
+            (CONSOLE_HEIGHT / 2 - 10) as i32,
+            (255, 255, 255, 255),
+        );
         con.rectangle(
             (CONSOLE_WIDTH / 2 - 20) as i32,
             (CONSOLE_HEIGHT / 2 - 2) as i32,
@@ -85,8 +110,8 @@ impl Engine for MyRoguelike {
 impl MyRoguelike {
     pub fn new() -> Self {
         Self {
-            cur_font:0,
-            cur_font_name:FONTS[0].to_owned(),
+            cur_font: 0,
+            cur_font_name: FONTS[0].to_owned(),
         }
     }
 }
