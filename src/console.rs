@@ -94,7 +94,7 @@ impl Console {
         back: Option<Color>,
     ) {
         let stext = text.to_owned();
-        let mut str_len = stext.len() as i32;
+        let mut str_len = stext.chars().count() as i32;
         let mut start = 0;
         let mut ix = match align {
             TextAlign::Left => x,
@@ -111,7 +111,8 @@ impl Console {
         }
         let mut chars = stext.chars().skip(start as usize);
         for _ in 0..str_len {
-            self.cell(ix, y, Some(chars.next().unwrap() as u16), fore, back);
+            let ch = chars.next();
+            self.cell(ix, y, Some(ch.unwrap() as u16), fore, back);
             ix += 1;
         }
     }

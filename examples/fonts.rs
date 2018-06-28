@@ -6,24 +6,24 @@ const CONSOLE_WIDTH: u32 = 40;
 const CONSOLE_HEIGHT: u32 = 25;
 
 const FONTS: [&str; 18] = [
-    "terminal8x8_aa_ro.png",
-    "terminal8x12_gs_ro.png",
-    "terminal10x16_gs_ro.png",
-    "terminal12x12_gs_ro.png",
-    "720x225_SmoothWalls.png",
+    "terminal_8x8.png",
+    "terminal_8x12.png",
+    "terminal_10x16.png",
+    "terminal_12x12.png",
+    "SmoothWalls_9x9.png",
     "Aesomatica_16x16.png",
     "Bisasam_20x20.png",
-    "Buddy--graphical.png",
+    "Buddy--graphical_10x10.png",
     "Cheepicus_8x8.png",
     "Cheepicus_15x15.png",
     "Cheepicus_16x16.png",
-    "Herrbdog_144.png",
-    "Kein_400x125.png",
-    "Mkv_curses_480x150.png",
+    "Herrbdog_12x12.png",
+    "Kein_5x5.png",
+    "Mkv_curses_6x6.png",
     "Runeset_24x24.png",
     "Teeto_K_18x18.png",
     "Terbert_7x7.png",
-    "Yayo_tunur_1040x325.png",
+    "Yayo_tunur_12x12.png",
 ];
 
 struct MyRoguelike {
@@ -123,7 +123,7 @@ fn main() {
         screen_width: CONSOLE_WIDTH * 24,
         screen_height: CONSOLE_HEIGHT * 24,
         window_title: "doryen-rs font test".to_owned(),
-        font_path: "terminal8x8_aa_ro.png".to_owned(),
+        font_path: "terminal_8x8.png".to_owned(),
         vsync: true,
         fullscreen: false,
         show_cursor: false,

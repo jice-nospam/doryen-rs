@@ -18,6 +18,11 @@ Demos :
 
 ![fonts](http://roguecentral.org/~jice/doryen-rs/fonts.png)
 
+* [Unicode demo](http://roguecentral.org/~jice/doryen-rs/unicode/)
+
+![unicode](http://roguecentral.org/~jice/doryen-rs/unicode.png)
+
+
 # usage
 * add dependency to Cargo.toml :
 

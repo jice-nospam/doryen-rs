@@ -19,5 +19,7 @@ script:
   - ./ci/install_cargo_web.sh
   - cargo build --target $TARGET --verbose
   - cargo build --target $TARGET --verbose --examples
-  - cargo web build --example basic
   - cargo web build --example basic --release
+  - cargo web build --example perf --release
+  - cargo web build --example fonts --release
+  - cargo web build --example unicode --release

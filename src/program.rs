@@ -177,6 +177,8 @@ impl Program {
         con: &Console,
         font_width: u32,
         font_height: u32,
+        char_width: u32,
+        char_height: u32,
     ) {
         gl.use_program(&self.program);
         gl.bind_vertex_array(&self.vao);
@@ -206,8 +208,9 @@ impl Program {
         let pot_height = con.get_pot_height();
         let con_width = con.get_width();
         let con_height = con.get_height();
-        let pot_font_width = get_pot_value(font_width);
-        let pot_font_height = get_pot_value(font_height);
+        // TODO textures size should only be power of two
+        // let pot_font_width = get_pot_value(font_width);
+        // let pot_font_height = get_pot_value(font_height);
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::TermSize) {
             gl.uniform_2f(location, (con_width as f32, con_height as f32));
         }
@@ -221,14 +224,14 @@ impl Program {
             .uniform_locations
             .get(&DoryenUniforms::FontCharsPerLine)
         {
-            gl.uniform_1f(location, 16.0);
+            gl.uniform_1f(location, (font_width as f32) / (char_width as f32));
         }
         if let Some(&Some(ref location)) = self.uniform_locations.get(&DoryenUniforms::FontCoef) {
             gl.uniform_2f(
                 location,
                 (
-                    1.0 / 16.0,
-                    1.0 / 16.0,
+                    (char_width as f32) / (font_width as f32),
+                    (char_height as f32) / (font_height as f32),
                 ),
             );
         }
@@ -360,7 +363,7 @@ pub fn set_texture_params(gl: &WebGLRenderingContext, nearest: bool) {
     gl.tex_parameteri(TextureKind::Texture2d, TextureParameter::TextureWrapT, wrap);
 }
 
-fn get_pot_value(value: u32) -> u32 {
+fn _get_pot_value(value: u32) -> u32 {
     let mut pot_value = 1;
     while pot_value < value {
         pot_value *= 2;

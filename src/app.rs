@@ -88,6 +88,8 @@ pub struct App {
     engine: Option<Box<Engine>>,
     font_width: u32,
     font_height: u32,
+    char_width: u32,
+    char_height: u32,
 }
 
 impl App {
@@ -132,6 +134,8 @@ impl App {
             engine: None,
             font_width: 0,
             font_height: 0,
+            char_width: 0,
+            char_height: 0,
         }
     }
     pub fn set_engine(&mut self, engine: Box<Engine>) {
@@ -142,11 +146,19 @@ impl App {
         let file_data = &self.font_loader.image_data.take().unwrap()[..];
         let img = &mut image::load_from_memory(file_data).unwrap().to_rgba();
         self.process_image(img);
+        if self.font_loader.char_width != 0 {
+            self.char_width = self.font_loader.char_width;
+            self.char_height = self.font_loader.char_height;
+        } else {
+            self.char_width = img.width() as u32 / 16;
+            self.char_height = img.height() as u32 / 16;
+        }
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
         uni_app::App::print(format!(
-            "font size: {:?}\n",
-            (self.font_width, self.font_height)
+            "font size: {:?} char size: {:?}\n",
+            (self.font_width, self.font_height),
+            (self.char_width, self.char_height)
         ));
         self.gl.active_texture(0);
         self.gl.bind_texture(&self.font);
@@ -215,8 +227,14 @@ impl App {
             }
             if !font_loaded && self.font_loader.load_font_async() {
                 self.load_font_bytes();
-                self.program
-                    .bind(&self.gl, &self.api.con, self.font_width, self.font_height);
+                self.program.bind(
+                    &self.gl,
+                    &self.api.con,
+                    self.font_width,
+                    self.font_height,
+                    self.char_width,
+                    self.char_height,
+                );
                 self.program
                     .set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
                 font_loaded = true;

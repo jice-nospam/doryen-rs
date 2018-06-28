@@ -7,6 +7,8 @@ struct AsyncImage(String, uni_app::fs::File);
 pub struct FontLoader {
     async_images: Vec<Option<AsyncImage>>,
     pub image_data: Option<Vec<u8>>,
+    pub char_width: u32,
+    pub char_height: u32,
 }
 
 impl FontLoader {
@@ -14,25 +16,36 @@ impl FontLoader {
         Self {
             async_images: Vec::new(),
             image_data: None,
+            char_width: 0,
+            char_height: 0,
         }
     }
     pub fn load_font(&mut self, path: &str) {
-        uni_app::App::print(format!("loading font {}\n",path));
+        let start = path.rfind("_").unwrap_or(0);
+        let end = path.rfind(".").unwrap_or(0);
+        if start > 0 && end > 0 {
+            let subpath = path[start + 1..end].to_owned();
+            let charsize: Vec<&str> = subpath.split("x").collect();
+            self.char_width = charsize[0].parse::<u32>().unwrap();
+            self.char_height = charsize[1].parse::<u32>().unwrap();
+        } else {
+            self.char_width = 0;
+            self.char_height = 0;
+        }
+
+        uni_app::App::print(format!("loading font {}\n", path));
         match open_file(path) {
             Ok(mut f) => {
                 if f.is_ready() {
                     match f.read_binary() {
                         Ok(buf) => {
-                            self.image_data=Some(buf.to_vec());
-                        },
-                        Err(e) => {
-                            panic!("Could not read file {} : {}\n", path, e)
+                            self.image_data = Some(buf.to_vec());
                         }
+                        Err(e) => panic!("Could not read file {} : {}\n", path, e),
                     }
                 } else {
                     uni_app::App::print(format!("loading async file {}\n", path));
-                    self.async_images
-                        .push(Some(AsyncImage(path.to_owned(), f)));
+                    self.async_images.push(Some(AsyncImage(path.to_owned(), f)));
                 }
             }
             Err(e) => panic!("Could not open file {} : {}\n", path, e),
@@ -57,7 +70,7 @@ impl FontLoader {
             let mut asfile = self.async_images[*idx].take().unwrap();
             match asfile.1.read_binary() {
                 Ok(buf) => {
-                    self.image_data=Some(buf.to_vec());
+                    self.image_data = Some(buf.to_vec());
                     return true;
                 }
                 Err(e) => {
