@@ -5,10 +5,10 @@ use image;
 use uni_app;
 use webgl;
 
-use console::{Console};
+use console::Console;
+use font::FontLoader;
 use input::{DoryenInput, InputApi};
 use program::{set_texture_params, Program};
-use font::FontLoader;
 
 // shaders
 const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
@@ -18,7 +18,6 @@ const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
 pub const MAX_FRAMESKIP: i32 = 5;
 pub const TICKS_PER_SECOND: f64 = 60.0;
 pub const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
-
 
 pub trait DoryenApi {
     fn con(&mut self) -> &mut Console;
@@ -33,7 +32,7 @@ pub struct DoryenApiImpl {
     input: DoryenInput,
     fps: u32,
     average_fps: u32,
-    font_path:Option<String>,
+    font_path: Option<String>,
 }
 
 impl DoryenApi for DoryenApiImpl {
@@ -50,13 +49,13 @@ impl DoryenApi for DoryenApiImpl {
         self.average_fps
     }
     fn set_font_path(&mut self, font_path: &str) {
-        self.font_path=Some(font_path.to_owned());
+        self.font_path = Some(font_path.to_owned());
     }
 }
 
 impl DoryenApiImpl {
     pub fn clear_font_path(&mut self) {
-        self.font_path=None;
+        self.font_path = None;
     }
 }
 
@@ -127,7 +126,7 @@ impl App {
                 con: con,
                 fps: 0,
                 average_fps: 0,
-                font_path:None,
+                font_path: None,
             },
             fps: FPS::new(),
             engine: None,
@@ -145,7 +144,10 @@ impl App {
         self.process_image(img);
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
-        uni_app::App::print(format!("font size: {:?}\n",(self.font_width,self.font_height)));
+        uni_app::App::print(format!(
+            "font size: {:?}\n",
+            (self.font_width, self.font_height)
+        ));
         self.gl.active_texture(0);
         self.gl.bind_texture(&self.font);
         self.gl.tex_image2d(
@@ -160,18 +162,24 @@ impl App {
     }
 
     fn process_image(&mut self, img: &mut image::RgbaImage) {
-        let pixel=img.get_pixel(0,0).data;
+        let pixel = img.get_pixel(0, 0).data;
         let alpha = pixel[3];
         if alpha == 255 {
-            let transparent_color=(pixel[0],pixel[1],pixel[2]);
-            uni_app::App::print(format!("transparent color: {:?}\n",transparent_color));
-            let (width,height)=img.dimensions();
+            let transparent_color = (pixel[0], pixel[1], pixel[2]);
+            uni_app::App::print(format!("transparent color: {:?}\n", transparent_color));
+            let (width, height) = img.dimensions();
             for y in 0..height {
                 for x in 0..width {
-                    let p = img.get_pixel_mut(x,y);
+                    let p = img.get_pixel_mut(x, y);
                     let pixel = p.data;
-                    if (pixel[0],pixel[1],pixel[2]) == transparent_color {
+                    if (pixel[0], pixel[1], pixel[2]) == transparent_color {
                         p.data[3] = 0;
+                    } else {
+                        let alpha = pixel[0];
+                        p.data[0] = 255;
+                        p.data[1] = 255;
+                        p.data[2] = 255;
+                        p.data[3] = alpha;
                     }
                 }
             }
