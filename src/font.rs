@@ -94,7 +94,12 @@ impl FontLoader {
         let alpha = pixel[3];
         if alpha == 255 {
             let transparent_color = (pixel[0], pixel[1], pixel[2]);
-            uni_app::App::print(format!("transparent color: {:?}\n", transparent_color));
+            let greyscale = transparent_color == (0, 0, 0);
+            uni_app::App::print(format!(
+                "{}transparent color: {:?}\n",
+                if greyscale { "greyscale " } else { "" },
+                transparent_color
+            ));
             let (width, height) = img.dimensions();
             for y in 0..height {
                 for x in 0..width {
@@ -102,7 +107,10 @@ impl FontLoader {
                     let pixel = p.data;
                     if (pixel[0], pixel[1], pixel[2]) == transparent_color {
                         p.data[3] = 0;
-                    } else {
+                        p.data[0] = 0;
+                        p.data[1] = 0;
+                        p.data[2] = 0;
+                    } else if greyscale && pixel[0] == pixel[1] && pixel[1] == pixel[2] {
                         let alpha = pixel[0];
                         p.data[0] = 255;
                         p.data[1] = 255;

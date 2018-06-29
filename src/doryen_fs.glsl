@@ -18,5 +18,5 @@ void main(){
     vec4 background = texture(uBack, address);
     vec2 tchar = vec2(mod(floor(ascii_code), floor(uFontCharsPerLine)), floor(ascii_code / uFontCharsPerLine));
     vec4 font_color = texture(uFont, tchar * uFontCoef + pixPos);
-    FragColor=font_color.a * foreground + (1.0 - font_color.a) * background;
+    FragColor=font_color.a * foreground * vec4(font_color.rgb,1.0) + (1.0 - font_color.a) * background;
 }

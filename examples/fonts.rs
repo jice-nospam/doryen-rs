@@ -23,7 +23,7 @@ const FONTS: [&str; 18] = [
     "Runeset_24x24.png",
     "Teeto_K_18x18.png",
     "Terbert_7x7.png",
-    "Yayo_tunur_12x12.png",
+    "Yayo_tunur_13x13.png",
 ];
 
 struct MyRoguelike {
