@@ -96,6 +96,8 @@ impl DoryenApiImpl {
 /// This is the trait you must implement to update and render your game.
 /// See [`App::set_engine`]
 pub trait Engine {
+    /// Called before the first game loop for one time initialization
+    fn init(&mut self, _api: &mut DoryenApi) {}
     /// This is called 60 times per second and is independant of the framerate. Put your world update logic in there.
     fn update(&mut self, api: &mut DoryenApi);
     /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
@@ -240,6 +242,7 @@ impl App {
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
         let mut font_loaded = false;
+        engine.init(&mut self.api);
         app.run(move |app: &mut uni_app::App| {
             if self.api.font_path.is_some() {
                 let font_path = self.api.font_path.clone().unwrap();

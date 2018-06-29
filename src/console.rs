@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub type Color = (u8, u8, u8, u8);
 pub const CHAR_CORNER_NW: u16 = 218;
 pub const CHAR_CORNER_SW: u16 = 192;
@@ -23,6 +25,8 @@ pub struct Console {
     ascii: Vec<u32>,
     back: Vec<Color>,
     fore: Vec<Color>,
+    colors: HashMap<String, Color>,
+    color_stack: Vec<Color>,
 }
 
 impl Console {
@@ -53,7 +57,19 @@ impl Console {
             fore,
             pot_width,
             pot_height,
+            colors: HashMap::new(),
+            color_stack: Vec::new(),
         }
+    }
+    /// associate a name with a color for this console.
+    /// The color name can then be used in [`Console::print_color`]
+    /// Example
+    /// ```
+    /// con.register_color("pink", (255, 0, 255, 255));
+    /// con.print_color(5, 5, "This text contains a %{pink}pink%{} word");
+    /// ```
+    pub fn register_color(&mut self, name: &str, value: Color) {
+        self.colors.insert(name.to_owned(), value);
     }
     pub fn get_width(&self) -> u32 {
         self.width
@@ -123,6 +139,81 @@ impl Console {
         let w = self.width;
         let h = self.height;
         self.area(0, 0, w, h, fore, back, fillchar);
+    }
+    /// write a multi-color string. Foreground color is defined by %{color_name} patterns inside the string.
+    /// color_name must have been registered with [`Console::register_color`] before.
+    /// Default foreground color is white, at the start of the string.
+    /// When an unknown color name is used, the color goes back to its previous value.
+    /// You can then use an empty name to end a color span.
+    /// Example
+    /// ```
+    /// con.register_color("pink", (255, 0, 255, 255));
+    /// con.register_color("blue", (0, 0, 255, 255));
+    /// con.print_color(5, 5, "%{blue}This blue text contains a %{pink}pink%{} word");
+    /// ```
+    pub fn print_color(
+        &mut self,
+        x: i32,
+        y: i32,
+        text: &str,
+        align: TextAlign,
+        back: Option<Color>,
+    ) {
+        let mut cury = y;
+        self.color_stack.clear();
+        for line in text.to_owned().split("\n") {
+            self.print_line_color(x, cury, line, align, back);
+            cury += 1;
+        }
+    }
+
+    fn get_color_spans(&mut self, text: &str, text_len: &mut i32) -> Vec<(Color, String)> {
+        let mut spans: Vec<(Color, String)> = Vec::new();
+        *text_len = 0;
+        let mut fore = *self.color_stack.last().unwrap_or(&(255, 255, 255, 255));
+        for color_span in text.to_owned().split("%{") {
+            if color_span.len() == 0 {
+                continue;
+            }
+            let mut col_text = color_span.split("}");
+            let col_name = col_text.next().unwrap();
+            if let Some(text_span) = col_text.next() {
+                if let Some(color) = self.colors.get(col_name) {
+                    fore = *color;
+                    self.color_stack.push(fore);
+                } else {
+                    self.color_stack.pop();
+                    fore = *self.color_stack.last().unwrap_or(&(255, 255, 255, 255));
+                }
+                spans.push((fore, text_span.to_owned()));
+                *text_len += text_span.chars().count() as i32;
+            } else {
+                spans.push((fore, col_name.to_owned()));
+                *text_len += col_name.chars().count() as i32;
+            }
+        }
+        spans
+    }
+
+    fn print_line_color(
+        &mut self,
+        x: i32,
+        y: i32,
+        text: &str,
+        align: TextAlign,
+        back: Option<Color>,
+    ) {
+        let mut str_len = 0;
+        let spans = self.get_color_spans(text, &mut str_len);
+        let mut ix = match align {
+            TextAlign::Left => x,
+            TextAlign::Right => (x - str_len + 1),
+            TextAlign::Center => (x - str_len / 2),
+        };
+        for (color, span) in spans {
+            self.print_line(ix, y, &span, TextAlign::Left, Some(color), back);
+            ix += span.chars().count() as i32;
+        }
     }
     /// write a string. If the string reaches the border of the console, it's truncated.
     /// If the string contains carriage return `"\n"`, multiple lines are printed.

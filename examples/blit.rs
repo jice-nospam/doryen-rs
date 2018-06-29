@@ -32,6 +32,7 @@ fn move_con(pos: &mut (i32, i32), spd: &mut (i32, i32), size: (i32, i32)) {
 }
 
 impl Engine for MyRoguelike {
+    fn init(&mut self, _api: &mut DoryenApi) {}
     fn update(&mut self, _api: &mut DoryenApi) {
         if self.step == 0 {
             move_con(

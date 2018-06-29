@@ -8,6 +8,7 @@ const CONSOLE_HEIGHT: u32 = 25;
 struct MyRoguelike {}
 
 impl Engine for MyRoguelike {
+    fn init(&mut self, _api: &mut DoryenApi) {}
     fn update(&mut self, _api: &mut DoryenApi) {}
     fn render(&mut self, api: &mut DoryenApi) {
         let con = api.con();

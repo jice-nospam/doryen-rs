@@ -10,6 +10,7 @@ struct PerfTest {
 }
 
 impl Engine for PerfTest {
+    fn init(&mut self, _api: &mut DoryenApi) {}
     fn update(&mut self, _api: &mut DoryenApi) {}
     fn render(&mut self, api: &mut DoryenApi) {
         let fps = api.fps();

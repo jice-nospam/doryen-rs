@@ -33,6 +33,7 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
+    fn init(&mut self, _api: &mut DoryenApi) {}
     fn update(&mut self, api: &mut DoryenApi) {
         let mut font_path = None;
         {

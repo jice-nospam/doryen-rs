@@ -10,6 +10,11 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
+    fn init(&mut self, api: &mut DoryenApi) {
+        api.con().register_color("white", (255, 255, 255, 255));
+        api.con().register_color("red", (255, 92, 92, 255));
+        api.con().register_color("blue", (192, 192, 255, 255));
+    }
     fn update(&mut self, api: &mut DoryenApi) {
         let input = api.input();
         if input.key("ArrowLeft") {
@@ -45,12 +50,18 @@ impl Engine for MyRoguelike {
         );
         con.ascii(self.player_pos.0, self.player_pos.1, '@' as u16);
         con.fore(self.player_pos.0, self.player_pos.1, (255, 255, 255, 255));
-        con.print(
+        con.print_color(
             (CONSOLE_WIDTH / 2) as i32,
             (CONSOLE_HEIGHT - 1) as i32,
-            "Move with arrows",
+            "%{white}Move with %{red}arrows",
             TextAlign::Center,
             None,
+        );
+        con.print_color(
+            5,
+            5,
+            "%{blue}This blue text contains a %{red}red%{} word",
+            TextAlign::Left,
             None,
         );
     }
