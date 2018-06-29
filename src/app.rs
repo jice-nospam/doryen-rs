@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use image;
 use uni_app;
 use webgl;
 
@@ -143,9 +142,7 @@ impl App {
     }
 
     fn load_font_bytes(&mut self) {
-        let file_data = &self.font_loader.image_data.take().unwrap()[..];
-        let img = &mut image::load_from_memory(file_data).unwrap().to_rgba();
-        self.process_image(img);
+        let img = self.font_loader.img.take().unwrap();
         if self.font_loader.char_width != 0 {
             self.char_width = self.font_loader.char_width;
             self.char_height = self.font_loader.char_height;
@@ -173,31 +170,6 @@ impl App {
         );
     }
 
-    fn process_image(&mut self, img: &mut image::RgbaImage) {
-        let pixel = img.get_pixel(0, 0).data;
-        let alpha = pixel[3];
-        if alpha == 255 {
-            let transparent_color = (pixel[0], pixel[1], pixel[2]);
-            uni_app::App::print(format!("transparent color: {:?}\n", transparent_color));
-            let (width, height) = img.dimensions();
-            for y in 0..height {
-                for x in 0..width {
-                    let p = img.get_pixel_mut(x, y);
-                    let pixel = p.data;
-                    if (pixel[0], pixel[1], pixel[2]) == transparent_color {
-                        p.data[3] = 0;
-                    } else {
-                        let alpha = pixel[0];
-                        p.data[0] = 255;
-                        p.data[1] = 255;
-                        p.data[2] = 255;
-                        p.data[3] = alpha;
-                    }
-                }
-            }
-        }
-    }
-
     fn handle_input(&mut self, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
         self.api.input.on_frame();
         for evt in events.borrow().iter() {
@@ -212,8 +184,7 @@ impl App {
     }
 
     pub fn run(mut self) {
-        let font_path = &self.options.font_path.clone();
-        self.font_loader.load_font(font_path);
+        self.api.set_font_path(&self.options.font_path);
         let app = self.app.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();

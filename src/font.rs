@@ -1,12 +1,13 @@
 use std;
 
+use image;
 use uni_app;
 
 struct AsyncImage(String, uni_app::fs::File);
 
 pub struct FontLoader {
     async_images: Vec<Option<AsyncImage>>,
-    pub image_data: Option<Vec<u8>>,
+    pub img: Option<image::RgbaImage>,
     pub char_width: u32,
     pub char_height: u32,
 }
@@ -15,7 +16,7 @@ impl FontLoader {
     pub fn new() -> Self {
         Self {
             async_images: Vec::new(),
-            image_data: None,
+            img: None,
             char_width: 0,
             char_height: 0,
         }
@@ -39,7 +40,7 @@ impl FontLoader {
                 if f.is_ready() {
                     match f.read_binary() {
                         Ok(buf) => {
-                            self.image_data = Some(buf.to_vec());
+                            self.load_font_bytes(&buf);
                         }
                         Err(e) => panic!("Could not read file {} : {}\n", path, e),
                     }
@@ -70,7 +71,7 @@ impl FontLoader {
             let mut asfile = self.async_images[*idx].take().unwrap();
             match asfile.1.read_binary() {
                 Ok(buf) => {
-                    self.image_data = Some(buf.to_vec());
+                    self.load_font_bytes(&buf);
                     return true;
                 }
                 Err(e) => {
@@ -80,6 +81,37 @@ impl FontLoader {
         }
         self.async_images.retain(|f| f.is_some());
         return false;
+    }
+
+    fn load_font_bytes(&mut self, buf: &Vec<u8>) {
+        let mut img = image::load_from_memory(buf).unwrap().to_rgba();
+        self.process_image(&mut img);
+        self.img = Some(img);
+    }
+
+    fn process_image(&mut self, img: &mut image::RgbaImage) {
+        let pixel = img.get_pixel(0, 0).data;
+        let alpha = pixel[3];
+        if alpha == 255 {
+            let transparent_color = (pixel[0], pixel[1], pixel[2]);
+            uni_app::App::print(format!("transparent color: {:?}\n", transparent_color));
+            let (width, height) = img.dimensions();
+            for y in 0..height {
+                for x in 0..width {
+                    let p = img.get_pixel_mut(x, y);
+                    let pixel = p.data;
+                    if (pixel[0], pixel[1], pixel[2]) == transparent_color {
+                        p.data[3] = 0;
+                    } else {
+                        let alpha = pixel[0];
+                        p.data[0] = 255;
+                        p.data[1] = 255;
+                        p.data[2] = 255;
+                        p.data[3] = alpha;
+                    }
+                }
+            }
+        }
     }
 }
 
