@@ -22,6 +22,16 @@ Demos :
 
 ![unicode](http://roguecentral.org/~jice/doryen-rs/unicode2.png)
 
+# status
+```diff
++ [x] GLSL renderer: stable
++ [x] RGBA, RGB and greyscale fonts : stable
++ [x] mouse input : stable
+- [x] unicode support : beta
+- [x] keyboard input : alpha
+  [ ] PNG image blitting : planned
+  [ ] subcell resolution : planned
+```
 
 # usage
 * add dependency to Cargo.toml :
