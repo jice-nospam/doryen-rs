@@ -20,7 +20,7 @@ Demos :
 
 * [Unicode demo](http://roguecentral.org/~jice/doryen-rs/unicode/)
 
-![unicode](http://roguecentral.org/~jice/doryen-rs/unicode.png)
+![unicode](http://roguecentral.org/~jice/doryen-rs/unicode2.png)
 
 
 # usage
