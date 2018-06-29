@@ -5,8 +5,9 @@ use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 const CONSOLE_WIDTH: u32 = 40;
 const CONSOLE_HEIGHT: u32 = 25;
 
-const FONTS: [&str; 18] = [
+const FONTS: [&str; 19] = [
     "terminal_8x8.png",
+    "terminal_colored_8x8.png",
     "terminal_8x12.png",
     "terminal_10x16.png",
     "terminal_12x12.png",

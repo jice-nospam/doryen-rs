@@ -16,7 +16,7 @@ Demos :
 
 * [Fonts demo](http://roguecentral.org/~jice/doryen-rs/fonts/)
 
-![fonts](http://roguecentral.org/~jice/doryen-rs/fonts.png)
+![fonts](http://roguecentral.org/~jice/doryen-rs/colored.png)
 
 * [Unicode demo](http://roguecentral.org/~jice/doryen-rs/unicode/)
 
