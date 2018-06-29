@@ -2,15 +2,32 @@ use std::collections::HashMap;
 
 use uni_app::AppEvent;
 
+/// Provides information about user input.
+/// Possible values for the `key` scancode parameter can be found in unrust/uni-app's `translate_scan_code`
+/// [function](https://github.com/unrust/uni-app/blob/41246b070567e3267f128fff41ededf708149d60/src/native_keycode.rs#L160).
+/// Warning, there are some slight variations from one OS to another, for example the `Command`, `F13`, `F14`, `F15` keys
+/// only exist on Mac.
+///
 pub trait InputApi {
     // keyboard
+    /// return the current status of a key (true if pressed)
     fn key(&self, key: &str) -> bool;
+    /// return true if a key was pressed since last update.
+    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn key_pressed(&mut self, key: &str) -> bool;
+    /// return true if a key was released since last update.
+    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn key_released(&mut self, key: &str) -> bool;
     // mouse
+    /// return the current status of a mouse button (true if pressed)
     fn mouse_button(&self, num: usize) -> bool;
+    /// return true if a mouse button was pressed since last update.
+    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn mouse_button_pressed(&mut self, num: usize) -> bool;
+    /// return true if a mouse button was released since last update.
+    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn mouse_button_released(&mut self, num: usize) -> bool;
+    /// return the current mouse position in pixels from the game window top left corner
     fn mouse_pos(&self) -> (f32, f32);
 }
 

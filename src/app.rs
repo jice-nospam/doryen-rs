@@ -14,19 +14,54 @@ const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
 const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
 
 // fps
-pub const MAX_FRAMESKIP: i32 = 5;
-pub const TICKS_PER_SECOND: f64 = 60.0;
-pub const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
+const MAX_FRAMESKIP: i32 = 5;
+const TICKS_PER_SECOND: f64 = 60.0;
+const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
+/// This is the complete doryen-rs API provided to you by [`App`] in [`Engine::update`] and [`Engine::render`] methods.
 pub trait DoryenApi {
+    /// return the root console that you can use to draw things on the screen
     fn con(&mut self) -> &mut Console;
+    /// return the input API to check user mouse and keyboard input
     fn input(&mut self) -> &mut InputApi;
+    /// return the current framerate
     fn fps(&self) -> u32;
+    /// return the average framerate since the start of the game
     fn average_fps(&self) -> u32;
+    /// replace the current font by a new one.
+    /// Put your font in the static/ directory of the project to make this work with both `cargo run` and `cargo web start`.
+    /// Example
+    /// ```
+    /// api.set_font_path("terminal.png");
+    /// ```
+    /// During development, this references `$PROJECT_ROOT/static/terminal.png`.
+    /// Once deployed, `terminal.png` should be in the same directory as your game's executable or `index.html`.
+    ///
+    /// By default, doryen-rs will assume the font has a 16x16 extended ASCII layout. The character size will be calculated with :
+    /// ```
+    /// char_width = font_image_width / 16
+    /// char_height = font_image_height / 16
+    /// ```
+    /// If your font has a different layout (that's the case in the unicode example), you have to provide the character size by appending it to the font file name :
+    /// ```
+    /// myfont_8x8.png
+    /// ```
+    ///
+    /// doryen_rs support several font format. It uses the top left pixel of the font to determin the format.
+    /// * If the top-left pixel alpha value is < 255, this is an RGBA font.
+    /// * If the top-left pixel alpha value is 255 and its color is black, this is a greyscale font.
+    /// * Else, it's an RGB font.
+    ///
+    /// * RGBA : transparency is stored in alpha channel. It can have semi-transparent pixels of any color. The picture below shows on the left the font image and on the right how it appears when the characters are drawn on a blue background.
+    /// ![rgba](http://roguecentral.org/~jice/doryen-rs/rgba.png)
+    /// * greyscale : black pixels are transparent. Grey pixels are replaced by white semi-transparent pixels. Colored pixels are opaque. The font cannot have pure grey colors.
+    /// ![greyscale](http://roguecentral.org/~jice/doryen-rs/greyscale.png)
+    /// * RGB : The top-left pixel's color is transparent. The font cannot have semi-transparent pixels but it can have pure grey pixels.
+    /// ![rgb](http://roguecentral.org/~jice/doryen-rs/rgb.png)
     fn set_font_path(&mut self, font_path: &str);
 }
 
-pub struct DoryenApiImpl {
+struct DoryenApiImpl {
     con: Console,
     input: DoryenInput,
     fps: u32,
@@ -58,23 +93,39 @@ impl DoryenApiImpl {
     }
 }
 
+/// This is the trait you must implement to update and render your game.
+/// See [`App::set_engine`]
 pub trait Engine {
+    /// This is called 60 times per second and is independant of the framerate. Put your world update logic in there.
     fn update(&mut self, api: &mut DoryenApi);
+    /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
+    /// The framerate is not reliable so don't update time related stuff in this function.
     fn render(&mut self, api: &mut DoryenApi);
 }
 
 pub struct AppOptions {
+    /// the console width in characters
     pub console_width: u32,
+    /// the console height in characters
     pub console_height: u32,
+    /// the game window width in pixels
     pub screen_width: u32,
+    /// the game window height in pixels
     pub screen_height: u32,
+    /// the title of the game window (only in native mode)
     pub window_title: String,
+    /// the font to use. See [`DoryenApi::set_font_path`]
     pub font_path: String,
+    /// whether framerate are limited by the screen frequency.
+    /// On web platforms, this parameter is ignored and vsync is always enabled.
     pub vsync: bool,
+    /// Native only. Might not work on every platforms.
     pub fullscreen: bool,
+    /// Whether the mouse cursor should be visible in the game window.
     pub show_cursor: bool,
 }
 
+/// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
 pub struct App {
     app: Option<uni_app::App>,
     gl: webgl::WebGLRenderingContext,

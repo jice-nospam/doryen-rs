@@ -41,7 +41,7 @@ Demos :
 doryen-rs={ git = "https://github.com/jice-nospam/doryen-rs" }
 ```
 
-Check the examples for more information.
+Check the examples and [documentation](http://roguecentral.org/~jice/doryen-rs/doc/doryen_rs) for more information.
 
 # compilation
 

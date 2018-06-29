@@ -12,6 +12,7 @@ pub enum TextAlign {
     Center,
 }
 
+/// This contains the data for a console (including the one displayed on the screen) and functions to draw on it.
 pub struct Console {
     width: u32,
     height: u32,
