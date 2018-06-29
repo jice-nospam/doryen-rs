@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -45,6 +45,14 @@ impl Engine for MyRoguelike {
         );
         con.ascii(self.player_pos.0, self.player_pos.1, '@' as u16);
         con.fore(self.player_pos.0, self.player_pos.1, (255, 255, 255, 255));
+        con.print(
+            (CONSOLE_WIDTH / 2) as i32,
+            (CONSOLE_HEIGHT - 1) as i32,
+            "Move with arrows",
+            TextAlign::Center,
+            None,
+            None,
+        );
     }
 }
 

@@ -6,6 +6,7 @@ pub const CHAR_CORNER_NE: u16 = 191;
 pub const CHAR_LINE_H: u16 = 196;
 pub const CHAR_LINE_V: u16 = 179;
 
+#[derive(Copy, Clone)]
 pub enum TextAlign {
     Left,
     Right,
@@ -124,7 +125,23 @@ impl Console {
         self.area(0, 0, w, h, fore, back, fillchar);
     }
     /// write a string. If the string reaches the border of the console, it's truncated.
+    /// If the string contains carriage return `"\n"`, multiple lines are printed.
     pub fn print(
+        &mut self,
+        x: i32,
+        y: i32,
+        text: &str,
+        align: TextAlign,
+        fore: Option<Color>,
+        back: Option<Color>,
+    ) {
+        let mut cury = y;
+        for line in text.to_owned().split("\n") {
+            self.print_line(x, cury, line, align, fore, back);
+            cury += 1;
+        }
+    }
+    fn print_line(
         &mut self,
         x: i32,
         y: i32,

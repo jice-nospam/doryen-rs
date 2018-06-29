@@ -67,15 +67,7 @@ impl Engine for MyRoguelike {
         con.print(
             (CONSOLE_WIDTH / 2) as i32,
             (CONSOLE_HEIGHT / 2) as i32,
-            "You create offscreen consoles",
-            TextAlign::Center,
-            Some((255, 255, 255, 255)),
-            None,
-        );
-        con.print(
-            (CONSOLE_WIDTH / 2) as i32,
-            (CONSOLE_HEIGHT / 2 + 1) as i32,
-            "and blit them on other consoles",
+            "You create offscreen consoles\nand blit them on other consoles",
             TextAlign::Center,
             Some((255, 255, 255, 255)),
             None,
