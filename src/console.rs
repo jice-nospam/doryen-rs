@@ -12,7 +12,7 @@ pub enum TextAlign {
     Center,
 }
 
-/// This contains the data for a console (including the one displayed on the screen) and functions to draw on it.
+/// This contains the data for a console (including the one displayed on the screen) and methods to draw on it.
 pub struct Console {
     width: u32,
     height: u32,
@@ -25,6 +25,8 @@ pub struct Console {
 }
 
 impl Console {
+    /// create a new offscreen console that you can blit on another console
+    /// width and height are in cells (characters), not pixels.
     pub fn new(width: u32, height: u32) -> Self {
         let mut back = Vec::new();
         let mut fore = Vec::new();
@@ -40,7 +42,7 @@ impl Console {
         for _ in 0..(pot_width * pot_height) as usize {
             back.push((0, 0, 0, 255));
             fore.push((255, 255, 255, 255));
-            ascii.push(0);
+            ascii.push(' ' as u32);
         }
         Self {
             width,
@@ -64,14 +66,29 @@ impl Console {
     pub fn get_pot_height(&self) -> u32 {
         self.pot_height
     }
+    /// for fast reading of the characters values
     pub fn borrow_ascii(&self) -> &Vec<u32> {
         &self.ascii
     }
+    /// for fast reading of the characters colors
     pub fn borrow_foreground(&self) -> &Vec<Color> {
         &self.fore
     }
+    /// for fast reading of the background colors
     pub fn borrow_background(&self) -> &Vec<Color> {
         &self.back
+    }
+    /// for fast writing of the characters values
+    pub fn borrow_mut_ascii(&mut self) -> &mut Vec<u32> {
+        &mut self.ascii
+    }
+    /// for fast writing of the characters colors
+    pub fn borrow_mut_foreground(&mut self) -> &mut Vec<Color> {
+        &mut self.fore
+    }
+    /// for fast writing of the background colors
+    pub fn borrow_mut_background(&mut self) -> &mut Vec<Color> {
+        &mut self.back
     }
     fn offset(&self, x: i32, y: i32) -> usize {
         x as usize + y as usize * self.pot_width as usize
@@ -79,12 +96,34 @@ impl Console {
     fn check_coords(&self, x: i32, y: i32) -> bool {
         (x as u32) < self.width && (y as u32) < self.height
     }
+    /// set the character at a specific position (doesn't change the color)
     pub fn ascii(&mut self, x: i32, y: i32, ascii: u16) {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
             self.ascii[off] = ascii as u32;
         }
     }
+    /// set the character color at a specific position
+    pub fn fore(&mut self, x: i32, y: i32, col: Color) {
+        if self.check_coords(x, y) {
+            let off = self.offset(x, y);
+            self.fore[off] = col;
+        }
+    }
+    /// set the background color at a specific position
+    pub fn back(&mut self, x: i32, y: i32, col: Color) {
+        if self.check_coords(x, y) {
+            let off = self.offset(x, y);
+            self.back[off] = col;
+        }
+    }
+    /// fill the whole console with values
+    pub fn clear(&mut self, fore: Option<Color>, back: Option<Color>, fillchar: Option<u16>) {
+        let w = self.width;
+        let h = self.height;
+        self.area(0, 0, w, h, fore, back, fillchar);
+    }
+    /// write a string. If the string reaches the border of the console, it's truncated.
     pub fn print(
         &mut self,
         x: i32,
@@ -117,6 +156,7 @@ impl Console {
             ix += 1;
         }
     }
+    /// draw a rectangle, possibly filling it with a character.
     pub fn rectangle(
         &mut self,
         x: i32,
@@ -149,6 +189,7 @@ impl Console {
             self.area(x + 1, y + 1, w - 2, h - 2, fore, back, fill);
         }
     }
+    /// fill an area with values
     pub fn area(
         &mut self,
         x: i32,
@@ -186,11 +227,7 @@ impl Console {
             }
         }
     }
-    pub fn clear(&mut self, fore: Option<Color>, back: Option<Color>, fillchar: Option<u16>) {
-        let w = self.width;
-        let h = self.height;
-        self.area(0, 0, w, h, fore, back, fillchar);
-    }
+    /// can change all properties of a console cell at once
     pub fn cell(
         &mut self,
         x: i32,
@@ -212,16 +249,114 @@ impl Console {
             }
         }
     }
-    pub fn fore(&mut self, x: i32, y: i32, col: Color) {
-        if self.check_coords(x, y) {
-            let off = self.offset(x, y);
-            self.fore[off] = col;
+    /// blit (draw) a console onto another one
+    /// You can use fore_alpha and back_alpha to blend this console with existing background on the destination.
+    /// If you define a key color, the cells using this color as background will be ignored. This makes it possible to blit
+    /// non rectangular zones.
+    pub fn blit(
+        &self,
+        x: i32,
+        y: i32,
+        destination: &mut Console,
+        fore_alpha: f32,
+        back_alpha: f32,
+        key_color: Option<Color>,
+    ) {
+        self.blit_ex(
+            0,
+            0,
+            self.width as i32,
+            self.height as i32,
+            destination,
+            x,
+            y,
+            fore_alpha,
+            back_alpha,
+            key_color,
+        );
+    }
+    /// blit a region of this console onto another one.
+    /// see [`Console::blit`]
+    pub fn blit_ex(
+        &self,
+        xsrc: i32,
+        ysrc: i32,
+        wsrc: i32,
+        hsrc: i32,
+        destination: &mut Console,
+        xdst: i32,
+        ydst: i32,
+        fore_alpha: f32,
+        back_alpha: f32,
+        key_color: Option<Color>,
+    ) {
+        for y in 0..hsrc - ysrc {
+            let off = (y + ysrc) * self.pot_width as i32;
+            let doff = (y + ydst) * destination.pot_width as i32;
+            for x in 0..wsrc - xsrc {
+                if self.check_coords(xsrc + x, ysrc + y) {
+                    if destination.check_coords(xdst + x, ydst + y) {
+                        let src_idx = (off + x + xsrc) as usize;
+                        let dest_idx = (doff + x + xdst) as usize;
+                        let src_back = self.back[src_idx];
+                        let dst_back = destination.back[dest_idx];
+                        if back_alpha > 0.0 {
+                            let mut back = self.back[src_idx];
+                            if let Some(key) = key_color {
+                                if key == back {
+                                    continue;
+                                }
+                            }
+                            destination.back[dest_idx] =
+                                blend_color(&dst_back, &src_back, back_alpha);
+                        }
+                        if fore_alpha > 0.0 {
+                            let src_fore = self.fore[src_idx];
+                            let dst_fore = destination.fore[dest_idx];
+                            let src_char = self.ascii[src_idx];
+                            let dst_char = destination.ascii[dest_idx];
+                            let dst_back = destination.back[dest_idx];
+                            if fore_alpha < 1.0 {
+                                if src_char == ' ' as u32 {
+                                    destination.fore[dest_idx] =
+                                        blend_color(&dst_fore, &src_back, back_alpha);
+                                } else if dst_char == ' ' as u32 {
+                                    destination.ascii[dest_idx] = src_char;
+                                    destination.fore[dest_idx] =
+                                        blend_color(&dst_back, &src_fore, fore_alpha);
+                                } else if dst_char == src_char {
+                                    destination.fore[dest_idx] =
+                                        blend_color(&dst_fore, &src_fore, fore_alpha);
+                                } else {
+                                    if fore_alpha < 0.5 {
+                                        destination.fore[dest_idx] =
+                                            blend_color(&dst_fore, &dst_back, fore_alpha * 2.0);
+                                    } else {
+                                        destination.ascii[dest_idx] = src_char;
+                                        destination.fore[dest_idx] = blend_color(
+                                            &dst_back,
+                                            &src_fore,
+                                            (fore_alpha - 0.5) * 2.0,
+                                        );
+                                    }
+                                }
+                            } else {
+                                destination.fore[dest_idx] = src_fore;
+                                destination.ascii[dest_idx] = src_char;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    pub fn back(&mut self, x: i32, y: i32, col: Color) {
-        if self.check_coords(x, y) {
-            let off = self.offset(x, y);
-            self.back[off] = col;
-        }
-    }
+}
+
+fn blend_color(c1: &Color, c2: &Color, alpha: f32) -> Color {
+    (
+        (((1.0 - alpha) * c1.0 as f32) + alpha * (c2.0 as f32)) as u8,
+        (((1.0 - alpha) * c1.1 as f32) + alpha * (c2.1 as f32)) as u8,
+        (((1.0 - alpha) * c1.2 as f32) + alpha * (c2.2 as f32)) as u8,
+        255,
+    )
 }

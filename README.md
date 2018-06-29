@@ -22,6 +22,10 @@ Demos :
 
 ![unicode](http://roguecentral.org/~jice/doryen-rs/unicode2.png)
 
+* [Console blitting demo](http://roguecentral.org/~jice/doryen-rs/blit/)
+
+![blit](http://roguecentral.org/~jice/doryen-rs/blit.png)
+
 # status
 ```diff
 + [x] GLSL renderer: stable
