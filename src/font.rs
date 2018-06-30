@@ -33,8 +33,6 @@ impl FontLoader {
             self.char_height = 0;
         }
         self.id = self.loader.load_file(path);
-
-        uni_app::App::print(format!("loading font {}\n", path));
         self.load_font_async();
     }
 

@@ -7,22 +7,23 @@ const CONSOLE_HEIGHT: u32 = 45;
 
 struct MyRoguelike {
     skull: Image,
+    x: f32,
+    y: f32,
+    angle: f32,
+    scale_time: f32,
 }
 
 impl Engine for MyRoguelike {
     fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, _api: &mut DoryenApi) {}
+    fn update(&mut self, _api: &mut DoryenApi) {
+        self.angle += 0.01;
+        self.scale_time += 0.01;
+    }
     fn render(&mut self, api: &mut DoryenApi) {
         let con = api.con();
-        self.skull.blit(
-            con,
-            (CONSOLE_WIDTH / 2) as i32,
-            (CONSOLE_HEIGHT / 2) as i32,
-            1.0,
-            1.0,
-            0.0,
-            None,
-        );
+        let scale = self.scale_time.cos();
+        self.skull
+            .blit_ex(con, self.x, self.y, scale, scale, self.angle, None);
     }
 }
 
@@ -30,6 +31,10 @@ impl MyRoguelike {
     pub fn new() -> Self {
         Self {
             skull: Image::new("skull.png"),
+            x: (CONSOLE_WIDTH / 2) as f32,
+            y: (CONSOLE_HEIGHT / 2) as f32,
+            angle: 0.0,
+            scale_time: 0.0,
         }
     }
 }
