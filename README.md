@@ -40,8 +40,8 @@ Demos :
 + [x] RGBA, RGB and greyscale fonts : stable
 + [x] mouse input : stable
 + [x] subcell resolution : stable
++ [x] PNG image blitting : stable
 - [x] unicode support : beta
-- [x] PNG image blitting : beta
 - [x] keyboard input : alpha
 ```
 

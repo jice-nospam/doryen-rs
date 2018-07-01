@@ -21,8 +21,15 @@ impl Engine for MyRoguelike {
         let con = api.con();
         let scale = self.scale_time.cos();
         con.clear(None, Some((0, 0, 0, 255)), None);
-        self.skull
-            .blit_ex(con, self.x, self.y, scale, scale, self.angle, None);
+        self.skull.blit_ex(
+            con,
+            (CONSOLE_WIDTH / 2) as f32,
+            (CONSOLE_HEIGHT / 2) as f32,
+            scale,
+            scale,
+            self.angle,
+            None,
+        );
     }
 }
 

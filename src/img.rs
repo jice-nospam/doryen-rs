@@ -153,11 +153,16 @@ impl Image {
                         (iw + (cx as f32 - x) * newx_x + (cy as f32 - y) * (-newy_x)) * invscalex;
                     let iy =
                         (ih + (cx as f32 - x) * (newx_y) - (cy as f32 - y) * newy_y) * invscaley;
-                    if ix as u32 >= size.0 || iy as u32 >= size.1 {
-                        continue;
-                    }
-                    let pixel = img.get_pixel(ix as u32, iy as u32).data;
-                    let color = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                    let color = if ix as i32 >= size.0 as i32
+                        || ix < 0.0
+                        || iy as i32 >= size.1 as i32
+                        || iy < 0.0
+                    {
+                        (0, 0, 0, 255)
+                    } else {
+                        let pixel = img.get_pixel(ix as u32, iy as u32).data;
+                        (pixel[0], pixel[1], pixel[2], pixel[3])
+                    };
                     if let Some(ref t) = transparent {
                         if color == *t {
                             continue;
