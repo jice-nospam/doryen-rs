@@ -204,103 +204,116 @@ impl Image {
         if !self.is_loaded() {
             return;
         }
+        if let Some(ref img) = self.img {
+            Image::blit_2x_image(img, con, dx, dy, sx, sy, w, h, transparent);
+        }
+    }
+    /// blit an image on a console. See [`Image::blit_2x`]
+    pub fn blit_2x_image(
+        img: &image::RgbaImage,
+        con: &mut Console,
+        dx: i32,
+        dy: i32,
+        sx: i32,
+        sy: i32,
+        w: Option<i32>,
+        h: Option<i32>,
+        transparent: Option<Color>,
+    ) {
         let mut grid: [Color; 4] = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)];
         let mut back: Color = (0, 0, 0, 0);
         let mut front: Option<Color> = None;
         let mut ascii: i32 = ' ' as i32;
-
-        if let Some(ref img) = self.img {
-            let width = img.width() as i32;
-            let height = img.height() as i32;
-            let con_width = con.get_width() as i32;
-            let con_height = con.get_height() as i32;
-            let mut blit_w = w.unwrap_or(width);
-            let mut blit_h = h.unwrap_or(height);
-            let minx = sx.max(0);
-            let miny = sy.max(0);
-            blit_w = blit_w.min(width - minx);
-            blit_h = blit_h.min(height - miny);
-            let mut maxx = if dx + blit_w / 2 <= con_width {
-                blit_w
-            } else {
-                (con_width - dx) * 2
-            };
-            let mut maxy = if dy + blit_h / 2 <= con_height {
-                blit_h
-            } else {
-                (con_height - dy) * 2
-            };
-            maxx += minx;
-            maxy += miny;
-            let mut cx = minx;
-            while cx < maxx {
-                let mut cy = miny;
-                while cy < maxy {
-                    // get the 2x2 super pixel colors from the image
-                    let conx = dx + (cx - minx) / 2;
-                    let cony = dy + (cy - miny) / 2;
-                    let console_back = con.unsafe_get_back(conx, cony);
-                    let pixel = img.get_pixel(cx as u32, cy as u32).data;
-                    grid[0] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+        let width = img.width() as i32;
+        let height = img.height() as i32;
+        let con_width = con.get_width() as i32;
+        let con_height = con.get_height() as i32;
+        let mut blit_w = w.unwrap_or(width);
+        let mut blit_h = h.unwrap_or(height);
+        let minx = sx.max(0);
+        let miny = sy.max(0);
+        blit_w = blit_w.min(width - minx);
+        blit_h = blit_h.min(height - miny);
+        let mut maxx = if dx + blit_w / 2 <= con_width {
+            blit_w
+        } else {
+            (con_width - dx) * 2
+        };
+        let mut maxy = if dy + blit_h / 2 <= con_height {
+            blit_h
+        } else {
+            (con_height - dy) * 2
+        };
+        maxx += minx;
+        maxy += miny;
+        let mut cx = minx;
+        while cx < maxx {
+            let mut cy = miny;
+            while cy < maxy {
+                // get the 2x2 super pixel colors from the image
+                let conx = dx + (cx - minx) / 2;
+                let cony = dy + (cy - miny) / 2;
+                let console_back = con.unsafe_get_back(conx, cony);
+                let pixel = img.get_pixel(cx as u32, cy as u32).data;
+                grid[0] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                if let Some(ref t) = transparent {
+                    if grid[0] == *t {
+                        grid[0] = console_back;
+                    }
+                }
+                if cx < maxx - 1 {
+                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32).data;
+                    grid[1] = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
-                        if grid[0] == *t {
-                            grid[0] = console_back;
+                        if grid[1] == *t {
+                            grid[1] = console_back;
                         }
                     }
-                    if cx < maxx - 1 {
-                        let pixel = img.get_pixel(cx as u32 + 1, cy as u32).data;
-                        grid[1] = (pixel[0], pixel[1], pixel[2], pixel[3]);
-                        if let Some(ref t) = transparent {
-                            if grid[1] == *t {
-                                grid[1] = console_back;
-                            }
+                } else {
+                    grid[1] = console_back;
+                }
+                if cy < maxy - 1 {
+                    let pixel = img.get_pixel(cx as u32, cy as u32 + 1).data;
+                    grid[2] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                    if let Some(ref t) = transparent {
+                        if grid[2] == *t {
+                            grid[2] = console_back;
                         }
-                    } else {
-                        grid[1] = console_back;
                     }
-                    if cy < maxy - 1 {
-                        let pixel = img.get_pixel(cx as u32, cy as u32 + 1).data;
-                        grid[2] = (pixel[0], pixel[1], pixel[2], pixel[3]);
-                        if let Some(ref t) = transparent {
-                            if grid[2] == *t {
-                                grid[2] = console_back;
-                            }
+                } else {
+                    grid[2] = console_back;
+                }
+                if cx < maxx - 1 && cy < maxy - 1 {
+                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32 + 1).data;
+                    grid[3] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                    if let Some(ref t) = transparent {
+                        if grid[3] == *t {
+                            grid[3] = console_back;
                         }
-                    } else {
-                        grid[2] = console_back;
                     }
-                    if cx < maxx - 1 && cy < maxy - 1 {
-                        let pixel = img.get_pixel(cx as u32 + 1, cy as u32 + 1).data;
-                        grid[3] = (pixel[0], pixel[1], pixel[2], pixel[3]);
-                        if let Some(ref t) = transparent {
-                            if grid[3] == *t {
-                                grid[3] = console_back;
-                            }
-                        }
-                    } else {
-                        grid[3] = console_back;
-                    }
-                    // analyse color, posterize, get pattern
-                    compute_pattern(&grid, &mut back, &mut front, &mut ascii);
-                    if front.is_none() {
-                        // single color
+                } else {
+                    grid[3] = console_back;
+                }
+                // analyse color, posterize, get pattern
+                compute_pattern(&grid, &mut back, &mut front, &mut ascii);
+                if front.is_none() {
+                    // single color
+                    con.unsafe_back(conx, cony, back);
+                    con.unsafe_ascii(conx, cony, ascii as u16);
+                } else {
+                    if ascii >= 0 {
                         con.unsafe_back(conx, cony, back);
+                        con.unsafe_fore(conx, cony, front.unwrap());
                         con.unsafe_ascii(conx, cony, ascii as u16);
                     } else {
-                        if ascii >= 0 {
-                            con.unsafe_back(conx, cony, back);
-                            con.unsafe_fore(conx, cony, front.unwrap());
-                            con.unsafe_ascii(conx, cony, ascii as u16);
-                        } else {
-                            con.unsafe_back(conx, cony, front.unwrap());
-                            con.unsafe_fore(conx, cony, back);
-                            con.unsafe_ascii(conx, cony, (-ascii) as u16);
-                        }
+                        con.unsafe_back(conx, cony, front.unwrap());
+                        con.unsafe_fore(conx, cony, back);
+                        con.unsafe_ascii(conx, cony, (-ascii) as u16);
                     }
-                    cy += 2;
                 }
-                cx += 2;
+                cy += 2;
             }
+            cx += 2;
         }
     }
 }
