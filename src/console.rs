@@ -1,12 +1,22 @@
 use std::collections::HashMap;
 
-pub type Color = (u8, u8, u8, u8);
+use color::{color_blend, Color};
+
+// rectangle drawing kit
 pub const CHAR_CORNER_NW: u16 = 218;
 pub const CHAR_CORNER_SW: u16 = 192;
 pub const CHAR_CORNER_SE: u16 = 217;
 pub const CHAR_CORNER_NE: u16 = 191;
 pub const CHAR_LINE_H: u16 = 196;
 pub const CHAR_LINE_V: u16 = 179;
+// sub-pixel resolution kit
+pub const CHAR_SUBP_NW: u16 = 226;
+pub const CHAR_SUBP_NE: u16 = 227;
+pub const CHAR_SUBP_N: u16 = 228;
+pub const CHAR_SUBP_SE: u16 = 229;
+pub const CHAR_SUBP_DIAG: u16 = 230;
+pub const CHAR_SUBP_E: u16 = 231;
+pub const CHAR_SUBP_SW: u16 = 232;
 
 #[derive(Copy, Clone)]
 pub enum TextAlign {
@@ -107,6 +117,42 @@ impl Console {
     pub fn borrow_mut_background(&mut self) -> &mut Vec<Color> {
         &mut self.back
     }
+    /// get the background color of a cell (if x,y inside the console)
+    pub fn get_back(&self, x: i32, y: i32) -> Option<Color> {
+        if self.check_coords(x, y) {
+            return Some(self.unsafe_get_back(x, y));
+        }
+        None
+    }
+    /// get the foreground color of a cell (if x,y inside the console)
+    pub fn get_fore(&self, x: i32, y: i32) -> Option<Color> {
+        if self.check_coords(x, y) {
+            return Some(self.unsafe_get_fore(x, y));
+        }
+        None
+    }
+    /// get the ascii code of a cell (if x,y inside the console)
+    pub fn get_ascii(&self, x: i32, y: i32) -> Option<u16> {
+        if self.check_coords(x, y) {
+            return Some(self.unsafe_get_ascii(x, y));
+        }
+        None
+    }
+    /// get the background color of a cell (no boundary check)
+    pub fn unsafe_get_back(&self, x: i32, y: i32) -> Color {
+        let off = self.offset(x, y);
+        self.back[off]
+    }
+    /// get the foreground color of a cell (no boundary check)
+    pub fn unsafe_get_fore(&self, x: i32, y: i32) -> Color {
+        let off = self.offset(x, y);
+        self.fore[off]
+    }
+    /// get the ascii code of a cell (no boundary check)
+    pub fn unsafe_get_ascii(&self, x: i32, y: i32) -> u16 {
+        let off = self.offset(x, y);
+        self.ascii[off] as u16
+    }
     fn offset(&self, x: i32, y: i32) -> usize {
         x as usize + y as usize * self.pot_width as usize
     }
@@ -116,23 +162,35 @@ impl Console {
     /// set the character at a specific position (doesn't change the color)
     pub fn ascii(&mut self, x: i32, y: i32, ascii: u16) {
         if self.check_coords(x, y) {
-            let off = self.offset(x, y);
-            self.ascii[off] = ascii as u32;
+            self.unsafe_ascii(x, y, ascii);
         }
     }
     /// set the character color at a specific position
     pub fn fore(&mut self, x: i32, y: i32, col: Color) {
         if self.check_coords(x, y) {
-            let off = self.offset(x, y);
-            self.fore[off] = col;
+            self.unsafe_fore(x, y, col);
         }
     }
     /// set the background color at a specific position
     pub fn back(&mut self, x: i32, y: i32, col: Color) {
         if self.check_coords(x, y) {
-            let off = self.offset(x, y);
-            self.back[off] = col;
+            self.unsafe_back(x, y, col);
         }
+    }
+    /// set the character at a specific position (no boundary check)
+    pub fn unsafe_ascii(&mut self, x: i32, y: i32, ascii: u16) {
+        let off = self.offset(x, y);
+        self.ascii[off] = ascii as u32;
+    }
+    /// set the character color at a specific position (no boundary check)
+    pub fn unsafe_fore(&mut self, x: i32, y: i32, col: Color) {
+        let off = self.offset(x, y);
+        self.fore[off] = col;
+    }
+    /// set the background color at a specific position (no boundary check)
+    pub fn unsafe_back(&mut self, x: i32, y: i32, col: Color) {
+        let off = self.offset(x, y);
+        self.back[off] = col;
     }
     /// fill the whole console with values
     pub fn clear(&mut self, fore: Option<Color>, back: Option<Color>, fillchar: Option<u16>) {
@@ -416,7 +474,7 @@ impl Console {
                                 }
                             }
                             destination.back[dest_idx] =
-                                blend_color(&dst_back, &src_back, back_alpha);
+                                color_blend(&dst_back, &src_back, back_alpha);
                         }
                         if fore_alpha > 0.0 {
                             let src_fore = self.fore[src_idx];
@@ -427,21 +485,21 @@ impl Console {
                             if fore_alpha < 1.0 {
                                 if src_char == ' ' as u32 {
                                     destination.fore[dest_idx] =
-                                        blend_color(&dst_fore, &src_back, back_alpha);
+                                        color_blend(&dst_fore, &src_back, back_alpha);
                                 } else if dst_char == ' ' as u32 {
                                     destination.ascii[dest_idx] = src_char;
                                     destination.fore[dest_idx] =
-                                        blend_color(&dst_back, &src_fore, fore_alpha);
+                                        color_blend(&dst_back, &src_fore, fore_alpha);
                                 } else if dst_char == src_char {
                                     destination.fore[dest_idx] =
-                                        blend_color(&dst_fore, &src_fore, fore_alpha);
+                                        color_blend(&dst_fore, &src_fore, fore_alpha);
                                 } else {
                                     if fore_alpha < 0.5 {
                                         destination.fore[dest_idx] =
-                                            blend_color(&dst_fore, &dst_back, fore_alpha * 2.0);
+                                            color_blend(&dst_fore, &dst_back, fore_alpha * 2.0);
                                     } else {
                                         destination.ascii[dest_idx] = src_char;
-                                        destination.fore[dest_idx] = blend_color(
+                                        destination.fore[dest_idx] = color_blend(
                                             &dst_back,
                                             &src_fore,
                                             (fore_alpha - 0.5) * 2.0,
@@ -458,13 +516,4 @@ impl Console {
             }
         }
     }
-}
-
-fn blend_color(c1: &Color, c2: &Color, alpha: f32) -> Color {
-    (
-        (((1.0 - alpha) * c1.0 as f32) + alpha * (c2.0 as f32)) as u8,
-        (((1.0 - alpha) * c1.1 as f32) + alpha * (c2.1 as f32)) as u8,
-        (((1.0 - alpha) * c1.2 as f32) + alpha * (c2.2 as f32)) as u8,
-        255,
-    )
 }

@@ -3,6 +3,7 @@ extern crate uni_app;
 extern crate webgl;
 
 mod app;
+mod color;
 mod console;
 mod file;
 mod font;
@@ -11,6 +12,7 @@ mod input;
 mod program;
 
 pub use self::app::*;
+pub use self::color::*;
 pub use self::console::*;
 pub use self::img::*;
 pub use self::input::InputApi;

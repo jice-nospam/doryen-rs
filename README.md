@@ -30,15 +30,19 @@ Demos :
 
 ![image](http://roguecentral.org/~jice/doryen-rs/image.png)
 
+* [Subcell resolution demo](http://roguecentral.org/~jice/doryen-rs/subcell/)
+
+![subcell](http://roguecentral.org/~jice/doryen-rs/subcell.png)
+
 # status
 ```diff
 + [x] GLSL renderer: stable
 + [x] RGBA, RGB and greyscale fonts : stable
 + [x] mouse input : stable
++ [x] subcell resolution : stable
 - [x] unicode support : beta
 - [x] PNG image blitting : beta
 - [x] keyboard input : alpha
-  [ ] subcell resolution : planned
 ```
 
 # usage

@@ -1,4 +1,5 @@
-use console::{Color, Console};
+use color::{color_blend, color_dist, Color};
+use console::*;
 use file::FileLoader;
 use image;
 
@@ -171,4 +172,230 @@ impl Image {
             }
         }
     }
+
+    /// blit an image on the console, using the subcell characters to achieve twice the normal resolution.
+    /// This uses the CHAR_SUBCELL_* ascii codes (from 226 to 232):
+    ///
+    /// ![subcell_chars](http://roguecentral.org/~jice/doryen-rs/subcell_chars.png)
+    ///
+    /// COmparison before/after subcell in the chronicles of Doryen :
+    ///
+    /// ![subcell_comp](http://roguecentral.org/~jice/doryen-rs/subcell_comp.png)
+    ///
+    /// Pyromancer! screenshot, making full usage of subcell resolution:
+    ///
+    /// ![subcell_pyro](http://roguecentral.org/~jice/doryen-rs/subcell_pyro.png)
+    pub fn blit_2x(
+        &mut self,
+        con: &mut Console,
+        dx: i32,
+        dy: i32,
+        sx: i32,
+        sy: i32,
+        w: Option<i32>,
+        h: Option<i32>,
+        transparent: Option<Color>,
+    ) {
+        if !self.is_loaded() {
+            return;
+        }
+        let mut grid: [Color; 4] = [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0)];
+        let mut back: Color = (0, 0, 0, 0);
+        let mut front: Option<Color> = None;
+        let mut ascii: i32 = ' ' as i32;
+
+        if let Some(ref img) = self.img {
+            let width = img.width() as i32;
+            let height = img.height() as i32;
+            let con_width = con.get_width() as i32;
+            let con_height = con.get_height() as i32;
+            let mut blit_w = w.unwrap_or(width);
+            let mut blit_h = h.unwrap_or(height);
+            let minx = sx.max(0);
+            let miny = sy.max(0);
+            blit_w = blit_w.min(width - minx);
+            blit_h = blit_h.min(height - miny);
+            let mut maxx = if dx + blit_w / 2 <= con_width {
+                blit_w
+            } else {
+                (con_width - dx) * 2
+            };
+            let mut maxy = if dy + blit_h / 2 <= con_height {
+                blit_h
+            } else {
+                (con_height - dy) * 2
+            };
+            maxx += minx;
+            maxy += miny;
+            let mut cx = minx;
+            while cx < maxx {
+                let mut cy = miny;
+                while cy < maxy {
+                    // get the 2x2 super pixel colors from the image
+                    let conx = dx + (cx - minx) / 2;
+                    let cony = dy + (cy - miny) / 2;
+                    let console_back = con.unsafe_get_back(conx, cony);
+                    let pixel = img.get_pixel(cx as u32, cy as u32).data;
+                    grid[0] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                    if let Some(ref t) = transparent {
+                        if grid[0] == *t {
+                            grid[0] = console_back;
+                        }
+                    }
+                    if cx < maxx - 1 {
+                        let pixel = img.get_pixel(cx as u32 + 1, cy as u32).data;
+                        grid[1] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                        if let Some(ref t) = transparent {
+                            if grid[1] == *t {
+                                grid[1] = console_back;
+                            }
+                        }
+                    } else {
+                        grid[1] = console_back;
+                    }
+                    if cy < maxy - 1 {
+                        let pixel = img.get_pixel(cx as u32, cy as u32 + 1).data;
+                        grid[2] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                        if let Some(ref t) = transparent {
+                            if grid[2] == *t {
+                                grid[2] = console_back;
+                            }
+                        }
+                    } else {
+                        grid[2] = console_back;
+                    }
+                    if cx < maxx - 1 && cy < maxy - 1 {
+                        let pixel = img.get_pixel(cx as u32 + 1, cy as u32 + 1).data;
+                        grid[3] = (pixel[0], pixel[1], pixel[2], pixel[3]);
+                        if let Some(ref t) = transparent {
+                            if grid[3] == *t {
+                                grid[3] = console_back;
+                            }
+                        }
+                    } else {
+                        grid[3] = console_back;
+                    }
+                    // analyse color, posterize, get pattern
+                    compute_pattern(&grid, &mut back, &mut front, &mut ascii);
+                    if front.is_none() {
+                        // single color
+                        con.unsafe_back(conx, cony, back);
+                        con.unsafe_ascii(conx, cony, ascii as u16);
+                    } else {
+                        if ascii >= 0 {
+                            con.unsafe_back(conx, cony, back);
+                            con.unsafe_fore(conx, cony, front.unwrap());
+                            con.unsafe_ascii(conx, cony, ascii as u16);
+                        } else {
+                            con.unsafe_back(conx, cony, front.unwrap());
+                            con.unsafe_fore(conx, cony, back);
+                            con.unsafe_ascii(conx, cony, (-ascii) as u16);
+                        }
+                    }
+                    cy += 2;
+                }
+                cx += 2;
+            }
+        }
+    }
+}
+
+const FLAG_TO_ASCII: [i32; 8] = [
+    0,
+    CHAR_SUBP_NE as i32,
+    CHAR_SUBP_SW as i32,
+    -(CHAR_SUBP_DIAG as i32),
+    CHAR_SUBP_SE as i32,
+    CHAR_SUBP_E as i32,
+    -(CHAR_SUBP_N as i32),
+    -(CHAR_SUBP_NW as i32),
+];
+
+fn compute_pattern(
+    desired: &[Color; 4],
+    back: &mut Color,
+    front: &mut Option<Color>,
+    ascii: &mut i32,
+) {
+    // adapted from Jeff Lait's code posted on r.g.r.d
+    let mut flag = 0;
+    /*
+		pixels have following flag values :
+			X 1
+			2 4
+		flag indicates which pixels uses foreground color (top left pixel always uses foreground color except if all pixels have the same color)
+	*/
+    let mut weight: [f32; 2] = [0.0, 0.0];
+    // First colour trivial.
+    *back = desired[0];
+
+    // Ignore all duplicates...
+    let mut i = 1;
+    while i < 4 {
+        if desired[i].0 != back.0 || desired[i].1 != back.1 || desired[i].2 != back.2 {
+            break;
+        }
+        i += 1;
+    }
+
+    // All the same.
+    if i == 4 {
+        *front = None;
+        *ascii = ' ' as i32;
+        return;
+    }
+    weight[0] = i as f32;
+
+    // Found a second colour...
+    let mut tmp_front = desired[i];
+    weight[1] = 1.0;
+    flag |= 1 << (i - 1);
+    // remaining colours
+    i += 1;
+    while i < 4 {
+        if desired[i].0 == back.0 && desired[i].1 == back.1 && desired[i].2 == back.2 {
+            weight[0] += 1.0;
+        } else if desired[i].0 == tmp_front.0
+            && desired[i].1 == tmp_front.1
+            && desired[i].2 == tmp_front.2
+        {
+            flag |= 1 << (i - 1);
+            weight[1] += 1.0;
+        } else {
+            // Bah, too many colours,
+            // merge the two nearest
+            let dist0i = color_dist(&desired[i], back);
+            let dist1i = color_dist(&desired[i], &tmp_front);
+            let dist01 = color_dist(back, &tmp_front);
+            if dist0i < dist1i {
+                if dist0i <= dist01 {
+                    // merge 0 and i
+                    *back = color_blend(&desired[i], back, weight[0] / (1.0 + weight[0]));
+                    weight[0] += 1.0;
+                } else {
+                    // merge 0 and 1
+                    *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
+                    weight[0] += 1.0;
+                    tmp_front = desired[i];
+                    flag = 1 << (i - 1);
+                }
+            } else {
+                if dist1i <= dist01 {
+                    // merge 1 and i
+                    tmp_front = color_blend(&desired[i], &tmp_front, weight[1] / (1.0 + weight[1]));
+                    weight[1] += 1.0;
+                    flag |= 1 << (i - 1);
+                } else {
+                    // merge 0 and 1
+                    *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
+                    weight[0] += 1.0;
+                    tmp_front = desired[i];
+                    flag = 1 << (i - 1);
+                }
+            }
+        }
+        i += 1;
+    }
+    *front = Some(tmp_front);
+    *ascii = FLAG_TO_ASCII[flag as usize];
 }
