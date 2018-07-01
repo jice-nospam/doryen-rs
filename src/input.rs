@@ -27,9 +27,8 @@ pub trait InputApi {
     /// return true if a mouse button was released since last update.
     /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn mouse_button_released(&mut self, num: usize) -> bool;
-    /// return the current mouse position in pixels and in console cells coordinates from the game window top left corner
-    /// (pix_x, pix_y, con_x, con_y)
-    fn mouse_pos(&self) -> (f32, f32, f32, f32);
+    /// return the current mouse position in console cells coordinates (float value to have subcell precision)
+    fn mouse_pos(&self) -> (f32, f32);
 }
 
 pub struct DoryenInput {
@@ -39,13 +38,18 @@ pub struct DoryenInput {
     mdown: HashMap<usize, bool>,
     mpressed: HashMap<usize, bool>,
     mreleased: HashMap<usize, bool>,
-    mpos: (f32, f32, f32, f32),
+    mpos: (f32, f32),
     screen_size: (f32, f32),
-    char_size: (u32, u32),
+    con_size: (f32, f32),
 }
 
 impl DoryenInput {
-    pub fn new(screen_width: u32, screen_height: u32) -> DoryenInput {
+    pub fn new(
+        screen_width: u32,
+        screen_height: u32,
+        con_width: u32,
+        con_height: u32,
+    ) -> DoryenInput {
         DoryenInput {
             kdown: HashMap::new(),
             kpressed: HashMap::new(),
@@ -53,9 +57,9 @@ impl DoryenInput {
             mdown: HashMap::new(),
             mpressed: HashMap::new(),
             mreleased: HashMap::new(),
-            mpos: (0.0, 0.0, 0.0, 0.0),
+            mpos: (0.0, 0.0),
             screen_size: (screen_width as f32, screen_height as f32),
-            char_size: (1, 1),
+            con_size: (con_width as f32, con_height as f32),
         }
     }
     fn on_key_down(&mut self, code: &str) {
@@ -94,10 +98,8 @@ impl DoryenInput {
             }
             &AppEvent::MousePos(ref pos) => {
                 self.mpos = (
-                    pos.0 as f32 / self.screen_size.0,
-                    pos.1 as f32 / self.screen_size.1,
-                    pos.0 as f32 / self.char_size.0 as f32,
-                    pos.1 as f32 / self.char_size.1 as f32,
+                    pos.0 as f32 / self.screen_size.0 * self.con_size.0,
+                    pos.1 as f32 / self.screen_size.1 * self.con_size.1,
                 );
             }
             &AppEvent::MouseDown(ref mouse) => {
@@ -113,9 +115,6 @@ impl DoryenInput {
     }
     fn resize(&mut self, size: (u32, u32)) {
         self.screen_size = (size.0 as f32, size.1 as f32);
-    }
-    pub fn set_char_size(&mut self, width: u32, height: u32) {
-        self.char_size = (width, height);
     }
 }
 
@@ -168,7 +167,7 @@ impl InputApi for DoryenInput {
             _ => false,
         }
     }
-    fn mouse_pos(&self) -> (f32, f32, f32, f32) {
+    fn mouse_pos(&self) -> (f32, f32) {
         self.mpos
     }
 }

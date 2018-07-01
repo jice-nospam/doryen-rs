@@ -166,7 +166,12 @@ impl App {
             webgl::BlendMode::OneMinusSrcAlpha,
         );
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
-        let input = DoryenInput::new(options.screen_width, options.screen_height);
+        let input = DoryenInput::new(
+            options.screen_width,
+            options.screen_height,
+            options.console_width,
+            options.console_height,
+        );
         let font = create_texture(&gl);
         Self {
             app: Some(app),
@@ -203,9 +208,6 @@ impl App {
             self.char_width = img.width() as u32 / 16;
             self.char_height = img.height() as u32 / 16;
         }
-        self.api
-            .input
-            .set_char_size(self.char_width, self.char_height);
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
         uni_app::App::print(format!(
