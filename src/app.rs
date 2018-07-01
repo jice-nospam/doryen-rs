@@ -203,6 +203,9 @@ impl App {
             self.char_width = img.width() as u32 / 16;
             self.char_height = img.height() as u32 / 16;
         }
+        self.api
+            .input
+            .set_char_size(self.char_width, self.char_height);
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
         uni_app::App::print(format!(
