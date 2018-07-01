@@ -17,7 +17,7 @@ impl FileLoader {
             seq: 0,
         }
     }
-    pub fn load_file(&mut self, path: &str) -> usize {
+    pub fn load_file(&mut self, path: &str) -> Result<usize, String> {
         uni_app::App::print(format!("loading file {}\n", path));
         match open_file(path) {
             Ok(mut f) => {
@@ -27,19 +27,23 @@ impl FileLoader {
                             self.files_to_load
                                 .insert(self.seq, AsyncFile(path.to_owned(), f, Some(buf)));
                             self.seq += 1;
-                            return self.seq - 1;
+                            return Ok(self.seq - 1);
                         }
-                        Err(e) => panic!("Could not read file {} : {}\n", path, e),
+                        Err(e) => {
+                            return Err(format!("Could not read file {} : {}\n", path, e));
+                        }
                     }
                 } else {
                     uni_app::App::print(format!("loading async file {}\n", path));
                     self.files_to_load
                         .insert(self.seq, AsyncFile(path.to_owned(), f, None));
                     self.seq += 1;
-                    return self.seq - 1;
+                    return Ok(self.seq - 1);
                 }
             }
-            Err(e) => panic!("Could not open file {} : {}\n", path, e),
+            Err(e) => {
+                return Err(format!("Could not open file {} : {}\n", path, e));
+            }
         }
     }
 

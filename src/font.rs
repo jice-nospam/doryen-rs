@@ -32,8 +32,10 @@ impl FontLoader {
             self.char_width = 0;
             self.char_height = 0;
         }
-        self.id = self.loader.load_file(path);
-        self.load_font_async();
+        if let Ok(id) = self.loader.load_file(path) {
+            self.id = id;
+            self.load_font_async();
+        }
     }
 
     pub fn load_font_async(&mut self) -> bool {
