@@ -2,12 +2,16 @@ use console::{Color, Console};
 use file::FileLoader;
 use image;
 
+/// An easy way to load PNG images and blit them on the console
 pub struct Image {
     file_loader: FileLoader,
     img: Option<image::RgbaImage>,
 }
 
 impl Image {
+    /// Create an image and load a PNG file.
+    /// On the web platform, image loading is asynchronous.
+    /// Using blit methods before the image is loaded has no impact on the console.
     pub fn new(file_path: &str) -> Self {
         let mut file_loader = FileLoader::new();
         file_loader.load_file(file_path);
@@ -16,6 +20,9 @@ impl Image {
             img: None,
         }
     }
+    /// Check if the image has been loaded.
+    /// Since there's no background thread doing the work for you, you have to call some method on image for it to actually load.
+    /// Use either [`Image::is_loaded`], [`Image::get_size`], [`Image::blit`] or [`Image::blit_ex`] to run the loading code.
     pub fn is_loaded(&mut self) -> bool {
         if self.img.is_some() {
             return true;
@@ -30,9 +37,12 @@ impl Image {
     fn intialize_image(&mut self, buf: &Vec<u8>) {
         self.img = Some(image::load_from_memory(&buf).unwrap().to_rgba());
     }
-    pub fn get_size(&self) -> Option<(u32, u32)> {
-        if let Some(ref img) = self.img {
-            return Some((img.width(), img.height()));
+    /// If the image has already been loaded, return its size, else return None
+    pub fn get_size(&mut self) -> Option<(u32, u32)> {
+        if self.is_loaded() {
+            if let Some(ref img) = self.img {
+                return Some((img.width(), img.height()));
+            }
         }
         return None;
     }

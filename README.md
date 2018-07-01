@@ -26,14 +26,18 @@ Demos :
 
 ![blit](http://roguecentral.org/~jice/doryen-rs/blit.png)
 
+* [Image blitting demo](http://roguecentral.org/~jice/doryen-rs/image/)
+
+![image](http://roguecentral.org/~jice/doryen-rs/image.png)
+
 # status
 ```diff
 + [x] GLSL renderer: stable
 + [x] RGBA, RGB and greyscale fonts : stable
 + [x] mouse input : stable
 - [x] unicode support : beta
+- [x] PNG image blitting : beta
 - [x] keyboard input : alpha
-  [ ] PNG image blitting : planned
   [ ] subcell resolution : planned
 ```
 
