@@ -22,6 +22,7 @@ impl Engine for MyRoguelike {
     fn render(&mut self, api: &mut DoryenApi) {
         let con = api.con();
         let scale = self.scale_time.cos();
+        con.clear(None, Some((0, 0, 0, 255)), None);
         self.skull
             .blit_ex(con, self.x, self.y, scale, scale, self.angle, None);
     }

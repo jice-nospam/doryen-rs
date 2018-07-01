@@ -2,26 +2,9 @@ use console::{Color, Console};
 use file::FileLoader;
 use image;
 
-struct MipMap {
-    img: Option<image::RgbaImage>,
-    dirty: bool,
-    width: u32,
-    height: u32,
-}
-
-impl MipMap {
-    fn allocate(&mut self) {
-        self.img = Some(image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::new(
-            self.width,
-            self.height,
-        ));
-    }
-}
-
 pub struct Image {
     file_loader: FileLoader,
     img: Option<image::RgbaImage>,
-    mipmaps: Vec<MipMap>,
 }
 
 impl Image {
@@ -30,7 +13,6 @@ impl Image {
         file_loader.load_file(file_path);
         Self {
             file_loader,
-            mipmaps: Vec::new(),
             img: None,
         }
     }
@@ -46,22 +28,7 @@ impl Image {
         return false;
     }
     fn intialize_image(&mut self, buf: &Vec<u8>) {
-        let img = image::load_from_memory(&buf).unwrap().to_rgba();
-        let mut w = img.width();
-        let mut h = img.height();
-        w >>= 2;
-        h >>= 2;
-        while w > 0 && h > 0 {
-            self.mipmaps.push(MipMap {
-                img: None,
-                dirty: false,
-                width: w,
-                height: h,
-            });
-            w >>= 2;
-            h >>= 2;
-        }
-        self.img = Some(img);
+        self.img = Some(image::load_from_memory(&buf).unwrap().to_rgba());
     }
     pub fn get_size(&self) -> Option<(u32, u32)> {
         if let Some(ref img) = self.img {
@@ -69,6 +36,11 @@ impl Image {
         }
         return None;
     }
+    /// blit an image on a console
+    ///
+    /// x,y are the coordinate of the top left image pixel in the console
+    ///
+    /// image pixels using the transparent color will be ignored
     pub fn blit(&mut self, con: &mut Console, x: i32, y: i32, transparent: Option<Color>) {
         if !self.is_loaded() {
             return;
@@ -101,6 +73,11 @@ impl Image {
             }
         }
     }
+    /// blit an image on a console
+    ///
+    /// x,y are the coordinate of the image center in the console
+    /// image can be scaled and rotated (angle is in radians)
+    /// image pixels using the transparent color will be ignored
     pub fn blit_ex(
         &mut self,
         con: &mut Console,
@@ -182,40 +159,6 @@ impl Image {
                     back[offset] = color;
                 }
             }
-        }
-    }
-    fn generate_mip(&mut self, level: usize) {
-        if let Some(ref source) = self.img {
-            if self.mipmaps[level].img.is_none() {
-                self.mipmaps[level].allocate();
-            }
-            if let Some(ref mut dest) = self.mipmaps[level].img {
-                compute_mipmap(level, source, dest);
-            }
-        }
-    }
-}
-
-fn compute_mipmap(level: usize, source: &image::RgbaImage, dest: &mut image::RgbaImage) {
-    for y in 0..source.height() {
-        for x in 0..source.width() {
-            let mut r = 0;
-            let mut g = 0;
-            let mut b = 0;
-            let mut count = 0;
-            for sy in y << (level + 1)..(y + 1) << (level + 1) {
-                for sx in x << (level + 1)..(x + 1) << (level + 1) {
-                    let p = &source.get_pixel(sx, sy).data;
-                    count += 1;
-                    r += p[0];
-                    g += p[1];
-                    b += p[2];
-                }
-            }
-            r /= count;
-            g /= count;
-            b /= count;
-            dest.put_pixel(x, y, image::Pixel::from_channels(r, g, b, 255));
         }
     }
 }
