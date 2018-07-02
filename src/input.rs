@@ -8,24 +8,23 @@ use uni_app::AppEvent;
 /// Warning, there are some slight variations from one OS to another, for example the `Command`, `F13`, `F14`, `F15` keys
 /// only exist on Mac.
 ///
+/// State functions like [`InputApi::key`], [`InputApi::mouse_button`] and [`InputApi::mouse_pos`] always work.
+/// On another hand, pressed/released event functions should be called only in the update function.
+///
 pub trait InputApi {
     // keyboard
     /// return the current status of a key (true if pressed)
     fn key(&self, key: &str) -> bool;
     /// return true if a key was pressed since last update.
-    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn key_pressed(&mut self, key: &str) -> bool;
     /// return true if a key was released since last update.
-    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn key_released(&mut self, key: &str) -> bool;
     // mouse
     /// return the current status of a mouse button (true if pressed)
     fn mouse_button(&self, num: usize) -> bool;
     /// return true if a mouse button was pressed since last update.
-    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn mouse_button_pressed(&mut self, num: usize) -> bool;
     /// return true if a mouse button was released since last update.
-    /// Call this function only once per update. Once it is called, the status is cleared and it will return false.
     fn mouse_button_released(&mut self, num: usize) -> bool;
     /// return the current mouse position in console cells coordinates (float value to have subcell precision)
     fn mouse_pos(&self) -> (f32, f32);
@@ -87,6 +86,8 @@ impl DoryenInput {
     pub fn on_frame(&mut self) {
         self.mpressed.clear();
         self.mreleased.clear();
+        self.kreleased.clear();
+        self.kpressed.clear();
     }
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
@@ -128,7 +129,6 @@ impl InputApi for DoryenInput {
     fn key_pressed(&mut self, key: &str) -> bool {
         match self.kpressed.get(key) {
             Some(&true) => {
-                self.kpressed.insert(key.to_owned(), false);
                 return true;
             }
             _ => false,
@@ -137,7 +137,6 @@ impl InputApi for DoryenInput {
     fn key_released(&mut self, key: &str) -> bool {
         match self.kreleased.get(key) {
             Some(&true) => {
-                self.kreleased.insert(key.to_owned(), false);
                 return true;
             }
             _ => false,
@@ -152,7 +151,6 @@ impl InputApi for DoryenInput {
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
         match self.mpressed.get(&num) {
             Some(&true) => {
-                self.mpressed.insert(num, false);
                 return true;
             }
             _ => false,
@@ -161,7 +159,6 @@ impl InputApi for DoryenInput {
     fn mouse_button_released(&mut self, num: usize) -> bool {
         match self.mreleased.get(&num) {
             Some(&true) => {
-                self.mreleased.insert(num, false);
                 return true;
             }
             _ => false,

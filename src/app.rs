@@ -276,6 +276,7 @@ impl App {
                     engine.update(&mut self.api);
                     next_tick += SKIP_TICKS;
                     skipped_frames += 1;
+                    self.api.input.on_frame();
                 }
                 if skipped_frames == MAX_FRAMESKIP {
                     next_tick = time + SKIP_TICKS;
