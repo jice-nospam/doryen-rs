@@ -125,6 +125,8 @@ pub struct AppOptions {
     pub fullscreen: bool,
     /// Whether the mouse cursor should be visible in the game window.
     pub show_cursor: bool,
+    /// Whether the game window can be resized
+    pub resizable: bool,
 }
 
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
@@ -153,6 +155,7 @@ impl App {
             vsync: options.vsync,
             show_cursor: options.show_cursor,
             headless: false,
+            resizable:options.resizable,
             fullscreen: options.fullscreen,
         });
         let gl = webgl::WebGLRenderingContext::new(app.canvas());

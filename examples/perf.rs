@@ -81,7 +81,8 @@ fn main() {
         font_path: "terminal_8x8.png".to_owned(),
         vsync: false,
         fullscreen: false,
-        show_cursor: false,
+        show_cursor: true,
+        resizable: true,
     });
     app.set_engine(Box::new(PerfTest::new()));
     app.run();

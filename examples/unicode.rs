@@ -36,7 +36,8 @@ fn main() {
         font_path: "unicode_16x16.png".to_owned(),
         vsync: true,
         fullscreen: false,
-        show_cursor: false,
+        show_cursor: true,
+        resizable: true,
     });
     app.set_engine(Box::new(MyRoguelike {}));
     app.run();
