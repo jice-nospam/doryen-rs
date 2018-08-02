@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/jice-nospam/doryen-rs.svg)](https://travis-ci.org/jice-nospam/doryen-rs)
 
 Ascii roguelike library in rust with native and wasm support.
-Uses the webgl, uni-app and uni-glsl crates from the [unrust](http://github.com/unrust/unrust) game engine.
+Uses the webgl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
 
 Demos :
 * [Basic real-time walking @](http://roguecentral.org/~jice/doryen-rs/basic/)
