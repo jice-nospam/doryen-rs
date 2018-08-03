@@ -3,7 +3,7 @@ use std::mem::size_of;
 use std::slice;
 
 use uni_app::App;
-use webgl::{
+use uni_gl::{
     AttributeSize, BufferKind, DataType, DrawMode, PixelFormat, PixelType, Primitives, ShaderKind,
     TextureBindPoint, TextureKind, TextureMagFilter, TextureMinFilter, TextureParameter,
     TextureWrap, WebGLBuffer, WebGLProgram, WebGLRenderingContext, WebGLShader, WebGLTexture,

@@ -1,9 +1,11 @@
 # doryen-rs
 
 [![Build Status](https://travis-ci.org/jice-nospam/doryen-rs.svg)](https://travis-ci.org/jice-nospam/doryen-rs)
+[![Documentation](https://docs.rs/doryen-rs/badge.svg)](https://docs.rs/doryen-rs)
+[![crates.io](https://meritbadge.herokuapp.com/doryen-rs)](https://crates.io/crates/doryen-rs)
 
 Ascii roguelike library in rust with native and wasm support.
-Uses the webgl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
+Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
 
 Demos :
 * [Basic real-time walking @](http://roguecentral.org/~jice/doryen-rs/basic/)
@@ -50,10 +52,10 @@ Demos :
 
 ```toml
 [dependencies]
-doryen-rs={ git = "https://github.com/jice-nospam/doryen-rs" }
+doryen-rs="*"
 ```
 
-Check the examples and [documentation](http://roguecentral.org/~jice/doryen-rs/doc/doryen_rs) for more information.
+Check the examples and [documentation](https://docs.rs/doryen-rs) for more information.
 
 # compilation
 

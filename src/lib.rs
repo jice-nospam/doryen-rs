@@ -1,6 +1,6 @@
 extern crate image;
 extern crate uni_app;
-extern crate webgl;
+extern crate uni_gl;
 
 mod app;
 mod color;

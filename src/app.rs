@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use uni_app;
-use webgl;
+use uni_gl;
 
 use console::Console;
 use font::FontLoader;
@@ -132,8 +132,8 @@ pub struct AppOptions {
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
 pub struct App {
     app: Option<uni_app::App>,
-    gl: webgl::WebGLRenderingContext,
-    font: webgl::WebGLTexture,
+    gl: uni_gl::WebGLRenderingContext,
+    font: uni_gl::WebGLTexture,
     font_loader: FontLoader,
     program: Program,
     options: AppOptions,
@@ -155,18 +155,18 @@ impl App {
             vsync: options.vsync,
             show_cursor: options.show_cursor,
             headless: false,
-            resizable:options.resizable,
+            resizable: options.resizable,
             fullscreen: options.fullscreen,
         });
-        let gl = webgl::WebGLRenderingContext::new(app.canvas());
+        let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
         gl.viewport(0, 0, options.screen_width, options.screen_height);
-        gl.enable(webgl::Flag::Blend as i32);
+        gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
-        gl.clear(webgl::BufferBit::Color);
-        gl.blend_equation(webgl::BlendEquation::FuncAdd);
+        gl.clear(uni_gl::BufferBit::Color);
+        gl.blend_equation(uni_gl::BlendEquation::FuncAdd);
         gl.blend_func(
-            webgl::BlendMode::SrcAlpha,
-            webgl::BlendMode::OneMinusSrcAlpha,
+            uni_gl::BlendMode::SrcAlpha,
+            uni_gl::BlendMode::OneMinusSrcAlpha,
         );
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
         let input = DoryenInput::new(
@@ -221,12 +221,12 @@ impl App {
         self.gl.active_texture(0);
         self.gl.bind_texture(&self.font);
         self.gl.tex_image2d(
-            webgl::TextureBindPoint::Texture2d, // target
+            uni_gl::TextureBindPoint::Texture2d, // target
             0,                                  // level
             img.width() as u16,                 // width
             img.height() as u16,                // height
-            webgl::PixelFormat::Rgba,           // format
-            webgl::PixelType::UnsignedByte,     // type
+            uni_gl::PixelFormat::Rgba,           // format
+            uni_gl::PixelType::UnsignedByte,     // type
             &*img,                              // data
         );
     }
@@ -269,7 +269,7 @@ impl App {
                     self.char_height,
                 );
                 self.program
-                    .set_texture(&self.gl, webgl::WebGLTexture(self.font.0));
+                    .set_texture(&self.gl, uni_gl::WebGLTexture(self.font.0));
                 font_loaded = true;
             } else {
                 self.handle_input(app.events.clone());
@@ -294,7 +294,7 @@ impl App {
     }
 }
 
-fn create_texture(gl: &webgl::WebGLRenderingContext) -> webgl::WebGLTexture {
+fn create_texture(gl: &uni_gl::WebGLRenderingContext) -> uni_gl::WebGLTexture {
     let tex = gl.create_texture();
     gl.active_texture(0);
     gl.bind_texture(&tex);
