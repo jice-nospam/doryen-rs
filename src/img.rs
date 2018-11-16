@@ -15,7 +15,7 @@ impl Image {
     /// Using blit methods before the image is loaded has no impact on the console.
     pub fn new(file_path: &str) -> Self {
         let mut file_loader = FileLoader::new();
-        file_loader.load_file(file_path);
+        file_loader.load_file(file_path).ok();
         Self {
             file_loader,
             img: None,

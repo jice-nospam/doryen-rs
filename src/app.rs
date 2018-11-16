@@ -31,19 +31,19 @@ pub trait DoryenApi {
     /// replace the current font by a new one.
     /// Put your font in the static/ directory of the project to make this work with both `cargo run` and `cargo web start`.
     /// Example
-    /// ```
+    /// ```compile_fail
     /// api.set_font_path("terminal.png");
     /// ```
     /// During development, this references `$PROJECT_ROOT/static/terminal.png`.
     /// Once deployed, `terminal.png` should be in the same directory as your game's executable or `index.html`.
     ///
     /// By default, doryen-rs will assume the font has a 16x16 extended ASCII layout. The character size will be calculated with :
-    /// ```
+    /// ```text
     /// char_width = font_image_width / 16
     /// char_height = font_image_height / 16
     /// ```
     /// If your font has a different layout (that's the case in the unicode example), you have to provide the character size by appending it to the font file name :
-    /// ```
+    /// ```text
     /// myfont_8x8.png
     /// ```
     ///
@@ -222,12 +222,12 @@ impl App {
         self.gl.bind_texture(&self.font);
         self.gl.tex_image2d(
             uni_gl::TextureBindPoint::Texture2d, // target
-            0,                                  // level
-            img.width() as u16,                 // width
-            img.height() as u16,                // height
+            0,                                   // level
+            img.width() as u16,                  // width
+            img.height() as u16,                 // height
             uni_gl::PixelFormat::Rgba,           // format
             uni_gl::PixelType::UnsignedByte,     // type
-            &*img,                              // data
+            &*img,                               // data
         );
     }
 

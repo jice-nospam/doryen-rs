@@ -75,8 +75,10 @@ impl Console {
     /// The color name can then be used in [`Console::print_color`]
     /// Example
     /// ```
+    /// use doryen_rs::{Console, TextAlign};
+    /// let mut con=Console::new(80,25);
     /// con.register_color("pink", (255, 0, 255, 255));
-    /// con.print_color(5, 5, "This text contains a %{pink}pink%{} word");
+    /// con.print_color(5, 5, "This text contains a %{pink}pink%{} word", TextAlign::Left, None);
     /// ```
     pub fn register_color(&mut self, name: &str, value: Color) {
         self.colors.insert(name.to_owned(), value);
@@ -205,9 +207,11 @@ impl Console {
     /// You can then use an empty name to end a color span.
     /// Example
     /// ```
+    /// use doryen_rs::{Console, TextAlign};
+    /// let mut con=Console::new(80,25);
     /// con.register_color("pink", (255, 0, 255, 255));
     /// con.register_color("blue", (0, 0, 255, 255));
-    /// con.print_color(5, 5, "%{blue}This blue text contains a %{pink}pink%{} word");
+    /// con.print_color(5, 5, "%{blue}This blue text contains a %{pink}pink%{} word", TextAlign::Left, None);
     /// ```
     pub fn print_color(
         &mut self,
