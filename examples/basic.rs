@@ -53,14 +53,14 @@ impl Engine for MyRoguelike {
         con.print_color(
             (CONSOLE_WIDTH / 2) as i32,
             (CONSOLE_HEIGHT - 1) as i32,
-            "%{white}Move with %{red}arrows",
+            "#[white]Move with #[red]arrows",
             TextAlign::Center,
             None,
         );
         con.print_color(
             5,
             5,
-            "%{blue}This blue text contains a %{red}red%{} word",
+            "#[blue]This blue text contains a #[red]red#[] word",
             TextAlign::Left,
             None,
         );

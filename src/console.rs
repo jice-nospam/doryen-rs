@@ -78,7 +78,7 @@ impl Console {
     /// use doryen_rs::{Console, TextAlign};
     /// let mut con=Console::new(80,25);
     /// con.register_color("pink", (255, 0, 255, 255));
-    /// con.print_color(5, 5, "This text contains a %{pink}pink%{} word", TextAlign::Left, None);
+    /// con.print_color(5, 5, "This text contains a #[pink]pink#[] word", TextAlign::Left, None);
     /// ```
     pub fn register_color(&mut self, name: &str, value: Color) {
         self.colors.insert(name.to_owned(), value);
@@ -200,7 +200,7 @@ impl Console {
         let h = self.height;
         self.area(0, 0, w, h, fore, back, fillchar);
     }
-    /// write a multi-color string. Foreground color is defined by %{color_name} patterns inside the string.
+    /// write a multi-color string. Foreground color is defined by #[color_name] patterns inside the string.
     /// color_name must have been registered with [`Console::register_color`] before.
     /// Default foreground color is white, at the start of the string.
     /// When an unknown color name is used, the color goes back to its previous value.
@@ -211,7 +211,7 @@ impl Console {
     /// let mut con=Console::new(80,25);
     /// con.register_color("pink", (255, 0, 255, 255));
     /// con.register_color("blue", (0, 0, 255, 255));
-    /// con.print_color(5, 5, "%{blue}This blue text contains a %{pink}pink%{} word", TextAlign::Left, None);
+    /// con.print_color(5, 5, "#[blue]This blue text contains a #[pink]pink#[] word", TextAlign::Left, None);
     /// ```
     pub fn print_color(
         &mut self,
@@ -233,11 +233,11 @@ impl Console {
         let mut spans: Vec<(Color, String)> = Vec::new();
         *text_len = 0;
         let mut fore = *self.color_stack.last().unwrap_or(&(255, 255, 255, 255));
-        for color_span in text.to_owned().split("%{") {
+        for color_span in text.to_owned().split("#[") {
             if color_span.len() == 0 {
                 continue;
             }
-            let mut col_text = color_span.split("}");
+            let mut col_text = color_span.split("]");
             let col_name = col_text.next().unwrap();
             if let Some(text_span) = col_text.next() {
                 if let Some(color) = self.colors.get(col_name) {
