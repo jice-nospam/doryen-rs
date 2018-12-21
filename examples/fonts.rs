@@ -107,6 +107,7 @@ impl Engine for MyRoguelike {
             None,
         );
     }
+    fn resize(&mut self, _api: &mut DoryenApi) {}
 }
 
 impl MyRoguelike {

@@ -15,8 +15,10 @@ impl Engine for PerfTest {
     fn render(&mut self, api: &mut DoryenApi) {
         let fps = api.fps();
         let con = api.con();
-        for y in 0..CONSOLE_HEIGHT as i32 {
-            for x in 0..CONSOLE_WIDTH as i32 {
+        let con_width = con.get_width();
+        let con_height = con.get_height();
+        for y in 0..con_height as i32 {
+            for x in 0..con_width as i32 {
                 let val = self.rnd();
                 con.back(
                     x,
@@ -42,8 +44,8 @@ impl Engine for PerfTest {
             }
         }
         con.rectangle(
-            (CONSOLE_WIDTH / 2 - 10) as i32,
-            (CONSOLE_HEIGHT / 2 - 2) as i32,
+            (con_width / 2 - 10) as i32,
+            (con_height / 2 - 2) as i32,
             20,
             5,
             Some((255, 255, 255, 255)),
@@ -51,13 +53,18 @@ impl Engine for PerfTest {
             Some(' ' as u16),
         );
         con.print(
-            (CONSOLE_WIDTH / 2) as i32,
-            (CONSOLE_HEIGHT / 2) as i32,
+            (con_width / 2) as i32,
+            (con_height / 2) as i32,
             &format!("{} fps", fps),
             TextAlign::Center,
             Some((255, 255, 255, 255)),
             None,
         );
+    }
+    fn resize(&mut self, api: &mut DoryenApi) {
+        let new_width = api.get_screen_size().0 / 8;
+        let new_height = api.get_screen_size().1 / 8;
+        api.con().resize(new_width, new_height);
     }
 }
 

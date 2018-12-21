@@ -59,6 +59,8 @@ pub trait DoryenApi {
     /// * RGB : The top-left pixel's color is transparent. The font cannot have semi-transparent pixels but it can have pure grey pixels.
     /// ![rgb](http://roguecentral.org/~jice/doryen-rs/rgb.png)
     fn set_font_path(&mut self, font_path: &str);
+    /// return the current screen size
+    fn get_screen_size(&self) -> (u32, u32);
 }
 
 struct DoryenApiImpl {
@@ -67,6 +69,7 @@ struct DoryenApiImpl {
     fps: u32,
     average_fps: u32,
     font_path: Option<String>,
+    screen_size: (u32, u32)
 }
 
 impl DoryenApi for DoryenApiImpl {
@@ -84,6 +87,10 @@ impl DoryenApi for DoryenApiImpl {
     }
     fn set_font_path(&mut self, font_path: &str) {
         self.font_path = Some(font_path.to_owned());
+    }
+
+    fn get_screen_size(&self) -> (u32, u32) {
+        self.screen_size
     }
 }
 
@@ -103,6 +110,8 @@ pub trait Engine {
     /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
     /// The framerate is not reliable so don't update time related stuff in this function.
     fn render(&mut self, api: &mut DoryenApi);
+    ///This is called when the screen changes size
+    fn resize(&mut self, api: &mut DoryenApi);
 }
 
 pub struct AppOptions {
@@ -182,14 +191,15 @@ impl App {
             font_loader: FontLoader::new(),
             font,
             program,
-            options,
             api: DoryenApiImpl {
-                input: input,
-                con: con,
+                input,
+                con,
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
+                screen_size: (options.screen_width, options.screen_height)
             },
+            options,
             fps: FPS::new(),
             engine: None,
             font_width: 0,
@@ -231,12 +241,22 @@ impl App {
         );
     }
 
-    fn handle_input(&mut self, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
+    fn handle_input(&mut self, engine: &mut Box<Engine>, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
         self.api.input.on_frame();
         for evt in events.borrow().iter() {
             match evt {
                 &uni_app::AppEvent::Resized(size) => {
                     self.gl.viewport(0, 0, size.0, size.1);
+                    self.api.screen_size = size;
+                    engine.resize(&mut self.api);
+                    self.program.bind(
+                        &self.gl,
+                        &self.api.con,
+                        self.font_width,
+                        self.font_height,
+                        self.char_width,
+                        self.char_height,
+                    );
                 }
                 _ => (),
             }
@@ -272,7 +292,7 @@ impl App {
                     .set_texture(&self.gl, uni_gl::WebGLTexture(self.font.0));
                 font_loaded = true;
             } else {
-                self.handle_input(app.events.clone());
+                self.handle_input(&mut engine, app.events.clone());
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {

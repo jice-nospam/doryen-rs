@@ -24,6 +24,7 @@ impl Engine for MyRoguelike {
         con.print(25, 5, "Φοβερός!", TextAlign::Center, None, None);
         con.print(8, 12, "ça, c'est énorme!", TextAlign::Left, None, None);
     }
+    fn resize(&mut self, _api: &mut DoryenApi) {}
 }
 
 fn main() {

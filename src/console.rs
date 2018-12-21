@@ -71,6 +71,29 @@ impl Console {
             color_stack: Vec::new(),
         }
     }
+    /// resizes the console
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width;
+        self.height = height;
+        let mut pot_width = 1;
+        let mut pot_height = 1;
+        while pot_width < width {
+            pot_width *= 2;
+        }
+        while pot_height < height {
+            pot_height *= 2;
+        }
+        self.pot_height = pot_height;
+        self.pot_width = pot_width;
+        self.back.clear();
+        self.fore.clear();
+        self.ascii.clear();
+        for _ in 0..(pot_width * pot_height) as usize {
+            self.back.push((0, 0, 0, 255));
+            self.fore.push((255, 255, 255, 255));
+            self.ascii.push(' ' as u32);
+        }
+    }
     /// associate a name with a color for this console.
     /// The color name can then be used in [`Console::print_color`]
     /// Example
