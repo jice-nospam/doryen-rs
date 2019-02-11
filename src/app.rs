@@ -168,7 +168,11 @@ impl App {
             fullscreen: options.fullscreen,
         });
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
-        gl.viewport(0, 0, options.screen_width, options.screen_height);
+        gl.viewport(
+            0,
+            0, 
+            options.screen_width * app.hidpi_factor() as u32, 
+            options.screen_height * app.hidpi_factor() as u32);
         gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(uni_gl::BufferBit::Color);
