@@ -3,3 +3,7 @@
 * unicode font from [Yamamushi's asciiproject](https://github.com/yamamushi/theasciiproject/blob/master/data/font.png)
 * [unrust game engine](https://github.com/unrust) by Edwin Cheng
 * terminal fonts from [libtcod project](https://bitbucket.org/libtcod/libtcod)
+
+# contributors
+* Michael Ortmann (TheElec)
+* Daniel Rivas (drivasperez)

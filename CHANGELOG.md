@@ -1,3 +1,7 @@
+# 1.0.1 - TBD
+## fixes
+* fix HiDpi display on Mac
+
 # 1.0.0 - 2019 Feb 1
 ## API breaks
 * `Console.print_color` : replace %{} color marker with #[]

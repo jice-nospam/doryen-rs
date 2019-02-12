@@ -72,3 +72,7 @@ rustup target install wasm32-unknown-unknown
 cargo install cargo-web
 cargo web start --example basic
 ```
+
+# contributions
+
+You can contribute to this library through pull requests. If you do so, please update the CHANGELOG.md and CREDITS.md files. If you provide a new feature, consider adding an example as a tutorial/showcase.
