@@ -69,7 +69,7 @@ struct DoryenApiImpl {
     fps: u32,
     average_fps: u32,
     font_path: Option<String>,
-    screen_size: (u32, u32)
+    screen_size: (u32, u32),
 }
 
 impl DoryenApi for DoryenApiImpl {
@@ -170,9 +170,10 @@ impl App {
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
         gl.viewport(
             0,
-            0, 
-            options.screen_width * app.hidpi_factor() as u32, 
-            options.screen_height * app.hidpi_factor() as u32);
+            0,
+            options.screen_width * app.hidpi_factor() as u32,
+            options.screen_height * app.hidpi_factor() as u32,
+        );
         gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(uni_gl::BufferBit::Color);
@@ -201,7 +202,7 @@ impl App {
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
-                screen_size: (options.screen_width, options.screen_height)
+                screen_size: (options.screen_width, options.screen_height),
             },
             options,
             fps: FPS::new(),
@@ -245,7 +246,11 @@ impl App {
         );
     }
 
-    fn handle_input(&mut self, engine: &mut Box<Engine>, events: Rc<RefCell<Vec<uni_app::AppEvent>>>) {
+    fn handle_input(
+        &mut self,
+        engine: &mut Box<Engine>,
+        events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
+    ) {
         self.api.input.on_frame();
         for evt in events.borrow().iter() {
             match evt {
@@ -282,19 +287,21 @@ impl App {
                 self.font_loader.load_font(&font_path);
                 font_loaded = false;
             }
-            if !font_loaded && self.font_loader.load_font_async() {
-                self.load_font_bytes();
-                self.program.bind(
-                    &self.gl,
-                    &self.api.con,
-                    self.font_width,
-                    self.font_height,
-                    self.char_width,
-                    self.char_height,
-                );
-                self.program
-                    .set_texture(&self.gl, uni_gl::WebGLTexture(self.font.0));
-                font_loaded = true;
+            if !font_loaded {
+                if self.font_loader.load_font_async() {
+                    self.load_font_bytes();
+                    self.program.bind(
+                        &self.gl,
+                        &self.api.con,
+                        self.font_width,
+                        self.font_height,
+                        self.char_width,
+                        self.char_height,
+                    );
+                    self.program
+                        .set_texture(&self.gl, uni_gl::WebGLTexture(self.font.0));
+                    font_loaded = true;
+                }
             } else {
                 self.handle_input(&mut engine, app.events.clone());
                 let mut skipped_frames: i32 = -1;

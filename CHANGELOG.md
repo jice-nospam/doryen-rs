@@ -1,6 +1,7 @@
 # 1.0.1 - TBD
 ## fixes
 * fix HiDpi display on Mac
+* fix panic on start when font is too slow to load
 
 # 1.0.0 - 2019 Feb 1
 ## API breaks
