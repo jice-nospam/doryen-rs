@@ -59,15 +59,15 @@ Check the examples and [documentation](https://docs.rs/doryen-rs) for more infor
 
 # compilation
 
+As of February 18 2019, both native and wasm targets compile on stable channel (rust 1.32.0 / stdweb 0.4.14).
+
 * native compilation
 ```
-rustup default nightly
 cargo run --example basic
 ```
 
 * web compilation
 ```
-rustup default nightly
 rustup target install wasm32-unknown-unknown
 cargo install cargo-web
 cargo web start --example basic
