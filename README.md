@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/jice-nospam/doryen-rs.svg)](https://travis-ci.org/jice-nospam/doryen-rs)
 [![Documentation](https://docs.rs/doryen-rs/badge.svg)](https://docs.rs/doryen-rs)
 [![crates.io](https://meritbadge.herokuapp.com/doryen-rs)](https://crates.io/crates/doryen-rs)
+[![License: MIT](https://img.shields.io/badge/license-MIT-informational.svg)](#license)
 
 Ascii roguelike library in rust with native and wasm support.
 Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
@@ -72,6 +73,10 @@ rustup target install wasm32-unknown-unknown
 cargo install cargo-web
 cargo web start --example basic
 ```
+
+# license
+
+This code is released under the MIT license.
 
 # contributions
 
