@@ -208,8 +208,6 @@ impl Program {
         let pot_height = con.get_pot_height();
         let con_width = con.get_width();
         let con_height = con.get_height();
-        uni_app::App::print(format!("texture : {}x{}   console : {}x{}  font {}x{}",
-            pot_width, pot_height, con_width, con_height, font_width, font_height));
         // TODO textures size should only be power of two
         // let pot_font_width = get_pot_value(font_width);
         // let pot_font_height = get_pot_value(font_height);

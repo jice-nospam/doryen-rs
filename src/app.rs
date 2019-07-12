@@ -187,12 +187,22 @@ impl App {
             uni_gl::BlendMode::OneMinusSrcAlpha,
         );
         let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
-        let input = DoryenInput::new(
-            options.screen_width,
-            options.screen_height,
-            options.console_width,
-            options.console_height,
-        );
+        // TODO this should be handled in uni-app
+        let input = if cfg!(target_arch = "wasm32") {
+            DoryenInput::new(
+                options.screen_width,
+                options.screen_height,
+                options.console_width,
+                options.console_height,
+            )
+        } else {
+            DoryenInput::new(
+                real_screen_width,
+                real_screen_height,
+                options.console_width,
+                options.console_height,
+            )
+        };
         let font = create_texture(&gl);
         Self {
             app: Some(app),
@@ -206,7 +216,7 @@ impl App {
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
-                screen_size: (real_screen_width, real_screen_height),
+                screen_size: (options.screen_width, options.screen_height),
             },
             options,
             fps: FPS::new(),

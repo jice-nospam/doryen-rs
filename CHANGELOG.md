@@ -1,3 +1,8 @@
+# 1.0.2 - XXXX XXX XX
+## fixes
+* fix mouse coordinates on HiDpi screens
+* web : fix #8 black borders on HiDpi screens
+
 # 1.0.1 - 2019 Feb 15
 ## fixes
 * fix HiDpi display on Mac
