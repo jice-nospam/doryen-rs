@@ -8,8 +8,6 @@ documentation = "https://docs.rs/doryen-rs"
 repository = "https://github.com/jice-nospam/doryen-rs"
 keywords = ["roguelike", "console", "opengl", "wasm"]
 
-[workspace]
-
 [dependencies]
 uni-gl = "0.1.*"
 uni-app = "0.1.*"

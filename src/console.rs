@@ -205,7 +205,7 @@ impl Console {
     /// set the character at a specific position (no boundary check)
     pub fn unsafe_ascii(&mut self, x: i32, y: i32, ascii: u16) {
         let off = self.offset(x, y);
-        self.ascii[off] = ascii as u32;
+        self.ascii[off] = u32::from(ascii);
     }
     /// set the character color at a specific position (no boundary check)
     pub fn unsafe_fore(&mut self, x: i32, y: i32, col: Color) {
@@ -246,7 +246,7 @@ impl Console {
     ) {
         let mut cury = y;
         self.color_stack.clear();
-        for line in text.to_owned().split("\n") {
+        for line in text.to_owned().split('\n') {
             self.print_line_color(x, cury, line, align, back);
             cury += 1;
         }
@@ -257,10 +257,10 @@ impl Console {
         *text_len = 0;
         let mut fore = *self.color_stack.last().unwrap_or(&(255, 255, 255, 255));
         for color_span in text.to_owned().split("#[") {
-            if color_span.len() == 0 {
+            if color_span.is_empty() {
                 continue;
             }
-            let mut col_text = color_span.split("]");
+            let mut col_text = color_span.split(']');
             let col_name = col_text.next().unwrap();
             if let Some(text_span) = col_text.next() {
                 if let Some(color) = self.colors.get(col_name) {
@@ -312,7 +312,7 @@ impl Console {
         back: Option<Color>,
     ) {
         let mut cury = y;
-        for line in text.to_owned().split("\n") {
+        for line in text.to_owned().split('\n') {
             self.print_line(x, cury, line, align, fore, back);
             cury += 1;
         }
@@ -399,7 +399,7 @@ impl Console {
             for iy in y.max(0)..down.min(self.height as i32) {
                 let off = iy * self.pot_width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
-                    self.ascii[(off + ix) as usize] = fillchar as u32;
+                    self.ascii[(off + ix) as usize] = u32::from(fillchar);
                 }
             }
         }
@@ -432,7 +432,7 @@ impl Console {
         if self.check_coords(x, y) {
             let off = self.offset(x, y);
             if let Some(ascii) = ascii {
-                self.ascii[off] = ascii as u32;
+                self.ascii[off] = u32::from(ascii);
             }
             if let Some(fore) = fore {
                 self.fore[off] = fore;
@@ -487,56 +487,52 @@ impl Console {
             let off = (y + ysrc) * self.pot_width as i32;
             let doff = (y + ydst) * destination.pot_width as i32;
             for x in 0..wsrc - xsrc {
-                if self.check_coords(xsrc + x, ysrc + y) {
-                    if destination.check_coords(xdst + x, ydst + y) {
-                        let src_idx = (off + x + xsrc) as usize;
-                        let dest_idx = (doff + x + xdst) as usize;
-                        let src_back = self.back[src_idx];
-                        let dst_back = destination.back[dest_idx];
-                        if back_alpha > 0.0 {
-                            let back = self.back[src_idx];
-                            if let Some(key) = key_color {
-                                if key == back {
-                                    continue;
-                                }
+                if self.check_coords(xsrc + x, ysrc + y) && destination.check_coords(xdst + x, ydst + y) {
+                    let src_idx = (off + x + xsrc) as usize;
+                    let dest_idx = (doff + x + xdst) as usize;
+                    let src_back = self.back[src_idx];
+                    let dst_back = destination.back[dest_idx];
+                    if back_alpha > 0.0 {
+                        let back = self.back[src_idx];
+                        if let Some(key) = key_color {
+                            if key == back {
+                                continue;
                             }
-                            destination.back[dest_idx] =
-                                color_blend(&dst_back, &src_back, back_alpha);
                         }
-                        if fore_alpha > 0.0 {
-                            let src_fore = self.fore[src_idx];
-                            let dst_fore = destination.fore[dest_idx];
-                            let src_char = self.ascii[src_idx];
-                            let dst_char = destination.ascii[dest_idx];
-                            let dst_back = destination.back[dest_idx];
-                            if fore_alpha < 1.0 {
-                                if src_char == ' ' as u32 {
-                                    destination.fore[dest_idx] =
-                                        color_blend(&dst_fore, &src_back, back_alpha);
-                                } else if dst_char == ' ' as u32 {
-                                    destination.ascii[dest_idx] = src_char;
-                                    destination.fore[dest_idx] =
-                                        color_blend(&dst_back, &src_fore, fore_alpha);
-                                } else if dst_char == src_char {
-                                    destination.fore[dest_idx] =
-                                        color_blend(&dst_fore, &src_fore, fore_alpha);
-                                } else {
-                                    if fore_alpha < 0.5 {
-                                        destination.fore[dest_idx] =
-                                            color_blend(&dst_fore, &dst_back, fore_alpha * 2.0);
-                                    } else {
-                                        destination.ascii[dest_idx] = src_char;
-                                        destination.fore[dest_idx] = color_blend(
-                                            &dst_back,
-                                            &src_fore,
-                                            (fore_alpha - 0.5) * 2.0,
-                                        );
-                                    }
-                                }
-                            } else {
-                                destination.fore[dest_idx] = src_fore;
+                        destination.back[dest_idx] =
+                            color_blend(&dst_back, &src_back, back_alpha);
+                    }
+                    if fore_alpha > 0.0 {
+                        let src_fore = self.fore[src_idx];
+                        let dst_fore = destination.fore[dest_idx];
+                        let src_char = self.ascii[src_idx];
+                        let dst_char = destination.ascii[dest_idx];
+                        let dst_back = destination.back[dest_idx];
+                        if fore_alpha < 1.0 {
+                            if src_char == ' ' as u32 {
+                                destination.fore[dest_idx] =
+                                    color_blend(&dst_fore, &src_back, back_alpha);
+                            } else if dst_char == ' ' as u32 {
                                 destination.ascii[dest_idx] = src_char;
+                                destination.fore[dest_idx] =
+                                    color_blend(&dst_back, &src_fore, fore_alpha);
+                            } else if dst_char == src_char {
+                                destination.fore[dest_idx] =
+                                    color_blend(&dst_fore, &src_fore, fore_alpha);
+                            } else if fore_alpha < 0.5 {
+                                destination.fore[dest_idx] =
+                                    color_blend(&dst_fore, &dst_back, fore_alpha * 2.0);
+                            } else {
+                                destination.ascii[dest_idx] = src_char;
+                                destination.fore[dest_idx] = color_blend(
+                                    &dst_back,
+                                    &src_fore,
+                                    (fore_alpha - 0.5) * 2.0,
+                                );
                             }
+                        } else {
+                            destination.fore[dest_idx] = src_fore;
+                            destination.ascii[dest_idx] = src_char;
                         }
                     }
                 }

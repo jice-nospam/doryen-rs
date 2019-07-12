@@ -33,9 +33,9 @@ impl Image {
             self.intialize_image(&buf);
             return true;
         }
-        return false;
+        false
     }
-    fn intialize_image(&mut self, buf: &Vec<u8>) {
+    fn intialize_image(&mut self, buf: &[u8]) {
         self.img = Some(image::load_from_memory(&buf).unwrap().to_rgba());
     }
     /// If the image has already been loaded, return its size, else return None
@@ -45,7 +45,7 @@ impl Image {
                 return Some((img.width(), img.height()));
             }
         }
-        return None;
+        None
     }
     /// blit an image on a console
     ///
@@ -300,16 +300,14 @@ impl Image {
                     // single color
                     con.unsafe_back(conx, cony, back);
                     con.unsafe_ascii(conx, cony, ascii as u16);
+                } else if ascii >= 0 {
+                    con.unsafe_back(conx, cony, back);
+                    con.unsafe_fore(conx, cony, front.unwrap());
+                    con.unsafe_ascii(conx, cony, ascii as u16);
                 } else {
-                    if ascii >= 0 {
-                        con.unsafe_back(conx, cony, back);
-                        con.unsafe_fore(conx, cony, front.unwrap());
-                        con.unsafe_ascii(conx, cony, ascii as u16);
-                    } else {
-                        con.unsafe_back(conx, cony, front.unwrap());
-                        con.unsafe_fore(conx, cony, back);
-                        con.unsafe_ascii(conx, cony, (-ascii) as u16);
-                    }
+                    con.unsafe_back(conx, cony, front.unwrap());
+                    con.unsafe_fore(conx, cony, back);
+                    con.unsafe_ascii(conx, cony, (-ascii) as u16);
                 }
                 cy += 2;
             }
@@ -397,19 +395,17 @@ fn compute_pattern(
                     tmp_front = desired[i];
                     flag = 1 << (i - 1);
                 }
+            } else if dist1i <= dist01 {
+                // merge 1 and i
+                tmp_front = color_blend(&desired[i], &tmp_front, weight[1] / (1.0 + weight[1]));
+                weight[1] += 1.0;
+                flag |= 1 << (i - 1);
             } else {
-                if dist1i <= dist01 {
-                    // merge 1 and i
-                    tmp_front = color_blend(&desired[i], &tmp_front, weight[1] / (1.0 + weight[1]));
-                    weight[1] += 1.0;
-                    flag |= 1 << (i - 1);
-                } else {
-                    // merge 0 and 1
-                    *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
-                    weight[0] += 1.0;
-                    tmp_front = desired[i];
-                    flag = 1 << (i - 1);
-                }
+                // merge 0 and 1
+                *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
+                weight[0] += 1.0;
+                tmp_front = desired[i];
+                flag = 1 << (i - 1);
             }
         }
         i += 1;

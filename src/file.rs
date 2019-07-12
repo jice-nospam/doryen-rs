@@ -27,10 +27,10 @@ impl FileLoader {
                             self.files_to_load
                                 .insert(self.seq, AsyncFile(path.to_owned(), f, Some(buf)));
                             self.seq += 1;
-                            return Ok(self.seq - 1);
+                            Ok(self.seq - 1)
                         }
                         Err(e) => {
-                            return Err(format!("Could not read file {} : {}\n", path, e));
+                            Err(format!("Could not read file {} : {}\n", path, e))
                         }
                     }
                 } else {
@@ -38,11 +38,11 @@ impl FileLoader {
                     self.files_to_load
                         .insert(self.seq, AsyncFile(path.to_owned(), f, None));
                     self.seq += 1;
-                    return Ok(self.seq - 1);
+                    Ok(self.seq - 1)
                 }
             }
             Err(e) => {
-                return Err(format!("Could not open file {} : {}\n", path, e));
+                Err(format!("Could not open file {} : {}\n", path, e))
             }
         }
     }
@@ -58,7 +58,7 @@ impl FileLoader {
                 }
             }
         }
-        return true;
+        true
     }
 
     pub fn is_file_ready(&mut self, id: usize) -> bool {

@@ -67,10 +67,10 @@ impl DoryenInput {
             self.kdown.insert(code.to_owned(), true);
         }
     }
-    fn on_key_up(&mut self, code: &String) {
-        self.kpressed.insert(code.clone(), false);
-        self.kdown.insert(code.clone(), false);
-        self.kreleased.insert(code.clone(), true);
+    fn on_key_up(&mut self, code: &str) {
+        self.kpressed.insert(code.to_string(), false);
+        self.kdown.insert(code.to_string(), false);
+        self.kreleased.insert(code.to_string(), true);
     }
     fn on_mouse_down(&mut self, button: usize) {
         if !self.mouse_button(button) {
@@ -91,26 +91,26 @@ impl DoryenInput {
     }
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
-            &AppEvent::KeyDown(ref key) => {
+            AppEvent::KeyDown(ref key) => {
                 self.on_key_down(&key.code);
             }
-            &AppEvent::KeyUp(ref key) => {
+            AppEvent::KeyUp(ref key) => {
                 self.on_key_up(&key.code);
             }
-            &AppEvent::MousePos(ref pos) => {
+            AppEvent::MousePos(ref pos) => {
                 self.mpos = (
                     pos.0 as f32 / self.screen_size.0 * self.con_size.0,
                     pos.1 as f32 / self.screen_size.1 * self.con_size.1,
                 );
             }
-            &AppEvent::MouseDown(ref mouse) => {
+            AppEvent::MouseDown(ref mouse) => {
                 self.on_mouse_down(mouse.button);
             }
-            &AppEvent::MouseUp(ref mouse) => {
+            AppEvent::MouseUp(ref mouse) => {
                 self.on_mouse_up(mouse.button);
             }
-            &AppEvent::Resized(size) => {
-                self.resize(size);
+            AppEvent::Resized(size) => {
+                self.resize(*size);
             }
         }
     }
@@ -129,7 +129,7 @@ impl InputApi for DoryenInput {
     fn key_pressed(&mut self, key: &str) -> bool {
         match self.kpressed.get(key) {
             Some(&true) => {
-                return true;
+                true
             }
             _ => false,
         }
@@ -137,7 +137,7 @@ impl InputApi for DoryenInput {
     fn key_released(&mut self, key: &str) -> bool {
         match self.kreleased.get(key) {
             Some(&true) => {
-                return true;
+                true
             }
             _ => false,
         }
@@ -151,7 +151,7 @@ impl InputApi for DoryenInput {
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
         match self.mpressed.get(&num) {
             Some(&true) => {
-                return true;
+                true
             }
             _ => false,
         }
@@ -159,7 +159,7 @@ impl InputApi for DoryenInput {
     fn mouse_button_released(&mut self, num: usize) -> bool {
         match self.mreleased.get(&num) {
             Some(&true) => {
-                return true;
+                true
             }
             _ => false,
         }

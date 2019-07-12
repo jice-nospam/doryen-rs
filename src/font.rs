@@ -21,11 +21,11 @@ impl FontLoader {
         }
     }
     pub fn load_font(&mut self, path: &str) {
-        let start = path.rfind("_").unwrap_or(0);
-        let end = path.rfind(".").unwrap_or(0);
+        let start = path.rfind('_').unwrap_or(0);
+        let end = path.rfind('.').unwrap_or(0);
         if start > 0 && end > 0 {
             let subpath = path[start + 1..end].to_owned();
-            let charsize: Vec<&str> = subpath.split("x").collect();
+            let charsize: Vec<&str> = subpath.split('x').collect();
             self.char_width = charsize[0].parse::<u32>().unwrap();
             self.char_height = charsize[1].parse::<u32>().unwrap();
         } else {
@@ -47,10 +47,10 @@ impl FontLoader {
             self.load_font_bytes(&buf);
             return true;
         }
-        return false;
+        false
     }
 
-    fn load_font_bytes(&mut self, buf: &Vec<u8>) {
+    fn load_font_bytes(&mut self, buf: &[u8]) {
         let mut img = image::load_from_memory(buf).unwrap().to_rgba();
         self.process_image(&mut img);
         self.img = Some(img);

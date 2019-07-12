@@ -10,8 +10,8 @@ use input::{DoryenInput, InputApi};
 use program::{set_texture_params, Program};
 
 // shaders
-const DORYEN_VS: &'static str = include_str!("doryen_vs.glsl");
-const DORYEN_FS: &'static str = include_str!("doryen_fs.glsl");
+const DORYEN_VS: &str = include_str!("doryen_vs.glsl");
+const DORYEN_FS: &str = include_str!("doryen_fs.glsl");
 
 // fps
 const MAX_FRAMESKIP: i32 = 5;
@@ -267,21 +267,18 @@ impl App {
     ) {
         self.api.input.on_frame();
         for evt in events.borrow().iter() {
-            match evt {
-                &uni_app::AppEvent::Resized(size) => {
-                    self.gl.viewport(0, 0, size.0, size.1);
-                    self.api.screen_size = size;
-                    engine.resize(&mut self.api);
-                    self.program.bind(
-                        &self.gl,
-                        &self.api.con,
-                        self.font_width,
-                        self.font_height,
-                        self.char_width,
-                        self.char_height,
-                    );
-                }
-                _ => (),
+            if let uni_app::AppEvent::Resized(size) = evt {
+                self.gl.viewport(0, 0, size.0, size.1);
+                self.api.screen_size = *size;
+                engine.resize(&mut self.api);
+                self.program.bind(
+                    &self.gl,
+                    &self.api.con,
+                    self.font_width,
+                    self.font_height,
+                    self.char_width,
+                    self.char_height,
+                );
             }
             self.api.input.on_event(&evt);
         }
@@ -359,16 +356,14 @@ struct FPS {
 impl FPS {
     pub fn new() -> FPS {
         let now = uni_app::now();
-        let fps = FPS {
+        FPS {
             counter: 0,
             total_frames: 0,
             start: now,
             last: now,
             fps: 0,
             average: 0,
-        };
-
-        fps
+        }
     }
     pub fn fps(&self) -> u32 {
         self.fps
