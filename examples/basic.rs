@@ -7,6 +7,7 @@ const CONSOLE_HEIGHT: u32 = 45;
 
 struct MyRoguelike {
     player_pos: (i32, i32),
+    mouse_pos: (f32, f32),
 }
 
 impl Engine for MyRoguelike {
@@ -27,6 +28,7 @@ impl Engine for MyRoguelike {
         } else if input.key("ArrowDown") {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
+        self.mouse_pos = input.mouse_pos();
     }
     fn render(&mut self, api: &mut DoryenApi) {
         let con = api.con();
@@ -58,6 +60,13 @@ impl Engine for MyRoguelike {
             None,
         );
         con.print_color(
+            (CONSOLE_WIDTH/2) as i32,
+            (CONSOLE_HEIGHT -3) as i32,
+            &format!("#[white]Mouse coordinates: #[red]{}, {}",self.mouse_pos.0,self.mouse_pos.1),
+            TextAlign::Center,
+            None,
+        );
+        con.print_color(
             5,
             5,
             "#[blue]This blue text contains a #[red]red#[] word",
@@ -72,6 +81,7 @@ impl MyRoguelike {
     pub fn new() -> Self {
         Self {
             player_pos: ((CONSOLE_WIDTH / 2) as i32, (CONSOLE_HEIGHT / 2) as i32),
+            mouse_pos: (0.0, 0.0),
         }
     }
 }
