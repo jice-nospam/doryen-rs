@@ -167,12 +167,16 @@ impl App {
             resizable: options.resizable,
             fullscreen: options.fullscreen,
         });
+        let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
+        let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
+        uni_app::App::print(format!("Screen size {} x {} GL viewport : {} x {}  hidpi factor : {}",
+            options.screen_width, options.screen_height, real_screen_width, real_screen_height, app.hidpi_factor()));
         gl.viewport(
             0,
             0,
-            options.screen_width * app.hidpi_factor() as u32,
-            options.screen_height * app.hidpi_factor() as u32,
+            real_screen_width,
+            real_screen_height,
         );
         gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
@@ -202,7 +206,7 @@ impl App {
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
-                screen_size: (options.screen_width, options.screen_height),
+                screen_size: (real_screen_width, real_screen_height),
             },
             options,
             fps: FPS::new(),
