@@ -63,8 +63,8 @@ impl Image {
             let miny = y.max(0);
             let maxx = (x + width).min(con.get_width() as i32);
             let maxy = (y + height).min(con.get_height() as i32);
-            let mut offx = if x < 0 { -x } else { 0 };
-            let mut offy = if y < 0 { -y } else { 0 };
+            let offx = if x < 0 { -x } else { 0 };
+            let offy = if y < 0 { -y } else { 0 };
             let con_width = con.get_pot_width();
             let back = con.borrow_mut_background();
             for cx in minx..maxx {

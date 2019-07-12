@@ -494,7 +494,7 @@ impl Console {
                         let src_back = self.back[src_idx];
                         let dst_back = destination.back[dest_idx];
                         if back_alpha > 0.0 {
-                            let mut back = self.back[src_idx];
+                            let back = self.back[src_idx];
                             if let Some(key) = key_color {
                                 if key == back {
                                     continue;
