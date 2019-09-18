@@ -11,12 +11,12 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, api: &mut DoryenApi) {
+    fn init(&mut self, api: &mut dyn DoryenApi) {
         api.con().register_color("white", (255, 255, 255, 255));
         api.con().register_color("red", (255, 92, 92, 255));
         api.con().register_color("blue", (192, 192, 255, 255));
     }
-    fn update(&mut self, api: &mut DoryenApi) {
+    fn update(&mut self, api: &mut dyn DoryenApi) {
         let input = api.input();
         if input.key("ArrowLeft") {
             self.player_pos.0 = (self.player_pos.0 - 1).max(1);
@@ -30,7 +30,7 @@ impl Engine for MyRoguelike {
         }
         self.mouse_pos = input.mouse_pos();
     }
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.rectangle(
             0,
@@ -60,9 +60,12 @@ impl Engine for MyRoguelike {
             None,
         );
         con.print_color(
-            (CONSOLE_WIDTH/2) as i32,
-            (CONSOLE_HEIGHT -3) as i32,
-            &format!("#[white]Mouse coordinates: #[red]{}, {}",self.mouse_pos.0,self.mouse_pos.1),
+            (CONSOLE_WIDTH / 2) as i32,
+            (CONSOLE_HEIGHT - 3) as i32,
+            &format!(
+                "#[white]Mouse coordinates: #[red]{}, {}",
+                self.mouse_pos.0, self.mouse_pos.1
+            ),
             TextAlign::Center,
             None,
         );
@@ -74,7 +77,7 @@ impl Engine for MyRoguelike {
             None,
         );
     }
-    fn resize(&mut self, _api: &mut DoryenApi) {}
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

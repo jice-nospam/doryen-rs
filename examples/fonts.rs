@@ -33,8 +33,8 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, api: &mut dyn DoryenApi) {
         let mut font_path = None;
         {
             let input = api.input();
@@ -51,7 +51,7 @@ impl Engine for MyRoguelike {
             api.set_font_path(font_path);
         }
     }
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.rectangle(
             0,
@@ -107,7 +107,7 @@ impl Engine for MyRoguelike {
             None,
         );
     }
-    fn resize(&mut self, _api: &mut DoryenApi) {}
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

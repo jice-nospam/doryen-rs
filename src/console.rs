@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use color::{color_blend, Color};
+use crate::color::{color_blend, Color};
 
 // rectangle drawing kit
 pub const CHAR_CORNER_NW: u16 = 218;
@@ -487,7 +487,9 @@ impl Console {
             let off = (y + ysrc) * self.pot_width as i32;
             let doff = (y + ydst) * destination.pot_width as i32;
             for x in 0..wsrc - xsrc {
-                if self.check_coords(xsrc + x, ysrc + y) && destination.check_coords(xdst + x, ydst + y) {
+                if self.check_coords(xsrc + x, ysrc + y)
+                    && destination.check_coords(xdst + x, ydst + y)
+                {
                     let src_idx = (off + x + xsrc) as usize;
                     let dest_idx = (doff + x + xdst) as usize;
                     let src_back = self.back[src_idx];
@@ -499,8 +501,7 @@ impl Console {
                                 continue;
                             }
                         }
-                        destination.back[dest_idx] =
-                            color_blend(&dst_back, &src_back, back_alpha);
+                        destination.back[dest_idx] = color_blend(dst_back, src_back, back_alpha);
                     }
                     if fore_alpha > 0.0 {
                         let src_fore = self.fore[src_idx];
@@ -511,24 +512,21 @@ impl Console {
                         if fore_alpha < 1.0 {
                             if src_char == ' ' as u32 {
                                 destination.fore[dest_idx] =
-                                    color_blend(&dst_fore, &src_back, back_alpha);
+                                    color_blend(dst_fore, src_back, back_alpha);
                             } else if dst_char == ' ' as u32 {
                                 destination.ascii[dest_idx] = src_char;
                                 destination.fore[dest_idx] =
-                                    color_blend(&dst_back, &src_fore, fore_alpha);
+                                    color_blend(dst_back, src_fore, fore_alpha);
                             } else if dst_char == src_char {
                                 destination.fore[dest_idx] =
-                                    color_blend(&dst_fore, &src_fore, fore_alpha);
+                                    color_blend(dst_fore, src_fore, fore_alpha);
                             } else if fore_alpha < 0.5 {
                                 destination.fore[dest_idx] =
-                                    color_blend(&dst_fore, &dst_back, fore_alpha * 2.0);
+                                    color_blend(dst_fore, dst_back, fore_alpha * 2.0);
                             } else {
                                 destination.ascii[dest_idx] = src_char;
-                                destination.fore[dest_idx] = color_blend(
-                                    &dst_back,
-                                    &src_fore,
-                                    (fore_alpha - 0.5) * 2.0,
-                                );
+                                destination.fore[dest_idx] =
+                                    color_blend(dst_back, src_fore, (fore_alpha - 0.5) * 2.0);
                             }
                         } else {
                             destination.fore[dest_idx] = src_fore;

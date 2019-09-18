@@ -12,12 +12,12 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, _api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) {
         self.angle += 0.01;
         self.scale_time += 0.01;
     }
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         let scale = self.scale_time.cos();
         con.clear(None, Some((0, 0, 0, 255)), None);
@@ -31,7 +31,7 @@ impl Engine for MyRoguelike {
             None,
         );
     }
-    fn resize(&mut self, _api: &mut DoryenApi) {}
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

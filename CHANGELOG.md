@@ -1,7 +1,12 @@
-# 1.0.2 - XXXX XXX XX
+# 1.1.0 - 2019 Sep 18
 ## fixes
 * fix mouse coordinates on HiDpi screens
 * web : fix #8 black borders on HiDpi screens
+## API breaks
+* `Image.is_loaded` : renamed to `Image.try_load` (see https://rust-lang.github.io/rust-clippy/master/index.html#wrong_self_convention)
+* `Image.get_size` : renamed to `Image.try_get_size`
+* `FileLoader.is_file_ready` : renamed to `FileLoader.check_file_ready`
+* `Color` parameter in `color_blend` and `color_dist` are now passed by value (see https://rust-lang.github.io/rust-clippy/master/index.html#trivially_copy_pass_by_ref)
 
 # 1.0.1 - 2019 Feb 15
 ## fixes

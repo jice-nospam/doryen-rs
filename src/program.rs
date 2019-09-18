@@ -137,7 +137,8 @@ impl Program {
             (DoryenUniforms::FontCoef, "uFontCoef"),
             (DoryenUniforms::TermCoef, "uTermCoef"),
             (DoryenUniforms::TermSize, "uTermSize"),
-        ].iter()
+        ]
+        .iter()
         {
             uniform_locations.insert(
                 uniform.0,

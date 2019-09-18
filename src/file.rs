@@ -5,6 +5,7 @@ use uni_app;
 
 struct AsyncFile(String, uni_app::fs::File, Option<Vec<u8>>);
 
+#[derive(Default)]
 pub struct FileLoader {
     files_to_load: HashMap<usize, AsyncFile>,
     seq: usize,
@@ -12,10 +13,7 @@ pub struct FileLoader {
 
 impl FileLoader {
     pub fn new() -> Self {
-        Self {
-            files_to_load: HashMap::new(),
-            seq: 0,
-        }
+        Default::default()
     }
     pub fn load_file(&mut self, path: &str) -> Result<usize, String> {
         uni_app::App::print(format!("loading file {}\n", path));
@@ -29,9 +27,7 @@ impl FileLoader {
                             self.seq += 1;
                             Ok(self.seq - 1)
                         }
-                        Err(e) => {
-                            Err(format!("Could not read file {} : {}\n", path, e))
-                        }
+                        Err(e) => Err(format!("Could not read file {} : {}\n", path, e)),
                     }
                 } else {
                     uni_app::App::print(format!("loading async file {}\n", path));
@@ -41,9 +37,7 @@ impl FileLoader {
                     Ok(self.seq - 1)
                 }
             }
-            Err(e) => {
-                Err(format!("Could not open file {} : {}\n", path, e))
-            }
+            Err(e) => Err(format!("Could not open file {} : {}\n", path, e)),
         }
     }
 
@@ -61,7 +55,7 @@ impl FileLoader {
         true
     }
 
-    pub fn is_file_ready(&mut self, id: usize) -> bool {
+    pub fn check_file_ready(&mut self, id: usize) -> bool {
         self.load_file_async();
         if let Some(f) = self.files_to_load.get(&id) {
             return f.2.is_some();

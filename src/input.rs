@@ -128,17 +128,13 @@ impl InputApi for DoryenInput {
     }
     fn key_pressed(&mut self, key: &str) -> bool {
         match self.kpressed.get(key) {
-            Some(&true) => {
-                true
-            }
+            Some(&true) => true,
             _ => false,
         }
     }
     fn key_released(&mut self, key: &str) -> bool {
         match self.kreleased.get(key) {
-            Some(&true) => {
-                true
-            }
+            Some(&true) => true,
             _ => false,
         }
     }
@@ -150,17 +146,13 @@ impl InputApi for DoryenInput {
     }
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
         match self.mpressed.get(&num) {
-            Some(&true) => {
-                true
-            }
+            Some(&true) => true,
             _ => false,
         }
     }
     fn mouse_button_released(&mut self, num: usize) -> bool {
         match self.mreleased.get(&num) {
-            Some(&true) => {
-                true
-            }
+            Some(&true) => true,
             _ => false,
         }
     }

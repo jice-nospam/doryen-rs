@@ -10,9 +10,9 @@ struct PerfTest {
 }
 
 impl Engine for PerfTest {
-    fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, _api: &mut DoryenApi) {}
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) {}
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let fps = api.fps();
         let con = api.con();
         let con_width = con.get_width();
@@ -61,7 +61,7 @@ impl Engine for PerfTest {
             None,
         );
     }
-    fn resize(&mut self, api: &mut DoryenApi) {
+    fn resize(&mut self, api: &mut dyn DoryenApi) {
         let new_width = api.get_screen_size().0 / 8;
         let new_height = api.get_screen_size().1 / 8;
         api.con().resize(new_width, new_height);

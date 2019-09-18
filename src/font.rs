@@ -1,4 +1,4 @@
-use file::FileLoader;
+use crate::file::FileLoader;
 use image;
 use uni_app;
 
@@ -42,7 +42,7 @@ impl FontLoader {
         if self.img.is_some() {
             return true;
         }
-        if self.loader.is_file_ready(self.id) {
+        if self.loader.check_file_ready(self.id) {
             let buf = self.loader.get_file_content(self.id);
             self.load_font_bytes(&buf);
             return true;

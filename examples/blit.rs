@@ -32,8 +32,8 @@ fn move_con(pos: &mut (i32, i32), spd: &mut (i32, i32), size: (i32, i32)) {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, _api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) {
         if self.step == 0 {
             move_con(
                 &mut self.c1_pos,
@@ -49,7 +49,7 @@ impl Engine for MyRoguelike {
         self.alpha = (self.alpha + 0.01) % 1.0;
         self.step = (self.step + 1) % 10;
     }
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.clear(Some((0, 0, 0, 255)), None, Some(' ' as u16));
         for x in 0..CONSOLE_WIDTH as i32 {
@@ -91,7 +91,7 @@ impl Engine for MyRoguelike {
             Some((0, 0, 0, 255)),
         );
     }
-    fn resize(&mut self, _api: &mut DoryenApi) {}
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

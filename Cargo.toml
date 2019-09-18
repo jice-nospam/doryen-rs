@@ -1,9 +1,10 @@
 [package]
 name = "doryen-rs"
-version = "1.0.2"
+version = "1.1.0"
 authors = ["jice <jice.nospam@gmail.com>"]
 description = "Pure rust OpenGL accelerated roguelike console API with native/wasm support"
 license = "MIT"
+edition = "2018"
 documentation = "https://docs.rs/doryen-rs"
 repository = "https://github.com/jice-nospam/doryen-rs"
 keywords = ["roguelike", "console", "opengl", "wasm"]

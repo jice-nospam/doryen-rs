@@ -1,6 +1,6 @@
-use color::{color_blend, color_dist, Color};
-use console::*;
-use file::FileLoader;
+use crate::color::{color_blend, color_dist, Color};
+use crate::console::*;
+use crate::file::FileLoader;
 use image;
 
 /// An easy way to load PNG images and blit them on the console
@@ -23,12 +23,12 @@ impl Image {
     }
     /// Check if the image has been loaded.
     /// Since there's no background thread doing the work for you, you have to call some method on image for it to actually load.
-    /// Use either [`Image::is_loaded`], [`Image::get_size`], [`Image::blit`] or [`Image::blit_ex`] to run the loading code.
-    pub fn is_loaded(&mut self) -> bool {
+    /// Use either [`Image::try_load`], [`Image::get_size`], [`Image::blit`] or [`Image::blit_ex`] to run the loading code.
+    pub fn try_load(&mut self) -> bool {
         if self.img.is_some() {
             return true;
         }
-        if self.file_loader.is_file_ready(0) {
+        if self.file_loader.check_file_ready(0) {
             let buf = self.file_loader.get_file_content(0);
             self.intialize_image(&buf);
             return true;
@@ -39,8 +39,8 @@ impl Image {
         self.img = Some(image::load_from_memory(&buf).unwrap().to_rgba());
     }
     /// If the image has already been loaded, return its size, else return None
-    pub fn get_size(&mut self) -> Option<(u32, u32)> {
-        if self.is_loaded() {
+    pub fn try_get_size(&mut self) -> Option<(u32, u32)> {
+        if self.try_load() {
             if let Some(ref img) = self.img {
                 return Some((img.width(), img.height()));
             }
@@ -53,7 +53,7 @@ impl Image {
     ///
     /// image pixels using the transparent color will be ignored
     pub fn blit(&mut self, con: &mut Console, x: i32, y: i32, transparent: Option<Color>) {
-        if !self.is_loaded() {
+        if !self.try_load() {
             return;
         }
         if let Some(ref img) = self.img {
@@ -99,10 +99,10 @@ impl Image {
         angle: f32,
         transparent: Option<Color>,
     ) {
-        if !self.is_loaded() || scalex == 0.0 || scaley == 0.0 {
+        if !self.try_load() || scalex == 0.0 || scaley == 0.0 {
             return;
         }
-        let size = self.get_size().unwrap();
+        let size = self.try_get_size().unwrap();
         let rx = x - size.0 as f32 * 0.5;
         let ry = y - size.1 as f32 * 0.5;
         if scalex == 1.0 && scaley == 1.0 && angle == 0.0 && rx.floor() == rx && ry.floor() == ry {
@@ -201,7 +201,7 @@ impl Image {
         h: Option<i32>,
         transparent: Option<Color>,
     ) {
-        if !self.is_loaded() {
+        if !self.try_load() {
             return;
         }
         if let Some(ref img) = self.img {
@@ -336,11 +336,11 @@ fn compute_pattern(
     // adapted from Jeff Lait's code posted on r.g.r.d
     let mut flag = 0;
     /*
-		pixels have following flag values :
-			X 1
-			2 4
-		flag indicates which pixels uses foreground color (top left pixel always uses foreground color except if all pixels have the same color)
-	*/
+        pixels have following flag values :
+            X 1
+            2 4
+        flag indicates which pixels uses foreground color (top left pixel always uses foreground color except if all pixels have the same color)
+    */
     let mut weight: [f32; 2] = [0.0, 0.0];
     // First colour trivial.
     *back = desired[0];
@@ -380,29 +380,29 @@ fn compute_pattern(
         } else {
             // Bah, too many colours,
             // merge the two nearest
-            let dist0i = color_dist(&desired[i], back);
-            let dist1i = color_dist(&desired[i], &tmp_front);
-            let dist01 = color_dist(back, &tmp_front);
+            let dist0i = color_dist(desired[i], *back);
+            let dist1i = color_dist(desired[i], tmp_front);
+            let dist01 = color_dist(*back, tmp_front);
             if dist0i < dist1i {
                 if dist0i <= dist01 {
                     // merge 0 and i
-                    *back = color_blend(&desired[i], back, weight[0] / (1.0 + weight[0]));
+                    *back = color_blend(desired[i], *back, weight[0] / (1.0 + weight[0]));
                     weight[0] += 1.0;
                 } else {
                     // merge 0 and 1
-                    *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
+                    *back = color_blend(*back, tmp_front, weight[1] / (weight[0] + weight[1]));
                     weight[0] += 1.0;
                     tmp_front = desired[i];
                     flag = 1 << (i - 1);
                 }
             } else if dist1i <= dist01 {
                 // merge 1 and i
-                tmp_front = color_blend(&desired[i], &tmp_front, weight[1] / (1.0 + weight[1]));
+                tmp_front = color_blend(desired[i], tmp_front, weight[1] / (1.0 + weight[1]));
                 weight[1] += 1.0;
                 flag |= 1 << (i - 1);
             } else {
                 // merge 0 and 1
-                *back = color_blend(back, &tmp_front, weight[1] / (weight[0] + weight[1]));
+                *back = color_blend(*back, tmp_front, weight[1] / (weight[0] + weight[1]));
                 weight[0] += 1.0;
                 tmp_front = desired[i];
                 flag = 1 << (i - 1);

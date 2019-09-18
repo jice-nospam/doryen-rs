@@ -8,11 +8,9 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut DoryenApi) {
-    }
-    fn update(&mut self, _api: &mut DoryenApi) {
-    }
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) {}
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.rectangle(
             0,
@@ -35,13 +33,13 @@ impl Engine for MyRoguelike {
         con.print(
             (self.width / 2) as i32,
             (self.height / 2) as i32,
-            &format!("{} x {}",self.width,self.height),
+            &format!("{} x {}", self.width, self.height),
             TextAlign::Center,
             None,
             None,
         );
     }
-    fn resize(&mut self, api: &mut DoryenApi) {
+    fn resize(&mut self, api: &mut dyn DoryenApi) {
         self.width = api.get_screen_size().0 / 8;
         self.height = api.get_screen_size().1 / 8;
         api.con().resize(self.width, self.height);

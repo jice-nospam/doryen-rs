@@ -4,10 +4,10 @@ use std::rc::Rc;
 use uni_app;
 use uni_gl;
 
-use console::Console;
-use font::FontLoader;
-use input::{DoryenInput, InputApi};
-use program::{set_texture_params, Program};
+use crate::console::Console;
+use crate::font::FontLoader;
+use crate::input::{DoryenInput, InputApi};
+use crate::program::{set_texture_params, Program};
 
 // shaders
 const DORYEN_VS: &str = include_str!("doryen_vs.glsl");
@@ -23,7 +23,7 @@ pub trait DoryenApi {
     /// return the root console that you can use to draw things on the screen
     fn con(&mut self) -> &mut Console;
     /// return the input API to check user mouse and keyboard input
-    fn input(&mut self) -> &mut InputApi;
+    fn input(&mut self) -> &mut dyn InputApi;
     /// return the current framerate
     fn fps(&self) -> u32;
     /// return the average framerate since the start of the game
@@ -76,7 +76,7 @@ impl DoryenApi for DoryenApiImpl {
     fn con(&mut self) -> &mut Console {
         &mut self.con
     }
-    fn input(&mut self) -> &mut InputApi {
+    fn input(&mut self) -> &mut dyn InputApi {
         &mut self.input
     }
     fn fps(&self) -> u32 {
@@ -104,14 +104,14 @@ impl DoryenApiImpl {
 /// See [`App::set_engine`]
 pub trait Engine {
     /// Called before the first game loop for one time initialization
-    fn init(&mut self, _api: &mut DoryenApi) {}
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
     /// This is called 60 times per second and is independant of the framerate. Put your world update logic in there.
-    fn update(&mut self, api: &mut DoryenApi);
+    fn update(&mut self, api: &mut dyn DoryenApi);
     /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
     /// The framerate is not reliable so don't update time related stuff in this function.
-    fn render(&mut self, api: &mut DoryenApi);
+    fn render(&mut self, api: &mut dyn DoryenApi);
     ///This is called when the screen changes size
-    fn resize(&mut self, api: &mut DoryenApi);
+    fn resize(&mut self, api: &mut dyn DoryenApi);
 }
 
 pub struct AppOptions {
@@ -148,7 +148,7 @@ pub struct App {
     options: AppOptions,
     fps: FPS,
     api: DoryenApiImpl,
-    engine: Option<Box<Engine>>,
+    engine: Option<Box<dyn Engine>>,
     font_width: u32,
     font_height: u32,
     char_width: u32,
@@ -170,14 +170,15 @@ impl App {
         let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
         let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
-        uni_app::App::print(format!("Screen size {} x {} GL viewport : {} x {}  hidpi factor : {}",
-            options.screen_width, options.screen_height, real_screen_width, real_screen_height, app.hidpi_factor()));
-        gl.viewport(
-            0,
-            0,
+        uni_app::App::print(format!(
+            "Screen size {} x {} GL viewport : {} x {}  hidpi factor : {}\n",
+            options.screen_width,
+            options.screen_height,
             real_screen_width,
             real_screen_height,
-        );
+            app.hidpi_factor()
+        ));
+        gl.viewport(0, 0, real_screen_width, real_screen_height);
         gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(uni_gl::BufferBit::Color);
@@ -227,7 +228,7 @@ impl App {
             char_height: 0,
         }
     }
-    pub fn set_engine(&mut self, engine: Box<Engine>) {
+    pub fn set_engine(&mut self, engine: Box<dyn Engine>) {
         self.engine = Some(engine);
     }
 
@@ -262,7 +263,7 @@ impl App {
 
     fn handle_input(
         &mut self,
-        engine: &mut Box<Engine>,
+        engine: &mut Box<dyn Engine>,
         events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
     ) {
         self.api.input.on_frame();

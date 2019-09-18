@@ -10,9 +10,9 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut DoryenApi) {}
-    fn update(&mut self, _api: &mut DoryenApi) {}
-    fn render(&mut self, api: &mut DoryenApi) {
+    fn init(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) {}
+    fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.clear(None, Some((0, 0, 0, 255)), None);
         self.skull.blit_2x(con, 23, 0, 0, 0, None, None, None);
@@ -25,7 +25,7 @@ impl Engine for MyRoguelike {
             None,
         );
     }
-    fn resize(&mut self, _api: &mut DoryenApi) {}
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {
