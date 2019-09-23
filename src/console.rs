@@ -252,6 +252,34 @@ impl Console {
         }
     }
 
+    /// compute the length of a string containing color codes.
+    /// Example :
+    /// ```
+    /// use doryen_rs::Console;
+    /// let len = Console::text_color_len("#[red]red text with a #[blue]blue#[] word");
+    /// assert_eq!(len, 25); // actual string : "red text with a blue word"
+    /// let len = Console::text_color_len("#[red]a\nb");
+    /// assert_eq!(len, 3); // actual string : "a\nb"
+    /// let len = Console::text_color_len("normal string");
+    /// assert_eq!(len, 13);
+    /// ```
+    pub fn text_color_len(text: &str) -> usize {
+        let mut text_len=0;
+        for color_span in text.to_owned().split("#[") {
+            if color_span.is_empty() {
+                continue;
+            }
+            let mut col_text = color_span.split(']');
+            let col_name = col_text.next().unwrap();
+            if let Some(text_span) = col_text.next() {
+                text_len += text_span.chars().count();
+            } else {
+                text_len += col_name.chars().count();
+            }
+        }
+        text_len
+    }
+
     fn get_color_spans(&mut self, text: &str, text_len: &mut i32) -> Vec<(Color, String)> {
         let mut spans: Vec<(Color, String)> = Vec::new();
         *text_len = 0;
@@ -260,7 +288,7 @@ impl Console {
             if color_span.is_empty() {
                 continue;
             }
-            let mut col_text = color_span.split(']');
+            let mut col_text = color_span.splitn(2,']');
             let col_name = col_text.next().unwrap();
             if let Some(text_span) = col_text.next() {
                 if let Some(color) = self.colors.get(col_name) {

@@ -1,3 +1,10 @@
+# 1.1.1 - TBD
+## fixed
+* fix #13 Console.print_color with text containing ']'
+
+## features
+* added `Console.text_color_len`
+
 # 1.1.0 - 2019 Sep 18
 ## fixes
 * fix mouse coordinates on HiDpi screens
