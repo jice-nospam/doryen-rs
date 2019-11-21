@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -16,7 +16,7 @@ impl Engine for MyRoguelike {
         api.con().register_color("red", (255, 92, 92, 255));
         api.con().register_color("blue", (192, 192, 255, 255));
     }
-    fn update(&mut self, api: &mut dyn DoryenApi) {
+    fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         let input = api.input();
         if input.key("ArrowLeft") {
             self.player_pos.0 = (self.player_pos.0 - 1).max(1);
@@ -29,6 +29,7 @@ impl Engine for MyRoguelike {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
         self.mouse_pos = input.mouse_pos();
+        None
     }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
@@ -101,6 +102,7 @@ fn main() {
         fullscreen: false,
         show_cursor: true,
         resizable: true,
+        intercept_close_request: false,
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

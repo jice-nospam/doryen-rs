@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, Console, DoryenApi, Engine, TextAlign};
+use doryen_rs::{App, AppOptions, Console, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -33,7 +33,7 @@ fn move_con(pos: &mut (i32, i32), spd: &mut (i32, i32), size: (i32, i32)) {
 
 impl Engine for MyRoguelike {
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
-    fn update(&mut self, _api: &mut dyn DoryenApi) {
+    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         if self.step == 0 {
             move_con(
                 &mut self.c1_pos,
@@ -48,6 +48,7 @@ impl Engine for MyRoguelike {
         }
         self.alpha = (self.alpha + 0.01) % 1.0;
         self.step = (self.step + 1) % 10;
+        None
     }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
@@ -139,6 +140,7 @@ fn main() {
         fullscreen: false,
         show_cursor: true,
         resizable: true,
+        intercept_close_request: false,
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

@@ -100,13 +100,19 @@ impl DoryenApiImpl {
     }
 }
 
+/// What is returned by the [`Engine::update`] function
+pub enum UpdateEvent {
+    /// end the program
+    Exit,
+}
+
 /// This is the trait you must implement to update and render your game.
 /// See [`App::set_engine`]
 pub trait Engine {
     /// Called before the first game loop for one time initialization
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
     /// This is called 60 times per second and is independant of the framerate. Put your world update logic in there.
-    fn update(&mut self, api: &mut dyn DoryenApi);
+    fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent>;
     /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
     /// The framerate is not reliable so don't update time related stuff in this function.
     fn render(&mut self, api: &mut dyn DoryenApi);
@@ -136,6 +142,8 @@ pub struct AppOptions {
     pub show_cursor: bool,
     /// Whether the game window can be resized
     pub resizable: bool,
+    /// Intercepts clicks on the window close button. Can be checked with [`InputApi::close_requested`]
+    pub intercept_close_request: bool,
 }
 
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
@@ -166,6 +174,7 @@ impl App {
             headless: false,
             resizable: options.resizable,
             fullscreen: options.fullscreen,
+            intercept_close_request: options.intercept_close_request,
         });
         let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
         let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
@@ -319,7 +328,9 @@ impl App {
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                    engine.update(&mut self.api);
+                    if let Some(UpdateEvent::Exit) = engine.update(&mut self.api) {
+                        uni_app::App::exit();
+                    }
                     next_tick += SKIP_TICKS;
                     skipped_frames += 1;
                     self.api.input.on_frame();

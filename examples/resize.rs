@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 struct MyRoguelike {
     width: u32,
@@ -9,7 +9,9 @@ struct MyRoguelike {
 
 impl Engine for MyRoguelike {
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
-    fn update(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
+        None
+    }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.rectangle(
@@ -67,6 +69,7 @@ fn main() {
         fullscreen: false,
         show_cursor: true,
         resizable: true,
+        intercept_close_request: false,
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

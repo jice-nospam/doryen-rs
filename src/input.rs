@@ -28,6 +28,8 @@ pub trait InputApi {
     fn mouse_button_released(&mut self, num: usize) -> bool;
     /// return the current mouse position in console cells coordinates (float value to have subcell precision)
     fn mouse_pos(&self) -> (f32, f32);
+    /// Whether the window close button was clicked
+    fn close_requested(&self) -> bool;
 }
 
 pub struct DoryenInput {
@@ -37,6 +39,7 @@ pub struct DoryenInput {
     mdown: HashMap<usize, bool>,
     mpressed: HashMap<usize, bool>,
     mreleased: HashMap<usize, bool>,
+    close_request: bool,
     mpos: (f32, f32),
     screen_size: (f32, f32),
     con_size: (f32, f32),
@@ -57,6 +60,7 @@ impl DoryenInput {
             mpressed: HashMap::new(),
             mreleased: HashMap::new(),
             mpos: (0.0, 0.0),
+            close_request: false,
             screen_size: (screen_width as f32, screen_height as f32),
             con_size: (con_width as f32, con_height as f32),
         }
@@ -88,6 +92,7 @@ impl DoryenInput {
         self.mreleased.clear();
         self.kreleased.clear();
         self.kpressed.clear();
+        self.close_request = false;
     }
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
@@ -111,6 +116,9 @@ impl DoryenInput {
             }
             AppEvent::Resized(size) => {
                 self.resize(*size);
+            }
+            AppEvent::CloseRequested => {
+                self.close_request = true;
             }
         }
     }
@@ -158,5 +166,8 @@ impl InputApi for DoryenInput {
     }
     fn mouse_pos(&self) -> (f32, f32) {
         self.mpos
+    }
+    fn close_requested(&self) -> bool {
+        self.close_request
     }
 }

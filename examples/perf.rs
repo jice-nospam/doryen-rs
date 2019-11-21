@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
@@ -11,7 +11,9 @@ struct PerfTest {
 
 impl Engine for PerfTest {
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
-    fn update(&mut self, _api: &mut dyn DoryenApi) {}
+    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
+        None
+    }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let fps = api.fps();
         let con = api.con();
@@ -90,6 +92,7 @@ fn main() {
         fullscreen: false,
         show_cursor: true,
         resizable: true,
+        intercept_close_request: false,
     });
     app.set_engine(Box::new(PerfTest::new()));
     app.run();
