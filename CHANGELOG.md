@@ -1,11 +1,10 @@
-# 1.2.0 - TBD
+# 1.2.0 - 2019 Nov 22
 ## fixed
 * fix #13 Console.print_color with text containing ']'
 ## API breaks
 * added `AppOption.intercept_close_request` to intercept clicks on the window close button (native only). See 'exit' example
 ## features
 * added `Console.text_color_len`
-
 
 # 1.1.0 - 2019 Sep 18
 ## fixes

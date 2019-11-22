@@ -296,18 +296,20 @@ impl Image {
                 }
                 // analyse color, posterize, get pattern
                 compute_pattern(&grid, &mut back, &mut front, &mut ascii);
-                if front.is_none() {
+                if let Some(front) = front {
+                    if ascii >= 0 {
+                        con.unsafe_back(conx, cony, back);
+                        con.unsafe_fore(conx, cony, front);
+                        con.unsafe_ascii(conx, cony, ascii as u16);
+                    } else {
+                        con.unsafe_back(conx, cony, front);
+                        con.unsafe_fore(conx, cony, back);
+                        con.unsafe_ascii(conx, cony, (-ascii) as u16);
+                    }
+                } else {
                     // single color
                     con.unsafe_back(conx, cony, back);
                     con.unsafe_ascii(conx, cony, ascii as u16);
-                } else if ascii >= 0 {
-                    con.unsafe_back(conx, cony, back);
-                    con.unsafe_fore(conx, cony, front.unwrap());
-                    con.unsafe_ascii(conx, cony, ascii as u16);
-                } else {
-                    con.unsafe_back(conx, cony, front.unwrap());
-                    con.unsafe_fore(conx, cony, back);
-                    con.unsafe_ascii(conx, cony, (-ascii) as u16);
                 }
                 cy += 2;
             }
