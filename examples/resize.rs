@@ -59,17 +59,8 @@ impl MyRoguelike {
 
 fn main() {
     let mut app = App::new(AppOptions {
-        console_width: 80,
-        console_height: 50,
-        screen_width: 80 * 8,
-        screen_height: 50 * 8,
         window_title: "resizable console".to_owned(),
-        font_path: "terminal_8x8.png".to_owned(),
-        vsync: true,
-        fullscreen: false,
-        show_cursor: true,
-        resizable: true,
-        intercept_close_request: false,
+        ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

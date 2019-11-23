@@ -18,6 +18,10 @@ const MAX_FRAMESKIP: i32 = 5;
 const TICKS_PER_SECOND: f64 = 60.0;
 const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
+// default options
+pub const DEFAULT_CONSOLE_WIDTH: u32 = 80;
+pub const DEFAULT_CONSOLE_HEIGHT: u32 = 45;
+
 /// This is the complete doryen-rs API provided to you by [`App`] in [`Engine::update`] and [`Engine::render`] methods.
 pub trait DoryenApi {
     /// return the root console that you can use to draw things on the screen
@@ -121,9 +125,9 @@ pub trait Engine {
 }
 
 pub struct AppOptions {
-    /// the console width in characters
+    /// the console width in characters. Default is 80
     pub console_width: u32,
-    /// the console height in characters
+    /// the console height in characters. Default is 45
     pub console_height: u32,
     /// the game window width in pixels
     pub screen_width: u32,
@@ -131,19 +135,39 @@ pub struct AppOptions {
     pub screen_height: u32,
     /// the title of the game window (only in native mode)
     pub window_title: String,
-    /// the font to use. See [`DoryenApi::set_font_path`]
+    /// the font to use. See [`DoryenApi::set_font_path`]. Default is 'terminal_8x8.png'
     pub font_path: String,
     /// whether framerate are limited by the screen frequency.
     /// On web platforms, this parameter is ignored and vsync is always enabled.
+    /// Default is true.
     pub vsync: bool,
-    /// Native only. Might not work on every platforms.
+    /// Native only. Might not work on every platforms. Default is false.
     pub fullscreen: bool,
-    /// Whether the mouse cursor should be visible in the game window.
+    /// Whether the mouse cursor should be visible in the game window. Default is true.
     pub show_cursor: bool,
-    /// Whether the game window can be resized
+    /// Whether the game window can be resized. Default is true.
     pub resizable: bool,
     /// Intercepts clicks on the window close button. Can be checked with [`InputApi::close_requested`]
+    /// Default is false (clicking on the window close button exits the game)
     pub intercept_close_request: bool,
+}
+
+impl Default for AppOptions {
+    fn default() -> Self {
+        Self {
+            console_width: DEFAULT_CONSOLE_WIDTH,
+            console_height: DEFAULT_CONSOLE_HEIGHT,
+            screen_width: DEFAULT_CONSOLE_WIDTH * 8,
+            screen_height: DEFAULT_CONSOLE_HEIGHT * 8,
+            window_title: "".to_owned(),
+            font_path: "terminal_8x8.png".to_owned(),
+            vsync: true,
+            fullscreen: false,
+            show_cursor: true,
+            resizable: true,
+            intercept_close_request: false,
+        }
+    }
 }
 
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.

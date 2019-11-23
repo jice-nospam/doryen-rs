@@ -127,12 +127,7 @@ fn main() {
         screen_width: CONSOLE_WIDTH * 24,
         screen_height: CONSOLE_HEIGHT * 24,
         window_title: "doryen-rs font test".to_owned(),
-        font_path: "terminal_8x8.png".to_owned(),
-        vsync: true,
-        fullscreen: false,
-        show_cursor: true,
-        resizable: true,
-        intercept_close_request: false,
+        ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

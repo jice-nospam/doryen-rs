@@ -37,11 +37,7 @@ fn main() {
         screen_height: CONSOLE_HEIGHT * 16,
         window_title: "doryen-rs unicode demo".to_owned(),
         font_path: "unicode_16x16.png".to_owned(),
-        vsync: true,
-        fullscreen: false,
-        show_cursor: true,
-        resizable: true,
-        intercept_close_request: false,
+        ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike {}));
     app.run();

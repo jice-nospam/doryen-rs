@@ -91,6 +91,8 @@ impl MyRoguelike {
 }
 
 fn main() {
+    // here are all the available options.
+    // better practise is to use default values (see other examples)
     let mut app = App::new(AppOptions {
         console_width: CONSOLE_WIDTH,
         console_height: CONSOLE_HEIGHT,
