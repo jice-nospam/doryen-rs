@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter::Filter;
 
 use uni_app::AppEvent;
 
@@ -17,8 +18,12 @@ pub trait InputApi {
     fn key(&self, key: &str) -> bool;
     /// return true if a key was pressed since last update.
     fn key_pressed(&mut self, key: &str) -> bool;
+    /// return an iterator over all the keys that were pressed since last update.
+    fn keys_pressed(&self) -> Keys;
     /// return true if a key was released since last update.
     fn key_released(&mut self, key: &str) -> bool;
+    /// return an iterator over all the keys that were released since last update.
+    fn keys_released(&self) -> Keys;
     // mouse
     /// return the current status of a mouse button (true if pressed)
     fn mouse_button(&self, num: usize) -> bool;
@@ -140,10 +145,20 @@ impl InputApi for DoryenInput {
             _ => false,
         }
     }
+    fn keys_pressed(&self) -> Keys {
+        Keys {
+            inner: self.kpressed.iter().filter(|&(_, &v)| v)
+        }
+    }
     fn key_released(&mut self, key: &str) -> bool {
         match self.kreleased.get(key) {
             Some(&true) => true,
             _ => false,
+        }
+    }
+    fn keys_released(&self) -> Keys {
+        Keys {
+            inner: self.kreleased.iter().filter(|&(_, &v)| v)
         }
     }
     fn mouse_button(&self, num: usize) -> bool {
@@ -169,5 +184,20 @@ impl InputApi for DoryenInput {
     }
     fn close_requested(&self) -> bool {
         self.close_request
+    }
+}
+
+type KeyMapFilter<'a> = Filter<std::collections::hash_map::Iter<'a, String, bool>, fn(&(&'a String, &'a bool)) -> bool>;
+
+/// An iterator visiting all keys in arbitrary order.
+pub struct Keys<'a> {
+    inner: KeyMapFilter<'a>,
+}
+
+impl<'a> Iterator for Keys<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|(k, _)| k.as_ref())
     }
 }
