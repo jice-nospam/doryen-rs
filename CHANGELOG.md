@@ -1,6 +1,7 @@
 # 1.2.1 - TBD
 ## features
 * `AppOptions` now implements `Default`
+* added `InputApi.keys_released` and `InputApi.keys_pressed` that return iterators on key events since last update
 
 # 1.2.0 - 2019 Nov 22
 ## fixed
