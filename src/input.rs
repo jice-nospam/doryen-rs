@@ -24,6 +24,8 @@ pub trait InputApi {
     fn key_released(&mut self, key: &str) -> bool;
     /// return an iterator over all the keys that were released since last update.
     fn keys_released(&self) -> Keys;
+    /// characters typed since last update
+    fn text(&self) -> String;
     // mouse
     /// return the current status of a mouse button (true if pressed)
     fn mouse_button(&self, num: usize) -> bool;
@@ -44,6 +46,7 @@ pub struct DoryenInput {
     mdown: HashMap<usize, bool>,
     mpressed: HashMap<usize, bool>,
     mreleased: HashMap<usize, bool>,
+    text: String,
     close_request: bool,
     mpos: (f32, f32),
     screen_size: (f32, f32),
@@ -65,21 +68,22 @@ impl DoryenInput {
             mpressed: HashMap::new(),
             mreleased: HashMap::new(),
             mpos: (0.0, 0.0),
+            text: String::new(),
             close_request: false,
             screen_size: (screen_width as f32, screen_height as f32),
             con_size: (con_width as f32, con_height as f32),
         }
     }
-    fn on_key_down(&mut self, code: &str) {
-        if !self.key(code) {
-            self.kpressed.insert(code.to_owned(), true);
-            self.kdown.insert(code.to_owned(), true);
+    fn on_key_down(&mut self, scan_code: &str) {
+        if !self.key(scan_code) {
+            self.kpressed.insert(scan_code.to_owned(), true);
+            self.kdown.insert(scan_code.to_owned(), true);
         }
     }
-    fn on_key_up(&mut self, code: &str) {
-        self.kpressed.insert(code.to_string(), false);
-        self.kdown.insert(code.to_string(), false);
-        self.kreleased.insert(code.to_string(), true);
+    fn on_key_up(&mut self, scan_code: &str) {
+        self.kpressed.insert(scan_code.to_owned(), false);
+        self.kdown.insert(scan_code.to_owned(), false);
+        self.kreleased.insert(scan_code.to_owned(), true);
     }
     fn on_mouse_down(&mut self, button: usize) {
         if !self.mouse_button(button) {
@@ -98,6 +102,7 @@ impl DoryenInput {
         self.kreleased.clear();
         self.kpressed.clear();
         self.close_request = false;
+        self.text.clear();
     }
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
@@ -106,6 +111,11 @@ impl DoryenInput {
             }
             AppEvent::KeyUp(ref key) => {
                 self.on_key_up(&key.code);
+            }
+            AppEvent::CharEvent(ch) => {
+                if !ch.is_control() {
+                    self.text.push(*ch);
+                }
             }
             AppEvent::MousePos(ref pos) => {
                 self.mpos = (
@@ -133,33 +143,36 @@ impl DoryenInput {
 }
 
 impl InputApi for DoryenInput {
-    fn key(&self, key: &str) -> bool {
-        match self.kdown.get(key) {
+    fn key(&self, scan_code: &str) -> bool {
+        match self.kdown.get(scan_code) {
             Some(&true) => true,
             _ => false,
         }
     }
-    fn key_pressed(&mut self, key: &str) -> bool {
-        match self.kpressed.get(key) {
+    fn key_pressed(&mut self, scan_code: &str) -> bool {
+        match self.kpressed.get(scan_code) {
             Some(&true) => true,
             _ => false,
         }
     }
     fn keys_pressed(&self) -> Keys {
         Keys {
-            inner: self.kpressed.iter().filter(|&(_, &v)| v)
+            inner: self.kpressed.iter().filter(|&(_, &v)| v),
         }
     }
-    fn key_released(&mut self, key: &str) -> bool {
-        match self.kreleased.get(key) {
+    fn key_released(&mut self, scan_code: &str) -> bool {
+        match self.kreleased.get(scan_code) {
             Some(&true) => true,
             _ => false,
         }
     }
     fn keys_released(&self) -> Keys {
         Keys {
-            inner: self.kreleased.iter().filter(|&(_, &v)| v)
+            inner: self.kreleased.iter().filter(|&(_, &v)| v),
         }
+    }
+    fn text(&self) -> String {
+        self.text.to_owned()
     }
     fn mouse_button(&self, num: usize) -> bool {
         match self.mdown.get(&num) {
@@ -187,7 +200,8 @@ impl InputApi for DoryenInput {
     }
 }
 
-type KeyMapFilter<'a> = Filter<std::collections::hash_map::Iter<'a, String, bool>, fn(&(&'a String, &'a bool)) -> bool>;
+type KeyMapFilter<'a> =
+    Filter<std::collections::hash_map::Iter<'a, String, bool>, fn(&(&'a String, &'a bool)) -> bool>;
 
 /// An iterator visiting all keys in arbitrary order.
 pub struct Keys<'a> {

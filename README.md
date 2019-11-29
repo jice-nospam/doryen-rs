@@ -44,8 +44,8 @@ Demos :
 + [x] mouse input : stable
 + [x] subcell resolution : stable
 + [x] PNG image blitting : stable
++ [x] keyboard input : stable
 - [x] unicode support : beta
-- [x] keyboard input : alpha
 ```
 
 # usage
@@ -70,7 +70,7 @@ cargo run --example basic
 * web compilation
 ```
 rustup target install wasm32-unknown-unknown
-cargo install cargo-web
+cargo install --force cargo-web
 cargo web start --example basic
 ```
 
