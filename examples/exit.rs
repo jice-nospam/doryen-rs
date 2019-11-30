@@ -4,6 +4,13 @@ use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEven
 
 const WHITE: Color = (255, 255, 255, 255);
 
+/*
+* This example show how you can intercept the user trying to close the game window.
+* All you have to do is to add the `intercept_close_request: true` option when creating the application
+* and calling the `InputApi.close_requested()` to detect the event.
+* This only works on native target right now.
+*/
+
 struct MyRoguelike {
     close_requested: bool,
 }
