@@ -1,6 +1,7 @@
 pub type Color = (u8, u8, u8, u8);
 
 pub fn color_blend(c1: Color, c2: Color, alpha: f32) -> Color {
+    let alpha = alpha * c2.3 as f32 / 255.0;
     (
         ((1.0 - alpha) * f32::from(c1.0) + alpha * f32::from(c2.0)) as u8,
         ((1.0 - alpha) * f32::from(c1.1) + alpha * f32::from(c2.1)) as u8,
