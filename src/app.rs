@@ -116,12 +116,18 @@ pub trait Engine {
     /// Called before the first game loop for one time initialization
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
     /// This is called 60 times per second and is independant of the framerate. Put your world update logic in there.
-    fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent>;
+    /// You can return `Some(UpdateEvent::Exit)` to stop the program
+    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
+        None
+    }
     /// This is called before drawing the console on the screen. The framerate depends on the screen frequency, the graphic cards and on whether you activated vsync or not.
     /// The framerate is not reliable so don't update time related stuff in this function.
+    /// The screen will display the content of the root console provided by `api.con()`
     fn render(&mut self, api: &mut dyn DoryenApi);
-    ///This is called when the screen changes size
-    fn resize(&mut self, api: &mut dyn DoryenApi);
+    /// This is called when the size of the game window has changed.
+    /// You can override this method if your game display or logic depends on the window size.
+    /// You get the new window size with `api.con().get_screen_size()`. See the resize example
+    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 pub struct AppOptions {

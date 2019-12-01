@@ -1,16 +1,12 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 
 struct PerfTest {
     seed: u64,
 }
 
 impl Engine for PerfTest {
-    fn init(&mut self, _api: &mut dyn DoryenApi) {}
-    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
-        None
-    }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let fps = api.fps();
         let con = api.con();

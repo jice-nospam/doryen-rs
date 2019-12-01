@@ -16,7 +16,6 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut dyn DoryenApi) {}
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         let input = api.input();
         if self.close_requested {
@@ -53,7 +52,6 @@ impl Engine for MyRoguelike {
             );
         }
     }
-    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

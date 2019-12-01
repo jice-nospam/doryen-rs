@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 
 const CONSOLE_WIDTH: u32 = 40;
 const CONSOLE_HEIGHT: u32 = 25;
@@ -8,10 +8,6 @@ const CONSOLE_HEIGHT: u32 = 25;
 struct MyRoguelike {}
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut dyn DoryenApi) {}
-    fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
-        None
-    }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.clear(Some((32, 16, 0, 255)), Some((255, 240, 224, 255)), None);
@@ -26,7 +22,6 @@ impl Engine for MyRoguelike {
         con.print(25, 5, "Φοβερός!", TextAlign::Center, None, None);
         con.print(8, 12, "ça, c'est énorme!", TextAlign::Left, None, None);
     }
-    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 fn main() {

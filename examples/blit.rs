@@ -29,7 +29,6 @@ fn move_con(pos: &mut (i32, i32), spd: &mut (i32, i32), size: (i32, i32)) {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut dyn DoryenApi) {}
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         if self.step == 0 {
             let con = api.con();
@@ -83,7 +82,6 @@ impl Engine for MyRoguelike {
             Some((0, 0, 0, 255)),
         );
     }
-    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

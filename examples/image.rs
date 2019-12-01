@@ -9,7 +9,6 @@ struct MyRoguelike {
 }
 
 impl Engine for MyRoguelike {
-    fn init(&mut self, _api: &mut dyn DoryenApi) {}
     fn update(&mut self, _api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         self.angle += 0.01;
         self.scale_time += 0.01;
@@ -29,7 +28,6 @@ impl Engine for MyRoguelike {
             None,
         );
     }
-    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 impl MyRoguelike {

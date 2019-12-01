@@ -6,6 +6,7 @@
 * added `InputApi.keys_released()` and `InputApi.keys_pressed()` that return iterators on key events since last update
 * added text input support through `InputApi.text()` (see text_input example)
 * added alpha demo showcasing framebuffer overdrawing
+* provided default `update` and `resize` functions. Now `Engine` must only provide a render method
 
 # 1.2.0 - 2019 Nov 22
 ## fixed
