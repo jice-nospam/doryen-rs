@@ -1,5 +1,7 @@
 extern crate doryen_rs;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 const WHITE: Color = (255, 255, 255, 255);
@@ -12,13 +14,19 @@ impl Engine for MyRoguelike {
     fn init(&mut self, _api: &mut dyn DoryenApi) {}
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         let input = api.input();
+        // input.text returns the characters typed by the player since last update
         let txt = input.text();
         if !txt.is_empty() {
             self.txt.push_str(&txt);
         }
         // handle backspace
         if input.key_released("Backspace") && !self.txt.is_empty() {
-            self.txt = self.txt.chars().take(self.txt.len() - 1).collect();
+            // convoluted way to remove the last character of the string
+            // in a way that also works with utf-8 graphemes
+            // where one character != one byte
+            let mut graphemes = self.txt.graphemes(true).rev();
+            graphemes.next();
+            self.txt = graphemes.rev().collect();
         }
         // handle tab
         if input.key_released("Tab") {
