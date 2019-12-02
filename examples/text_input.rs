@@ -8,6 +8,7 @@ const WHITE: Color = (255, 255, 255, 255);
 
 struct MyRoguelike {
     txt: String,
+    cursor: usize,
 }
 
 impl Engine for MyRoguelike {
@@ -31,6 +32,7 @@ impl Engine for MyRoguelike {
         if input.key_released("Tab") {
             self.txt.push_str("   ");
         }
+        self.cursor += 1;
         None
     }
     fn render(&mut self, api: &mut dyn DoryenApi) {
@@ -39,7 +41,12 @@ impl Engine for MyRoguelike {
         con.print(
             5,
             5,
-            &format!("Type some text : {}", self.txt),
+            &format!(
+                "Type some text : {}{}",
+                self.txt,
+                // blinking cursor
+                if self.cursor % 25 < 12 { '_' } else { ' ' }
+            ),
             TextAlign::Left,
             Some(WHITE),
             None,
@@ -49,7 +56,10 @@ impl Engine for MyRoguelike {
 
 impl MyRoguelike {
     pub fn new() -> Self {
-        Self { txt: String::new() }
+        Self {
+            txt: String::new(),
+            cursor: 0,
+        }
     }
 }
 
