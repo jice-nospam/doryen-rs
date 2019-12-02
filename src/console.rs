@@ -184,7 +184,14 @@ impl Console {
     fn check_coords(&self, x: i32, y: i32) -> bool {
         (x as u32) < self.width && (y as u32) < self.height
     }
-    /// set the character at a specific position (doesn't change the color)
+    /// set the character at a specific position (doesn't change the color).
+    ///
+    /// Since the glyph associated with an ascii code depends on the font you're using,
+    /// doryen-rs can't provide constants for specific characters except for a few ones used internally.
+    ///
+    /// More information about this [here](https://github.com/jice-nospam/doryen-rs/issues/7).
+    ///
+    /// You can find some constants that work with most fonts in [this file](https://github.com/tomassedovic/tcod-rs/blob/master/src/chars.rs) provided by Alex Mooney.
     pub fn ascii(&mut self, x: i32, y: i32, ascii: u16) {
         if self.check_coords(x, y) {
             self.unsafe_ascii(x, y, ascii);
@@ -264,7 +271,7 @@ impl Console {
     /// assert_eq!(len, 13);
     /// ```
     pub fn text_color_len(text: &str) -> usize {
-        let mut text_len=0;
+        let mut text_len = 0;
         for color_span in text.to_owned().split("#[") {
             if color_span.is_empty() {
                 continue;
@@ -288,7 +295,7 @@ impl Console {
             if color_span.is_empty() {
                 continue;
             }
-            let mut col_text = color_span.splitn(2,']');
+            let mut col_text = color_span.splitn(2, ']');
             let col_name = col_text.next().unwrap();
             if let Some(text_span) = col_text.next() {
                 if let Some(color) = self.colors.get(col_name) {
