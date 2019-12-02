@@ -11,16 +11,20 @@ impl Engine for MyRoguelike {
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
         con.clear(Some((32, 16, 0, 255)), Some((255, 240, 224, 255)), None);
-        con.ascii(
-            (CONSOLE_WIDTH / 2) as i32,
-            (CONSOLE_HEIGHT / 2 - 10) as i32,
-            '@' as u16,
+        con.area(
+            5,
+            5,
+            30,
+            15,
+            Some((255, 255, 255, 255)),
+            Some((0, 0, 0, 255)),
+            Some(' ' as u16),
         );
-        con.print(5, 20, "驚くばかり！", TextAlign::Left, None, None);
-        con.print(15, 20, "真棒！", TextAlign::Right, None, None);
-        con.print(15, 10, "классно", TextAlign::Center, None, None);
-        con.print(25, 5, "Φοβερός!", TextAlign::Center, None, None);
-        con.print(8, 12, "ça, c'est énorme!", TextAlign::Left, None, None);
+        con.print(20, 8, "こんにちは!", TextAlign::Center, None, None);
+        con.print(20, 10, "真棒!", TextAlign::Center, None, None);
+        con.print(20, 12, "классно", TextAlign::Center, None, None);
+        con.print(20, 14, "Φοβερός!", TextAlign::Center, None, None);
+        con.print(20, 16, "Ça, c'est énorme!", TextAlign::Center, None, None);
     }
 }
 

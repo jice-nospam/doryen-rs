@@ -1,6 +1,7 @@
 # 1.2.1 - TBD
 ## fixed
 * `Console.blit` not taking source console alpha value into account
+* fixed #19 : rendering unicode characters >= 0x00FF
 ## features
 * `AppOptions` now implements `Default`
 * added `InputApi.keys_released()` and `InputApi.keys_pressed()` that return iterators on key events since last update

@@ -23,7 +23,7 @@ Demos :
 
 * [Unicode demo](http://roguecentral.org/~jice/doryen-rs/unicode/)
 
-![unicode](http://roguecentral.org/~jice/doryen-rs/unicode2.png)
+![unicode](http://roguecentral.org/~jice/doryen-rs/unicode3.png)
 
 * [Console blitting demo](http://roguecentral.org/~jice/doryen-rs/blit/)
 
@@ -45,7 +45,7 @@ Demos :
 + [x] subcell resolution : stable
 + [x] PNG image blitting : stable
 + [x] keyboard input : stable
-- [x] unicode support : beta
++ [x] unicode support : stable
 ```
 
 # usage
