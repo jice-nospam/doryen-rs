@@ -209,15 +209,25 @@ impl App {
         let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
         let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
+        let (x_offset, y_offset) = if options.fullscreen && cfg!(not(target_arch = "wasm32")) {
+            let (resx, resy) = app.get_screen_resolution();
+            let x_offset = (resx - real_screen_width) as i32 / 2;
+            let y_offset = (resy - real_screen_height) as i32 / 2;
+            (x_offset, y_offset)
+        } else {
+            (0, 0)
+        };
         uni_app::App::print(format!(
-            "Screen size {} x {} GL viewport : {} x {}  hidpi factor : {}\n",
+            "Screen size {} x {} offset {} x {} GL viewport : {} x {}  hidpi factor : {}\n",
             options.screen_width,
             options.screen_height,
+            x_offset,
+            y_offset,
             real_screen_width,
             real_screen_height,
             app.hidpi_factor()
         ));
-        gl.viewport(0, 0, real_screen_width, real_screen_height);
+        gl.viewport(x_offset, y_offset, real_screen_width, real_screen_height);
         gl.enable(uni_gl::Flag::Blend as i32);
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.clear(uni_gl::BufferBit::Color);
@@ -230,17 +240,15 @@ impl App {
         // TODO this should be handled in uni-app
         let input = if cfg!(target_arch = "wasm32") {
             DoryenInput::new(
-                options.screen_width,
-                options.screen_height,
-                options.console_width,
-                options.console_height,
+                (options.screen_width, options.screen_height),
+                (options.console_width, options.console_height),
+                (x_offset as u32, y_offset as u32),
             )
         } else {
             DoryenInput::new(
-                real_screen_width,
-                real_screen_height,
-                options.console_width,
-                options.console_height,
+                (real_screen_width, real_screen_height),
+                (options.console_width, options.console_height),
+                (x_offset as u32, y_offset as u32),
             )
         };
         let font = create_texture(&gl);

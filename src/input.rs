@@ -51,16 +51,16 @@ pub struct DoryenInput {
     mpos: (f32, f32),
     screen_size: (f32, f32),
     con_size: (f32, f32),
+    mouse_offset: (f32, f32),
 }
 
 impl DoryenInput {
     pub fn new(
-        screen_width: u32,
-        screen_height: u32,
-        con_width: u32,
-        con_height: u32,
-    ) -> DoryenInput {
-        DoryenInput {
+        (screen_width, screen_height): (u32, u32),
+        (con_width, con_height): (u32, u32),
+        (x_offset, y_offset): (u32, u32),
+    ) -> Self {
+        Self {
             kdown: HashMap::new(),
             kpressed: HashMap::new(),
             kreleased: HashMap::new(),
@@ -72,6 +72,7 @@ impl DoryenInput {
             close_request: false,
             screen_size: (screen_width as f32, screen_height as f32),
             con_size: (con_width as f32, con_height as f32),
+            mouse_offset: (x_offset as f32, y_offset as f32),
         }
     }
     fn on_key_down(&mut self, scan_code: &str) {
@@ -119,8 +120,8 @@ impl DoryenInput {
             }
             AppEvent::MousePos(ref pos) => {
                 self.mpos = (
-                    pos.0 as f32 / self.screen_size.0 * self.con_size.0,
-                    pos.1 as f32 / self.screen_size.1 * self.con_size.1,
+                    (pos.0 as f32 - self.mouse_offset.0) / self.screen_size.0 * self.con_size.0,
+                    (pos.1 as f32 - self.mouse_offset.1) / self.screen_size.1 * self.con_size.1,
                 );
             }
             AppEvent::MouseDown(ref mouse) => {
