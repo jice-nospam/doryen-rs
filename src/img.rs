@@ -70,8 +70,7 @@ impl Image {
             for cx in minx..maxx {
                 for cy in miny..maxy {
                     let pixel = img
-                        .get_pixel((cx - minx + offx) as u32, (cy - miny + offy) as u32)
-                        .data;
+                        .get_pixel((cx - minx + offx) as u32, (cy - miny + offy) as u32);
                     let color = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
                         if color == *t {
@@ -160,7 +159,7 @@ impl Image {
                     {
                         (0, 0, 0, 255)
                     } else {
-                        let pixel = img.get_pixel(ix as u32, iy as u32).data;
+                        let pixel = img.get_pixel(ix as u32, iy as u32);
                         (pixel[0], pixel[1], pixel[2], pixel[3])
                     };
                     if let Some(ref t) = transparent {
@@ -254,7 +253,7 @@ impl Image {
                 let conx = dx + (cx - minx) / 2;
                 let cony = dy + (cy - miny) / 2;
                 let console_back = con.unsafe_get_back(conx, cony);
-                let pixel = img.get_pixel(cx as u32, cy as u32).data;
+                let pixel = img.get_pixel(cx as u32, cy as u32);
                 grid[0] = (pixel[0], pixel[1], pixel[2], pixel[3]);
                 if let Some(ref t) = transparent {
                     if grid[0] == *t {
@@ -262,7 +261,7 @@ impl Image {
                     }
                 }
                 if cx < maxx - 1 {
-                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32).data;
+                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32);
                     grid[1] = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
                         if grid[1] == *t {
@@ -273,7 +272,7 @@ impl Image {
                     grid[1] = console_back;
                 }
                 if cy < maxy - 1 {
-                    let pixel = img.get_pixel(cx as u32, cy as u32 + 1).data;
+                    let pixel = img.get_pixel(cx as u32, cy as u32 + 1);
                     grid[2] = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
                         if grid[2] == *t {
@@ -284,7 +283,7 @@ impl Image {
                     grid[2] = console_back;
                 }
                 if cx < maxx - 1 && cy < maxy - 1 {
-                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32 + 1).data;
+                    let pixel = img.get_pixel(cx as u32 + 1, cy as u32 + 1);
                     grid[3] = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
                         if grid[3] == *t {

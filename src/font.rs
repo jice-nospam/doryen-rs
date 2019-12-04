@@ -57,7 +57,7 @@ impl FontLoader {
     }
 
     fn process_image(&mut self, img: &mut image::RgbaImage) {
-        let pixel = img.get_pixel(0, 0).data;
+        let pixel = img.get_pixel(0, 0);
         let alpha = pixel[3];
         if alpha == 255 {
             let transparent_color = (pixel[0], pixel[1], pixel[2]);
@@ -70,19 +70,18 @@ impl FontLoader {
             let (width, height) = img.dimensions();
             for y in 0..height {
                 for x in 0..width {
-                    let p = img.get_pixel_mut(x, y);
-                    let pixel = p.data;
+                    let pixel = img.get_pixel_mut(x, y);
                     if (pixel[0], pixel[1], pixel[2]) == transparent_color {
-                        p.data[3] = 0;
-                        p.data[0] = 0;
-                        p.data[1] = 0;
-                        p.data[2] = 0;
+                        pixel[3] = 0;
+                        pixel[0] = 0;
+                        pixel[1] = 0;
+                        pixel[2] = 0;
                     } else if greyscale && pixel[0] == pixel[1] && pixel[1] == pixel[2] {
                         let alpha = pixel[0];
-                        p.data[0] = 255;
-                        p.data[1] = 255;
-                        p.data[2] = 255;
-                        p.data[3] = alpha;
+                        pixel[0] = 255;
+                        pixel[1] = 255;
+                        pixel[2] = 255;
+                        pixel[3] = alpha;
                     }
                 }
             }
