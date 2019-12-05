@@ -1,3 +1,4 @@
+#![warn(clippy::float_cmp)]
 use crate::color::{color_blend, color_dist, Color};
 use crate::console::*;
 use crate::file::FileLoader;
