@@ -264,7 +264,7 @@ impl App {
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
-                screen_size: (options.screen_width, options.screen_height),
+                screen_size: (real_screen_width, real_screen_height),
             },
             options,
             fps: FPS::new(),
@@ -345,6 +345,9 @@ impl App {
                 self.api.clear_font_path();
                 self.font_loader.load_font(&font_path);
                 font_loaded = false;
+                if self.options.resizable {
+                    engine.resize(&mut self.api);
+                }
             }
             if !font_loaded {
                 if self.font_loader.load_font_async() {
