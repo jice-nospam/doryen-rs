@@ -21,6 +21,14 @@ impl Image {
             img: None,
         }
     }
+    /// get the color of a specific pixel inside the image
+    pub fn pixel(&self, x: u32, y: u32) -> Option<Color> {
+        if let Some(ref img) = self.img {
+            let p = img.get_pixel(x, y);
+            return Some((p[0], p[1], p[2], p[3]));
+        }
+        None
+    }
     /// Check if the image has been loaded.
     /// Since there's no background thread doing the work for you, you have to call some method on image for it to actually load.
     /// Use either [`Image::try_load`], [`Image::get_size`], [`Image::blit`] or [`Image::blit_ex`] to run the loading code.
@@ -69,8 +77,7 @@ impl Image {
             let back = con.borrow_mut_background();
             for cx in minx..maxx {
                 for cy in miny..maxy {
-                    let pixel = img
-                        .get_pixel((cx - minx + offx) as u32, (cy - miny + offy) as u32);
+                    let pixel = img.get_pixel((cx - minx + offx) as u32, (cy - miny + offy) as u32);
                     let color = (pixel[0], pixel[1], pixel[2], pixel[3]);
                     if let Some(ref t) = transparent {
                         if color == *t {
