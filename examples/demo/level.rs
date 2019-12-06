@@ -73,6 +73,11 @@ impl Level {
     pub fn light_at(&self, (x, y): (i32, i32)) -> Color {
         self.lightmap.pixel(x as u32 * 2, y as u32 * 2).unwrap()
     }
+    pub fn update(&mut self) {
+        for light in self.lights.iter_mut() {
+            light.update();
+        }
+    }
     pub fn render(&mut self, api: &mut dyn DoryenApi, player_pos: (i32, i32)) {
         if self.ground.try_load() {
             self.compute_lightmap(player_pos);
@@ -83,6 +88,8 @@ impl Level {
                     if self.map.is_in_fov(x, y) {
                         let ground_col = self.ground.pixel(x as u32, y as u32).unwrap();
                         let light_col = self.lightmap.pixel(x as u32, y as u32).unwrap();
+                        let penumbra =
+                            (light_col.0 as u32 + light_col.1 as u32 + light_col.2 as u32) < 50;
                         let mut r =
                             f32::from(ground_col.0) * f32::from(light_col.0) * LIGHT_COEF / 255.0;
                         let mut g =
@@ -97,7 +104,9 @@ impl Level {
                             y as u32,
                             (r as u8, g as u8, b as u8, 255),
                         );
-                        self.visited_2x[off] = true;
+                        if !penumbra {
+                            self.visited_2x[off] = true;
+                        }
                     } else if self.visited_2x[off] {
                         let col = self.ground.pixel(x as u32, y as u32).unwrap();
                         let dark_col = color_blend(col, VISITED_BLEND_COLOR, VISITED_BLEND_COEF);
@@ -126,9 +135,9 @@ impl Level {
         let mut fov = FovRestrictive::new();
         *self.player_light.pos_mut() = ((px * 2) as f32, (py * 2) as f32);
         self.player_light
-            .render(&mut self.map, &mut fov, &mut self.lightmap);
+            .render(&mut self.map, &mut fov, &mut self.lightmap, false);
         for light in self.lights.iter() {
-            light.render(&mut self.map, &mut fov, &mut self.lightmap);
+            light.render(&mut self.map, &mut fov, &mut self.lightmap, true);
         }
     }
     fn compute_walls_2x_and_start_pos(&mut self) {

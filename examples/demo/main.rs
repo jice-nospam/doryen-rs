@@ -3,6 +3,7 @@ extern crate doryen_rs;
 
 mod level;
 mod light;
+mod noise;
 mod player;
 
 use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
@@ -51,6 +52,7 @@ impl Engine for DoryenDemo {
                 self.level.compute_fov(self.player.pos(), PLAYER_FOV_RADIUS);
             }
             self.mouse_pos = api.input().mouse_pos();
+            self.level.update();
         }
         None
     }
@@ -66,6 +68,14 @@ impl Engine for DoryenDemo {
                 (CONSOLE_WIDTH / 2) as i32,
                 (CONSOLE_HEIGHT - 2) as i32,
                 &format!("#[white]Move with #[red]arrows or WSAD\n#[white]Fire with #[red]mouse   {:4} fps",fps),
+                TextAlign::Center,
+                None,
+            );
+        } else {
+            api.con().print_color(
+                (CONSOLE_WIDTH / 2) as i32,
+                (CONSOLE_HEIGHT / 2) as i32,
+                &format!("#[white]Loading#[red]..."),
                 TextAlign::Center,
                 None,
             );
