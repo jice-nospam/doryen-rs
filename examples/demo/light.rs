@@ -6,9 +6,9 @@ use crate::BLACK;
 
 const TIME_SCALE: f32 = 0.1;
 const LIGHT_INTENSITY: f32 = 1.5;
-const LIGHT_FLICKER_MOVE: f32 = 3.0;
+const LIGHT_FLICKER_MOVE: f32 = 2.0;
 const LIGHT_FLICKER_INTENSITY: f32 = 0.4;
-const LIGHT_FLICKER_RADIUS: f32 = 0.3;
+const LIGHT_FLICKER_RADIUS: f32 = 0.2;
 
 pub struct Light {
     pos: (f32, f32),

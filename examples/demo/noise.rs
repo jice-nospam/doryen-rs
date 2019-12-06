@@ -1,55 +1,5 @@
 // fast 1D noise, WASM compatible
-
-const CMWC_CYCLE: usize = 4096;
-pub struct ComplementaryMultiplyWithCarryGen {
-    q: [u32; CMWC_CYCLE],
-    c: u32,
-    i: usize,
-}
-
-impl ComplementaryMultiplyWithCarryGen {
-    pub fn new(seed: u32) -> ComplementaryMultiplyWithCarryGen {
-        let mut q = [0; CMWC_CYCLE];
-        q[0] = seed;
-        for i in 1..CMWC_CYCLE {
-            q[i] = q[i - 1].wrapping_mul(1_103_515_245).wrapping_add(12345);
-        }
-
-        ComplementaryMultiplyWithCarryGen {
-            q: q,
-            c: 362_436,
-            i: 4095,
-        }
-    }
-
-    pub fn reset(&mut self, seed: u32) {
-        *self = ComplementaryMultiplyWithCarryGen::new(seed);
-    }
-
-    pub fn random(&mut self) -> u32 {
-        const A: u64 = 18782;
-        const R: u32 = 0xffff_fffe;
-
-        self.i = (self.i + 1) & (CMWC_CYCLE - 1);
-        let t = A * u64::from(self.q[self.i]) + u64::from(self.c);
-
-        self.c = (t >> 32) as u32;
-        let mut x = (t + u64::from(self.c)) as u32;
-        if x < self.c {
-            x += 1;
-            self.c += 1;
-        }
-
-        self.q[self.i] = R - x;
-        self.q[self.i]
-    }
-
-    pub fn frandom(&mut self) -> f32 {
-        self.random() as f32 / (0xffff_fffe as u32 as f32)
-    }
-}
-
-static mut PERMUT: [usize; 512] = [
+static PERMUT: [usize; 512] = [
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
     142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
     203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
@@ -77,17 +27,6 @@ static mut PERMUT: [usize; 512] = [
     222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180,
 ];
 
-pub fn seed(seed: u32) {
-    let mut rnd = ComplementaryMultiplyWithCarryGen::new(seed);
-    for i in 0..256 {
-        let idx = (rnd.random() % 256) as usize;
-        unsafe {
-            PERMUT[i] = idx;
-            PERMUT[i + 256] = idx;
-        }
-    }
-}
-
 #[inline]
 fn grad1(hash: usize, x: f32) -> f32 {
     let h = hash & 0xF;
@@ -107,7 +46,7 @@ pub fn simplex(val: f32) -> f32 {
     let mut t1 = 1.0 - x1 * x1;
     t0 *= t0;
     t1 *= t1;
-    let n0 = t0 * t0 * unsafe { grad1(PERMUT[i0 & 0xFF], x0) };
-    let n1 = t1 * t1 * unsafe { grad1(PERMUT[i1 & 0xFF], x1) };
+    let n0 = t0 * t0 * grad1(PERMUT[i0 & 0xFF], x0);
+    let n1 = t1 * t1 * grad1(PERMUT[i1 & 0xFF], x1);
     0.25 * (n0 + n1)
 }

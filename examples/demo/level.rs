@@ -1,5 +1,5 @@
 use doryen_fov::{FovAlgorithm, FovRestrictive, MapData};
-use doryen_rs::{color_blend, Color, DoryenApi, Image};
+use doryen_rs::{color_blend, color_mul, color_scale, Color, DoryenApi, Image};
 
 use crate::light::Light;
 
@@ -10,6 +10,7 @@ const PLAYER_LIGHT_RADIUS: f32 = 8.0;
 const PLAYER_LIGHT_COLOR: Color = (150, 150, 150, 255);
 const LIGHT_COEF: f32 = 1.5;
 const WALL_COLOR: Color = (255, 255, 255, 255);
+const GOBLIN_COLOR: Color = (0, 255, 0, 255);
 const VISITED_BLEND_COLOR: Color = (10, 10, 40, 255);
 const VISITED_BLEND_COEF: f32 = 0.8;
 
@@ -27,6 +28,7 @@ pub struct Level {
     render_output: Image,
     lights: Vec<Light>,
     player_light: Light,
+    goblins: Vec<(i32, i32)>,
 }
 
 impl Level {
@@ -44,6 +46,7 @@ impl Level {
             fov: FovRestrictive::new(),
             map: MapData::new(1, 1),
             lights: Vec::new(),
+            goblins: Vec::new(),
             player_light: Light::new((0, 0), PLAYER_LIGHT_RADIUS, PLAYER_LIGHT_COLOR),
         }
     }
@@ -78,6 +81,9 @@ impl Level {
             light.update();
         }
     }
+    fn penumbra(color: Color, level: usize) -> bool {
+        (color.0 as usize + color.1 as usize + color.2 as usize) < level
+    }
     pub fn render(&mut self, api: &mut dyn DoryenApi, player_pos: (i32, i32)) {
         if self.ground.try_load() {
             self.compute_lightmap(player_pos);
@@ -88,8 +94,7 @@ impl Level {
                     if self.map.is_in_fov(x, y) {
                         let ground_col = self.ground.pixel(x as u32, y as u32).unwrap();
                         let light_col = self.lightmap.pixel(x as u32, y as u32).unwrap();
-                        let penumbra =
-                            (light_col.0 as u32 + light_col.1 as u32 + light_col.2 as u32) < 50;
+                        let penumbra = Level::penumbra(light_col, 50);
                         let mut r =
                             f32::from(ground_col.0) * f32::from(light_col.0) * LIGHT_COEF / 255.0;
                         let mut g =
@@ -119,6 +124,17 @@ impl Level {
             }
             self.render_output
                 .blit_2x(&mut con, 0, 0, 0, 0, None, None, None);
+            self.render_goblins(api);
+        }
+    }
+    fn render_goblins(&self, api: &mut dyn DoryenApi) {
+        for goblin in self.goblins.iter() {
+            if self
+                .map
+                .is_in_fov(goblin.0 as usize * 2, goblin.1 as usize * 2)
+            {
+                self.render_creature(api, 'g' as u16, *goblin, GOBLIN_COLOR);
+            }
         }
     }
     pub fn compute_fov(&mut self, (x, y): (i32, i32), radius: usize) {
@@ -128,6 +144,16 @@ impl Level {
     }
     fn add_light(&mut self, pos: (i32, i32)) {
         self.lights.push(Light::new(pos, LIGHT_RADIUS, LIGHT_COLOR));
+    }
+    fn render_creature(&self, api: &mut dyn DoryenApi, c: u16, (x, y): (i32, i32), color: Color) {
+        let light = self.lightmap.pixel(x as u32 * 2, y as u32 * 2).unwrap();
+        let penumbra = Level::penumbra(light, 130);
+        let mut color = color_mul(color, light);
+        if penumbra {
+            color = color_scale(color, LIGHT_COEF);
+        }
+        api.con().ascii(x, y, if penumbra { '?' as u16 } else { c });
+        api.con().fore(x, y, color);
     }
     fn compute_lightmap(&mut self, (px, py): (i32, i32)) {
         // TODO check if filling with black pixels is faster
@@ -152,6 +178,7 @@ impl Level {
                 match p {
                     START_COLOR => self.start = (x as i32 / 2, y as i32 / 2),
                     LIGHT_COLOR => self.add_light((x as i32, y as i32)),
+                    GOBLIN_COLOR => self.goblins.push((x as i32 / 2, y as i32 / 2)),
                     _ => (),
                 }
             }
@@ -178,6 +205,10 @@ impl Level {
                 }
                 self.walls.push(count < 2);
             }
+        }
+        for goblin in self.goblins.iter() {
+            let off = self.offset(*goblin);
+            self.walls[off] = true;
         }
     }
     fn offset(&self, (x, y): (i32, i32)) -> usize {
