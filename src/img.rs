@@ -22,6 +22,20 @@ impl Image {
             img: None,
         }
     }
+    /// Returns the image's width in pixels or 0 if the image has not yet been loaded
+    pub fn width(&self) -> u32 {
+        if let Some(ref img) = self.img {
+            return img.width();
+        }
+        0
+    }
+    /// Returns the image's height in pixels or 0 if the image has not yet been loaded
+    pub fn height(&self) -> u32 {
+        if let Some(ref img) = self.img {
+            return img.height();
+        }
+        0
+    }
     /// Create an empty image.
     pub fn new_empty(width: u32, height: u32) -> Self {
         Self {

@@ -1,4 +1,4 @@
-use doryen_rs::DoryenApi;
+use doryen_rs::{Color, DoryenApi};
 
 pub struct Player {
     pos: (f32, f32),
@@ -43,10 +43,10 @@ impl Player {
     pub fn pos(&self) -> (i32, i32) {
         (self.pos.0 as i32, self.pos.1 as i32)
     }
-    pub fn render(&self, api: &mut dyn DoryenApi) {
+    pub fn render(&self, api: &mut dyn DoryenApi, light: Color) {
         let con = api.con();
         let pos = self.pos();
         con.ascii(pos.0, pos.1, '@' as u16);
-        con.fore(pos.0, pos.1, (255, 255, 255, 255));
+        con.fore(pos.0, pos.1, light);
     }
 }

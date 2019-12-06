@@ -2,6 +2,7 @@ extern crate doryen_fov;
 extern crate doryen_rs;
 
 mod level;
+mod light;
 mod player;
 
 use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
@@ -12,7 +13,7 @@ use player::Player;
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
 const PLAYER_SPEED: f32 = 0.2;
-const PLAYER_FOV_RADIUS: usize = 20;
+const PLAYER_FOV_RADIUS: usize = 40;
 const BLACK: Color = (0, 0, 0, 255);
 const WHITE: Color = (255, 255, 255, 255);
 
@@ -56,8 +57,10 @@ impl Engine for DoryenDemo {
     fn render(&mut self, api: &mut dyn DoryenApi) {
         if self.loaded {
             self.clear_con(api);
-            self.level.render(api);
-            self.player.render(api);
+            let player_pos = self.player.pos();
+            self.level.render(api, player_pos);
+            let player_light = self.level.light_at(player_pos);
+            self.player.render(api, player_light);
             let fps = api.fps();
             api.con().print_color(
                 (CONSOLE_WIDTH / 2) as i32,
