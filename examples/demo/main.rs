@@ -1,3 +1,4 @@
+extern crate doryen_fov;
 extern crate doryen_rs;
 
 mod level;
@@ -10,7 +11,8 @@ use player::Player;
 
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
-const PLAYER_SPEED: f32 = 0.15;
+const PLAYER_SPEED: f32 = 0.2;
+const PLAYER_FOV_RADIUS: usize = 20;
 const BLACK: Color = (0, 0, 0, 255);
 const WHITE: Color = (255, 255, 255, 255);
 
@@ -31,27 +33,23 @@ impl Engine for DoryenDemo {
         if !self.loaded && self.level.try_load() {
             self.loaded = true;
             self.player.move_to(self.level.start_pos());
+            self.level.compute_fov(self.player.pos(), PLAYER_FOV_RADIUS);
         }
         if self.loaded {
-            let input = api.input();
-            if (input.key("ArrowLeft") || input.key("KeyA"))
-                && !self.level.is_wall(self.player.left())
-            {
-                self.player.move_left();
-            } else if (input.key("ArrowRight") || input.key("KeyD"))
-                && !self.level.is_wall(self.player.right())
-            {
-                self.player.move_right();
+            let mut coef = 1.0 / std::f32::consts::SQRT_2;
+            let mut mov = self.player.move_from_input(api);
+            if self.level.is_wall(self.player.next_pos((mov.0, 0))) {
+                mov.0 = 0;
+                coef = 1.0;
             }
-            if (input.key("ArrowUp") || input.key("KeyW")) && !self.level.is_wall(self.player.up())
-            {
-                self.player.move_up();
-            } else if (input.key("ArrowDown") || input.key("KeyS"))
-                && !self.level.is_wall(self.player.down())
-            {
-                self.player.move_down();
+            if self.level.is_wall(self.player.next_pos((0, mov.1))) {
+                mov.1 = 0;
+                coef = 1.0;
             }
-            self.mouse_pos = input.mouse_pos();
+            if self.player.move_by(mov, coef) {
+                self.level.compute_fov(self.player.pos(), PLAYER_FOV_RADIUS);
+            }
+            self.mouse_pos = api.input().mouse_pos();
         }
         None
     }
@@ -59,14 +57,12 @@ impl Engine for DoryenDemo {
         if self.loaded {
             self.clear_con(api);
             self.level.render(api);
-            let con = api.con();
-            let pos = self.player.pos();
-            con.ascii(pos.0, pos.1, '@' as u16);
-            con.fore(pos.0, pos.1, (255, 255, 255, 255));
-            con.print_color(
+            self.player.render(api);
+            let fps = api.fps();
+            api.con().print_color(
                 (CONSOLE_WIDTH / 2) as i32,
                 (CONSOLE_HEIGHT - 2) as i32,
-                "#[white]Move with #[red]arrows or WSAD\n#[white]Fire with #[red]mouse",
+                &format!("#[white]Move with #[red]arrows or WSAD\n#[white]Fire with #[red]mouse   {:4} fps",fps),
                 TextAlign::Center,
                 None,
             );
@@ -93,8 +89,6 @@ impl DoryenDemo {
 }
 
 fn main() {
-    // here are all the available options.
-    // better practise is to use default values (see other examples)
     let mut app = App::new(AppOptions {
         window_title: "doryen demo".to_owned(),
         ..Default::default()

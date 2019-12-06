@@ -1,3 +1,4 @@
+use doryen_fov::{FovAlgorithm, FovRestrictive, MapData};
 use doryen_rs::{Color, DoryenApi, Image};
 
 const START_COLOR: Color = (255, 0, 0, 255);
@@ -9,6 +10,9 @@ pub struct Level {
     size: (i32, i32),
     start: (i32, i32),
     walls: Vec<bool>,
+    visited_2x: Vec<bool>,
+    fov: FovRestrictive,
+    map: MapData,
 }
 
 impl Level {
@@ -19,22 +23,16 @@ impl Level {
             size: (0, 0),
             start: (0, 0),
             walls: Vec::new(),
+            visited_2x: Vec::new(),
+            fov: FovRestrictive::new(),
+            map: MapData::new(1, 1),
         }
     }
     pub fn try_load(&mut self) -> bool {
         if let Some(ref mut img) = self.img {
             if img.try_load() {
-                let size = img.try_get_size().unwrap();
-                for y in 0..size.1 {
-                    for x in 0..size.0 {
-                        let p = img.pixel(x, y).unwrap();
-                        self.walls.push(p == WALL_COLOR);
-                        if p == START_COLOR {
-                            self.start = (x as i32, y as i32);
-                        }
-                    }
-                }
-                self.size = (size.0 as i32, size.1 as i32);
+                self.compute_walls_2x_and_start_pos();
+                self.compute_walls();
                 self.img = None;
             } else {
                 return false;
@@ -45,21 +43,76 @@ impl Level {
     pub fn start_pos(&self) -> (i32, i32) {
         self.start
     }
-    fn offset(&self, (x, y): (i32, i32)) -> usize {
-        (x + y * self.size.0 as i32) as usize
-    }
     pub fn is_wall(&self, pos: (i32, i32)) -> bool {
         self.walls[self.offset(pos)]
     }
     pub fn render(&mut self, api: &mut dyn DoryenApi) {
-        let mut con = api.con();
-        self.ground.blit_2x(&mut con, 0, 0, 0, 0, None, None, None);
-        for y in 0..self.size.1 {
-            for x in 0..self.size.0 {
-                if self.walls[self.offset((x, y))] {
-                    con.back(x as i32, y as i32, (100, 100, 100, 255));
+        if self.ground.try_load() {
+            let mut con = api.con();
+            let mut img = Image::new_empty(self.size.0 as u32 * 2, self.size.1 as u32 * 2);
+
+            for y in 0..self.size.1 as usize * 2 {
+                for x in 0..self.size.0 as usize * 2 {
+                    if self.map.is_in_fov(x, y) {
+                        img.put_pixel(
+                            x as u32,
+                            y as u32,
+                            self.ground.pixel(x as u32, y as u32).unwrap(),
+                        );
+                    } else {
+                        img.put_pixel(x as u32, y as u32, (0, 0, 0, 255));
+                    }
                 }
             }
+            img.blit_2x(&mut con, 0, 0, 0, 0, None, None, None);
         }
+    }
+    pub fn compute_fov(&mut self, (x, y): (i32, i32), radius: usize) {
+        self.map.clear_fov();
+        self.fov
+            .compute_fov(&mut self.map, x as usize * 2, y as usize * 2, radius, true);
+    }
+    fn compute_walls_2x_and_start_pos(&mut self) {
+        if let Some(ref mut img) = self.img {
+            let size = img.try_get_size().unwrap();
+            self.map = MapData::new(size.0 as usize, size.1 as usize);
+            for y in 0..size.1 {
+                for x in 0..size.0 {
+                    let p = img.pixel(x, y).unwrap();
+                    self.map
+                        .set_transparent(x as usize, y as usize, p != WALL_COLOR);
+                    self.visited_2x.push(false);
+                    if p == START_COLOR {
+                        self.start = (x as i32 / 2, y as i32 / 2);
+                    }
+                }
+            }
+            self.size = (size.0 as i32 / 2, size.1 as i32 / 2);
+        }
+    }
+    fn compute_walls(&mut self) {
+        for y in 0..self.size.1 {
+            for x in 0..self.size.0 {
+                let mut count = 0;
+                let x2 = x as usize * 2;
+                let y2 = y as usize * 2;
+                if self.map.is_transparent(x2, y2) {
+                    count += 1;
+                }
+                if self.map.is_transparent(x2 + 1, y2) {
+                    count += 1;
+                }
+                if self.map.is_transparent(x2, y2 + 1) {
+                    count += 1;
+                }
+                if self.map.is_transparent(x2 + 1, y2 + 1) {
+                    count += 1;
+                }
+                self.walls.push(count < 2);
+            }
+        }
+    }
+    fn offset(&self, (x, y): (i32, i32)) -> usize {
+        (x + y * self.size.0 as i32) as usize
     }
 }
