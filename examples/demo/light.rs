@@ -4,7 +4,7 @@ use doryen_rs::{color_add, color_blend, color_scale, Color, Image};
 use crate::noise::simplex;
 use crate::BLACK;
 
-const TIME_SCALE: f32 = 0.1;
+const TIME_SCALE: f32 = 0.05;
 const LIGHT_INTENSITY: f32 = 1.5;
 const LIGHT_FLICKER_MOVE: f32 = 2.0;
 const LIGHT_FLICKER_INTENSITY: f32 = 0.4;
@@ -25,7 +25,8 @@ impl Light {
             radius,
             color,
             intensity: LIGHT_INTENSITY,
-            t: 0.0,
+            // "random" t initial value so that all lights don't flicker in sync
+            t: (x * y) as f32,
         }
     }
     pub fn pos_mut(&mut self) -> &mut (f32, f32) {
@@ -70,22 +71,26 @@ impl Light {
         }
         fov.compute_fov(
             &mut map,
-            radius as usize,
-            radius as usize,
+            px as usize - minx as usize,
+            py as usize - miny as usize,
             radius as usize,
             true,
         );
         let light_color = color_scale(self.color, intensity);
         let radius2 = radius * radius;
+        let radius_coef = 1.0 / (1.0 + radius2 / 20.0);
         for y in miny..=maxy {
             for x in minx..=maxx {
                 if map.is_in_fov((x - minx) as usize, (y - miny) as usize) {
                     let dx = x as f32 - px;
                     let dy = y as f32 - py;
-                    let distance = dx * dx + dy * dy;
-                    let coef = distance / radius2;
-                    if coef < 1.0 {
-                        let light = color_blend(light_color, BLACK, coef);
+                    // good looking lights. see http://roguecentral.org/doryen/articles/lights-in-full-color-roguelikes/
+                    let squared_dist = dx * dx + dy * dy;
+                    let intensity_coef = 1.0 / (1.0 + squared_dist / 20.0);
+                    let intensity_coef = intensity_coef - radius_coef;
+                    let intensity_coef = intensity_coef / (1.0 - radius_coef);
+                    if intensity_coef > 0.0 {
+                        let light = color_blend(BLACK, light_color, intensity_coef);
                         let cur_light = lightmap.pixel(x, y).unwrap();
                         lightmap.put_pixel(x, y, color_add(light, cur_light));
                     }
