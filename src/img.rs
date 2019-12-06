@@ -21,6 +21,13 @@ impl Image {
             img: None,
         }
     }
+    /// Create an empty image.
+    pub fn new_empty(width: u32, height: u32) -> Self {
+        Self {
+            file_loader: FileLoader::new(),
+            img: Some(image::RgbaImage::new(width, height)),
+        }
+    }
     /// get the color of a specific pixel inside the image
     pub fn pixel(&self, x: u32, y: u32) -> Option<Color> {
         if let Some(ref img) = self.img {
@@ -28,6 +35,12 @@ impl Image {
             return Some((p[0], p[1], p[2], p[3]));
         }
         None
+    }
+    /// sets the color of a specific pixel inside the image
+    pub fn put_pixel(&mut self, x: u32, y: u32, color: Color) {
+        if let Some(ref mut img) = self.img {
+            img.put_pixel(x, y, image::Rgba([color.0, color.1, color.2, color.3]));
+        }
     }
     /// Check if the image has been loaded.
     /// Since there's no background thread doing the work for you, you have to call some method on image for it to actually load.
