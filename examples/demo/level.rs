@@ -1,8 +1,10 @@
 use doryen_fov::{FovAlgorithm, FovRestrictive, MapData};
-use doryen_rs::{Color, DoryenApi, Image};
+use doryen_rs::{color_blend, Color, DoryenApi, Image};
 
 const START_COLOR: Color = (255, 0, 0, 255);
 const WALL_COLOR: Color = (255, 255, 255, 255);
+const VISITED_BLEND_COLOR: Color = (10, 10, 40, 255);
+const VISITED_BLEND_COEF: f32 = 0.8;
 
 pub struct Level {
     img: Option<Image>,
@@ -53,12 +55,18 @@ impl Level {
 
             for y in 0..self.size.1 as usize * 2 {
                 for x in 0..self.size.0 as usize * 2 {
+                    let off = self.offset_2x((x as i32, y as i32));
                     if self.map.is_in_fov(x, y) {
                         img.put_pixel(
                             x as u32,
                             y as u32,
                             self.ground.pixel(x as u32, y as u32).unwrap(),
                         );
+                        self.visited_2x[off] = true;
+                    } else if self.visited_2x[off] {
+                        let col = self.ground.pixel(x as u32, y as u32).unwrap();
+                        let dark_col = color_blend(col, VISITED_BLEND_COLOR, VISITED_BLEND_COEF);
+                        img.put_pixel(x as u32, y as u32, dark_col);
                     } else {
                         img.put_pixel(x as u32, y as u32, (0, 0, 0, 255));
                     }
@@ -114,5 +122,8 @@ impl Level {
     }
     fn offset(&self, (x, y): (i32, i32)) -> usize {
         (x + y * self.size.0 as i32) as usize
+    }
+    fn offset_2x(&self, (x, y): (i32, i32)) -> usize {
+        (x + y * self.size.0 as i32 * 2) as usize
     }
 }
