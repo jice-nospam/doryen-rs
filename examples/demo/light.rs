@@ -4,6 +4,8 @@ use doryen_rs::{color_add, color_blend, color_scale, Color, Image};
 use crate::noise::simplex;
 use crate::BLACK;
 
+pub const LIGHT_COEF: f32 = 1.5;
+
 const TIME_SCALE: f32 = 0.05;
 const LIGHT_INTENSITY: f32 = 1.5;
 const LIGHT_FLICKER_MOVE: f32 = 2.0;
@@ -28,6 +30,9 @@ impl Light {
             // "random" t initial value so that all lights don't flicker in sync
             t: (x * y) as f32,
         }
+    }
+    pub fn is_penumbra(color: Color, level: usize) -> bool {
+        (color.0 as usize + color.1 as usize + color.2 as usize) < level
     }
     pub fn pos_mut(&mut self) -> &mut (f32, f32) {
         &mut self.pos

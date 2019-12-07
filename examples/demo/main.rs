@@ -1,6 +1,7 @@
 extern crate doryen_fov;
 extern crate doryen_rs;
 
+mod entity;
 mod level;
 mod light;
 mod noise;
@@ -8,6 +9,7 @@ mod player;
 
 use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
 
+use entity::Entity;
 use level::Level;
 use player::Player;
 
@@ -20,6 +22,7 @@ const WHITE: Color = (255, 255, 255, 255);
 
 struct DoryenDemo {
     player: Player,
+    entities: Vec<Entity>,
     mouse_pos: (f32, f32),
     level: Level,
     loaded: bool,
@@ -32,10 +35,13 @@ impl Engine for DoryenDemo {
         api.con().register_color("blue", (192, 192, 255, 255));
     }
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
-        if !self.loaded && self.level.try_load() {
-            self.loaded = true;
-            self.player.move_to(self.level.start_pos());
-            self.level.compute_fov(self.player.pos(), PLAYER_FOV_RADIUS);
+        if !self.loaded {
+            if let Some(entities) = self.level.try_load() {
+                self.loaded = true;
+                self.player.move_to(self.level.start_pos());
+                self.level.compute_fov(self.player.pos(), PLAYER_FOV_RADIUS);
+                self.entities = entities;
+            }
         }
         if self.loaded {
             let mut coef = 1.0 / std::f32::consts::SQRT_2;
@@ -59,15 +65,13 @@ impl Engine for DoryenDemo {
     fn render(&mut self, api: &mut dyn DoryenApi) {
         if self.loaded {
             self.clear_con(api);
-            let player_pos = self.player.pos();
-            self.level.render(api, player_pos);
-            let player_light = self.level.light_at(player_pos);
-            self.player.render(api, player_light);
+            self.level.render(api, self.player.pos());
+            self.render_entities(api);
             let fps = api.fps();
             api.con().print_color(
                 (CONSOLE_WIDTH / 2) as i32,
                 (CONSOLE_HEIGHT - 2) as i32,
-                &format!("#[white]Move with #[red]arrows or WSAD\n#[white]Fire with #[red]mouse   {:4} fps",fps),
+                &format!("#[white]Move with #[red]arrows or WSAD #[white]Fire with #[red]mouse   {:4} fps",fps),
                 TextAlign::Center,
                 None,
             );
@@ -75,7 +79,7 @@ impl Engine for DoryenDemo {
             api.con().print_color(
                 (CONSOLE_WIDTH / 2) as i32,
                 (CONSOLE_HEIGHT / 2) as i32,
-                &format!("#[white]Loading#[red]..."),
+                "#[white]Loading#[red]...",
                 TextAlign::Center,
                 None,
             );
@@ -89,8 +93,19 @@ impl DoryenDemo {
             player: Player::new(PLAYER_SPEED),
             mouse_pos: (0.0, 0.0),
             level: Level::new("demo/level"),
+            entities: Vec::new(),
             loaded: false,
         }
+    }
+    fn render_entities(&self, api: &mut dyn DoryenApi) {
+        for entity in self.entities.iter() {
+            if self.level.is_in_fov(entity.pos) {
+                entity.render(api, &self.level);
+            }
+        }
+        let player_pos = self.player.pos();
+        let player_light = self.level.light_at(player_pos);
+        self.player.render(api, player_light);
     }
 }
 
@@ -104,6 +119,7 @@ impl DoryenDemo {
 fn main() {
     let mut app = App::new(AppOptions {
         window_title: "doryen demo".to_owned(),
+        vsync: false,
         ..Default::default()
     });
     app.set_engine(Box::new(DoryenDemo::new()));

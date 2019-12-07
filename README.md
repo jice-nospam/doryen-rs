@@ -69,7 +69,6 @@ cargo run --example basic
 
 * web compilation
 ```
-rustup target install wasm32-unknown-unknown
 cargo install --force cargo-web
 cargo web start --example basic
 ```
