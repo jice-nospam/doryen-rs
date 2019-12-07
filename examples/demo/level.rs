@@ -95,10 +95,12 @@ impl Level {
             for y in 0..self.size.1 as usize * 2 {
                 for x in 0..self.size.0 as usize * 2 {
                     let off = self.offset_2x((x as i32, y as i32));
-                    if self.map.is_in_fov(x, y) {
+                    if self.map.is_in_fov(x, y)
+                        && (self.map.is_transparent(x, y) || !self.visited_2x[off])
+                    {
+                        self.visited_2x[off] = true;
                         let ground_col = self.ground.pixel(x as u32, y as u32).unwrap();
                         let light_col = self.lightmap.pixel(x as u32, y as u32).unwrap();
-                        let penumbra = Light::is_penumbra(light_col, 50);
                         let mut r =
                             f32::from(ground_col.0) * f32::from(light_col.0) * LIGHT_COEF / 255.0;
                         let mut g =
@@ -113,9 +115,6 @@ impl Level {
                             y as u32,
                             (r as u8, g as u8, b as u8, 255),
                         );
-                        if !penumbra {
-                            self.visited_2x[off] = true;
-                        }
                     } else if self.visited_2x[off] {
                         let col = self.ground.pixel(x as u32, y as u32).unwrap();
                         let dark_col = color_blend(col, VISITED_BLEND_COLOR, VISITED_BLEND_COEF);
