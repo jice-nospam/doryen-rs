@@ -17,9 +17,16 @@ install:
 script:
   - chmod +x ./ci/install_cargo_web.sh
   - ./ci/install_cargo_web.sh
-  - cargo build --target $TARGET --verbose
-  - cargo build --target $TARGET --verbose --examples
+  - cargo test --target $TARGET --verbose --release
+  - cargo web build --example alpha --release
   - cargo web build --example basic --release
-  - cargo web build --example perf --release
+  - cargo web build --example blit --release
+  - cargo web build --example demo --release
+  - cargo web build --example exit --release
   - cargo web build --example fonts --release
+  - cargo web build --example image --release
+  - cargo web build --example perf --release
+  - cargo web build --example resize --release
+  - cargo web build --example subcell --release
+  - cargo web build --example text_input --release
   - cargo web build --example unicode --release
