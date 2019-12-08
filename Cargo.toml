@@ -21,6 +21,6 @@ features = ["png_codec"]
 
 [dev-dependencies]
 unicode-segmentation = "1.6.0"
-doryen-fov="*"
+doryen-fov="0.1.*"
 
 [features]
