@@ -9,37 +9,49 @@ Ascii roguelike library in rust with native and wasm support.
 Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
 
 Demos :
-* [Visual demo](https://jice-nospam.github.io/doryen-rs/demo/)
+
+<table>
+  <tr><td>
+    <a href="https://jice-nospam.github.io/doryen-rs/demo/">Visual demo</a>
 
 ![demo](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/demo.png)
-
-* [Basic real-time walking @](https://jice-nospam.github.io/doryen-rs/basic/)
+</td><td>
+  <a href="https://jice-nospam.github.io/doryen-rs/basic/">Basic real-time walking @</a>
 
 ![basic](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/basic.png)
-
-* [Performance test](https://jice-nospam.github.io/doryen-rs/perf/)
+</td></tr><tr><td>
+  <a href="https://jice-nospam.github.io/doryen-rs/perf/">Performance test</a>
 
 ![perf](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/perf.png)
-
-* [Fonts demo](https://jice-nospam.github.io/doryen-rs/fonts/)
+</td><td>
+  <a href="https://jice-nospam.github.io/doryen-rs/fonts/">Fonts demo</a>
 
 ![fonts](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/fonts.png)
-
-* [Unicode demo](https://jice-nospam.github.io/doryen-rs/unicode/)
+</td></tr><tr><td>
+<a href="https://jice-nospam.github.io/doryen-rs/unicode/">Unicode demo</a>
 
 ![unicode](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/unicode.png)
-
-* [Console blitting demo](https://jice-nospam.github.io/doryen-rs/blit/)
+</td><td>
+<a href="https://jice-nospam.github.io/doryen-rs/blit/">Console blitting demo</a>
 
 ![blit](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/blit.png)
-
-* [Image blitting demo](https://jice-nospam.github.io/doryen-rs/image/)
+</td></tr><tr><td>
+<a href="https://jice-nospam.github.io/doryen-rs/image/">Image blitting demo</a>
 
 ![image](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/image.png)
-
-* [Subcell resolution demo](https://jice-nospam.github.io/doryen-rs/subcell/)
+</td><td>
+<a href="https://jice-nospam.github.io/doryen-rs/subcell/">Subcell resolution demo</a>
 
 ![subcell](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/subcell.png)
+</td></tr><tr><td>
+<a href="https://jice-nospam.github.io/doryen-rs/alpha/">Transparent console demo</a>
+
+![image](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/alpha.png)
+</td><td>
+<a href="https://jice-nospam.github.io/doryen-rs/text_input/">Text input demo</a>
+
+![subcell](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/text_input.png)
+</td></tr></table>
 
 # status
 ```diff
