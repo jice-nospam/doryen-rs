@@ -12,43 +12,43 @@ Demos :
 
 <table>
   <tr><td>
-    <a href="https://jice-nospam.github.io/doryen-rs/demo/">Visual demo</a>
+    <a href="https://jice-nospam.github.io/doryen-rs/docs/demo/">Visual demo</a>
 
 ![demo](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/demo.png)
 </td><td>
-  <a href="https://jice-nospam.github.io/doryen-rs/basic/">Basic real-time walking @</a>
+  <a href="https://jice-nospam.github.io/doryen-rs/docs/basic/">Basic real-time walking @</a>
 
 ![basic](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/basic.png)
 </td></tr><tr><td>
-  <a href="https://jice-nospam.github.io/doryen-rs/perf/">Performance test</a>
+  <a href="https://jice-nospam.github.io/doryen-rs/docs/perf/">Performance test</a>
 
 ![perf](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/perf.png)
 </td><td>
-  <a href="https://jice-nospam.github.io/doryen-rs/fonts/">Fonts demo</a>
+  <a href="https://jice-nospam.github.io/doryen-rs/docs/fonts/">Fonts demo</a>
 
 ![fonts](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/fonts.png)
 </td></tr><tr><td>
-<a href="https://jice-nospam.github.io/doryen-rs/unicode/">Unicode demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/unicode/">Unicode demo</a>
 
 ![unicode](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/unicode.png)
 </td><td>
-<a href="https://jice-nospam.github.io/doryen-rs/blit/">Console blitting demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/blit/">Console blitting demo</a>
 
 ![blit](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/blit.png)
 </td></tr><tr><td>
-<a href="https://jice-nospam.github.io/doryen-rs/image/">Image blitting demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/image/">Image blitting demo</a>
 
 ![image](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/image.png)
 </td><td>
-<a href="https://jice-nospam.github.io/doryen-rs/subcell/">Subcell resolution demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/subcell/">Subcell resolution demo</a>
 
 ![subcell](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/subcell.png)
 </td></tr><tr><td>
-<a href="https://jice-nospam.github.io/doryen-rs/alpha/">Transparent console demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/alpha/">Transparent console demo</a>
 
 ![image](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/alpha.png)
 </td><td>
-<a href="https://jice-nospam.github.io/doryen-rs/text_input/">Text input demo</a>
+<a href="https://jice-nospam.github.io/doryen-rs/docs/text_input/">Text input demo</a>
 
 ![subcell](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/text_input.png)
 </td></tr></table>
