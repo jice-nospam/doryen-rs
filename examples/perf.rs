@@ -65,10 +65,10 @@ impl Engine for PerfTest {
 
 impl PerfTest {
     pub fn new() -> Self {
-        Self { seed: 0xdeadbeef }
+        Self { seed: 0xdead_beef }
     }
     fn rnd(&mut self) -> u64 {
-        self.seed = 214013u64.wrapping_mul(self.seed).wrapping_add(2531011);
+        self.seed = 214_013u64.wrapping_mul(self.seed).wrapping_add(2_531_011);
         self.seed
     }
 }

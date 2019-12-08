@@ -310,7 +310,7 @@ impl App {
 
     fn handle_input(
         &mut self,
-        engine: &mut Box<dyn Engine>,
+        engine: &mut dyn Engine,
         events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
     ) {
         self.api.input.on_frame();
@@ -365,7 +365,7 @@ impl App {
                     font_loaded = true;
                 }
             } else {
-                self.handle_input(&mut engine, app.events.clone());
+                self.handle_input(&mut *engine, app.events.clone());
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {

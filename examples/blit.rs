@@ -15,15 +15,11 @@ struct MyRoguelike {
 
 fn move_con(pos: &mut (i32, i32), spd: &mut (i32, i32), size: (i32, i32)) {
     pos.0 += spd.0;
-    if pos.0 == size.0 - 20 {
-        spd.0 = -spd.0;
-    } else if pos.0 == 0 {
+    if pos.0 == size.0 - 20 || pos.0 == 0 {
         spd.0 = -spd.0;
     }
     pos.1 += spd.1;
-    if pos.1 == size.1 - 20 {
-        spd.1 = -spd.1;
-    } else if pos.1 == 0 {
+    if pos.1 == size.1 - 20 || pos.1 == 0 {
         spd.1 = -spd.1;
     }
 }
