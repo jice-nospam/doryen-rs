@@ -9,33 +9,37 @@ Ascii roguelike library in rust with native and wasm support.
 Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/unrust) game engine.
 
 Demos :
-* [Basic real-time walking @](http://roguecentral.org/~jice/doryen-rs/basic/)
+* [Visual demo](https://jice-nospam.github.io/doryen-rs/demo/)
 
-![basic](http://roguecentral.org/~jice/doryen-rs/basic.png)
+![demo](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/demo.png)
 
-* [Performance test](http://roguecentral.org/~jice/doryen-rs/perf/)
+* [Basic real-time walking @](https://jice-nospam.github.io/doryen-rs/basic/)
 
-![perf](http://roguecentral.org/~jice/doryen-rs/perf.png)
+![basic](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/basic.png)
 
-* [Fonts demo](http://roguecentral.org/~jice/doryen-rs/fonts/)
+* [Performance test](https://jice-nospam.github.io/doryen-rs/perf/)
 
-![fonts](http://roguecentral.org/~jice/doryen-rs/colored.png)
+![perf](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/perf.png)
 
-* [Unicode demo](http://roguecentral.org/~jice/doryen-rs/unicode/)
+* [Fonts demo](https://jice-nospam.github.io/doryen-rs/fonts/)
 
-![unicode](http://roguecentral.org/~jice/doryen-rs/unicode3.png)
+![fonts](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/fonts.png)
 
-* [Console blitting demo](http://roguecentral.org/~jice/doryen-rs/blit/)
+* [Unicode demo](https://jice-nospam.github.io/doryen-rs/unicode/)
 
-![blit](http://roguecentral.org/~jice/doryen-rs/blit.png)
+![unicode](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/unicode.png)
 
-* [Image blitting demo](http://roguecentral.org/~jice/doryen-rs/image/)
+* [Console blitting demo](https://jice-nospam.github.io/doryen-rs/blit/)
 
-![image](http://roguecentral.org/~jice/doryen-rs/image.png)
+![blit](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/blit.png)
 
-* [Subcell resolution demo](http://roguecentral.org/~jice/doryen-rs/subcell/)
+* [Image blitting demo](https://jice-nospam.github.io/doryen-rs/image/)
 
-![subcell](http://roguecentral.org/~jice/doryen-rs/subcell.png)
+![image](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/image.png)
+
+* [Subcell resolution demo](https://jice-nospam.github.io/doryen-rs/subcell/)
+
+![subcell](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/subcell.png)
 
 # status
 ```diff
