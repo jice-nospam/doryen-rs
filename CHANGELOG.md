@@ -1,4 +1,4 @@
-# 1.2.1 - TBD
+# 1.2.1 - 2019 Dev 08
 ## fixed
 * `Console.blit` not taking source console alpha value into account
 * fixed #19 : rendering unicode characters >= 0x00FF
@@ -7,9 +7,10 @@
 * `AppOptions` now implements `Default`
 * added `InputApi.keys_released()` and `InputApi.keys_pressed()` that return iterators on key events since last update
 * added text input support through `InputApi.text()` (see text_input example)
-* added alpha demo showcasing framebuffer overdrawing
+* added alpha example showcasing framebuffer overdrawing
 * provided default `update()` and `resize()` functions. Now `Engine` must only provide a render method
 * new Image methods : `new_empty()`, `pixel()`, `put_pixel()`
+* added a visual demo showcasing subcell resolution + dynamic lighting in a real time roguelike
 
 # 1.2.0 - 2019 Nov 22
 ## fixed
