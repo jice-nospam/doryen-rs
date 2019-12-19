@@ -6,6 +6,7 @@ use uni_app;
 struct AsyncFile(String, uni_app::fs::File, Option<Vec<u8>>);
 
 #[derive(Default)]
+/// This provides a common way to load files for both native and web targets
 pub struct FileLoader {
     files_to_load: HashMap<usize, AsyncFile>,
     seq: usize,
@@ -15,6 +16,7 @@ impl FileLoader {
     pub fn new() -> Self {
         Default::default()
     }
+    /// request to load a file. returns an id you can use with other methods
     pub fn load_file(&mut self, path: &str) -> Result<usize, String> {
         uni_app::App::print(format!("loading file {}\n", path));
         match open_file(path) {
@@ -55,6 +57,7 @@ impl FileLoader {
         true
     }
 
+    /// return true if the file is ready in memory
     pub fn check_file_ready(&mut self, id: usize) -> bool {
         self.load_file_async();
         if let Some(f) = self.files_to_load.get(&id) {
@@ -63,6 +66,7 @@ impl FileLoader {
         false
     }
 
+    /// retrieve the file content
     pub fn get_file_content(&mut self, id: usize) -> Vec<u8> {
         let mut f = self.files_to_load.remove(&id).unwrap();
         f.2.take().unwrap()
