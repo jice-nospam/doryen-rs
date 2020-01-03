@@ -1,4 +1,8 @@
-# 1.2.1 - 2019 Dev 08
+# 1.2.2 - 2020 Jan 03
+## fixed
+* fixed #21 : keyboard/mouse events lost when framerate > tickrate
+
+# 1.2.1 - 2019 Dec 08
 ## fixed
 * `Console.blit` not taking source console alpha value into account
 * fixed #19 : rendering unicode characters >= 0x00FF

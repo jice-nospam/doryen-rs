@@ -313,7 +313,6 @@ impl App {
         engine: &mut dyn Engine,
         events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
     ) {
-        self.api.input.on_frame();
         for evt in events.borrow().iter() {
             if let uni_app::AppEvent::Resized(size) = evt {
                 self.gl.viewport(0, 0, size.0, size.1);
