@@ -130,16 +130,21 @@ impl DoryenInput {
             AppEvent::MouseUp(ref mouse) => {
                 self.on_mouse_up(mouse.button);
             }
-            AppEvent::Resized(size) => {
-                self.resize(*size);
-            }
             AppEvent::CloseRequested => {
                 self.close_request = true;
             }
+            _ => (),
         }
     }
-    fn resize(&mut self, size: (u32, u32)) {
-        self.screen_size = (size.0 as f32, size.1 as f32);
+    pub(crate) fn resize(
+        &mut self,
+        (screen_width, screen_height): (u32, u32),
+        (con_width, con_height): (u32, u32),
+        (x_offset, y_offset): (u32, u32),
+    ) {
+        self.screen_size = (screen_width as f32, screen_height as f32);
+        self.con_size = (con_width as f32, con_height as f32);
+        self.mouse_offset = (x_offset as f32, y_offset as f32);
     }
 }
 

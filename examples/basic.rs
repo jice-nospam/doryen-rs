@@ -39,7 +39,7 @@ impl Engine for MyRoguelike {
             CONSOLE_WIDTH,
             CONSOLE_HEIGHT,
             Some((128, 128, 128, 255)),
-            None,
+            Some((0, 0, 0, 255)),
             Some('.' as u16),
         );
         con.area(
@@ -76,6 +76,11 @@ impl Engine for MyRoguelike {
             "#[blue]This blue text contains a #[red]red#[] word",
             TextAlign::Left,
             None,
+        );
+        con.back(
+            self.mouse_pos.0 as i32,
+            self.mouse_pos.1 as i32,
+            (255, 255, 255, 255),
         );
     }
 }

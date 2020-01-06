@@ -191,6 +191,7 @@ pub struct App {
     font_height: u32,
     char_width: u32,
     char_height: u32,
+    screen_resolution: (u32, u32),
 }
 
 impl App {
@@ -209,10 +210,10 @@ impl App {
         let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
         let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
         let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
+        let screen_resolution = app.get_screen_resolution();
         let (x_offset, y_offset) = if options.fullscreen && cfg!(not(target_arch = "wasm32")) {
-            let (resx, resy) = app.get_screen_resolution();
-            let x_offset = (resx - real_screen_width) as i32 / 2;
-            let y_offset = (resy - real_screen_height) as i32 / 2;
+            let x_offset = (screen_resolution.0 - real_screen_width) as i32 / 2;
+            let y_offset = (screen_resolution.1 - real_screen_height) as i32 / 2;
             (x_offset, y_offset)
         } else {
             (0, 0)
@@ -264,7 +265,7 @@ impl App {
                 fps: 0,
                 average_fps: 0,
                 font_path: None,
-                screen_size: (real_screen_width, real_screen_height),
+                screen_size: (options.screen_width, options.screen_height),
             },
             options,
             fps: FPS::new(),
@@ -273,6 +274,7 @@ impl App {
             font_height: 0,
             char_width: 0,
             char_height: 0,
+            screen_resolution,
         }
     }
     pub fn set_engine(&mut self, engine: Box<dyn Engine>) {
@@ -308,16 +310,51 @@ impl App {
         );
     }
 
+    fn resize(
+        &mut self,
+        engine: &mut dyn Engine,
+        hidpi_factor: f32,
+        (real_screen_width, real_screen_height): (u32, u32),
+    ) {
+        let (x_offset, y_offset) = if self.options.fullscreen && cfg!(not(target_arch = "wasm32")) {
+            let x_offset = (self.screen_resolution.0 - real_screen_width) as i32 / 2;
+            let y_offset = (self.screen_resolution.1 - real_screen_height) as i32 / 2;
+            (x_offset, y_offset)
+        } else {
+            (0, 0)
+        };
+        self.gl
+            .viewport(x_offset, y_offset, real_screen_width, real_screen_height);
+        self.api.screen_size = (
+            (real_screen_width as f32 / hidpi_factor) as u32,
+            (real_screen_height as f32 / hidpi_factor) as u32,
+        );
+        engine.resize(&mut self.api);
+        let con_size = self.api.con().get_size();
+        if cfg!(target_arch = "wasm32") {
+            self.api.input.resize(
+                (self.options.screen_width, self.options.screen_height),
+                con_size,
+                (x_offset as u32, y_offset as u32),
+            )
+        } else {
+            self.api.input.resize(
+                (real_screen_width, real_screen_height),
+                con_size,
+                (x_offset as u32, y_offset as u32),
+            )
+        };
+    }
+
     fn handle_input(
         &mut self,
         engine: &mut dyn Engine,
+        hidpi_factor: f32,
         events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
     ) {
         for evt in events.borrow().iter() {
             if let uni_app::AppEvent::Resized(size) = evt {
-                self.gl.viewport(0, 0, size.0, size.1);
-                self.api.screen_size = *size;
-                engine.resize(&mut self.api);
+                self.resize(engine, hidpi_factor, *size);
                 self.program.bind(
                     &self.gl,
                     &self.api.con,
@@ -344,9 +381,6 @@ impl App {
                 self.api.clear_font_path();
                 self.font_loader.load_font(&font_path);
                 font_loaded = false;
-                if self.options.resizable {
-                    engine.resize(&mut self.api);
-                }
             }
             if !font_loaded {
                 if self.font_loader.load_font_async() {
@@ -364,7 +398,7 @@ impl App {
                     font_loaded = true;
                 }
             } else {
-                self.handle_input(&mut *engine, app.events.clone());
+                self.handle_input(&mut *engine, app.hidpi_factor(), app.events.clone());
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {

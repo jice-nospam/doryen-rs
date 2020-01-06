@@ -1,3 +1,7 @@
+# 1.2.3 - TBD
+* fixed #22 : mouse coordinates broken when console is resized
+* fixed resizable console not taking hidpi factor into account
+
 # 1.2.2 - 2020 Jan 03
 ## fixed
 * fixed #21 : keyboard/mouse events lost when framerate > tickrate
