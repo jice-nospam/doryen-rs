@@ -26,6 +26,8 @@ pub trait InputApi {
     fn keys_released(&self) -> Keys;
     /// characters typed since last update
     fn text(&self) -> String;
+    /// number of backspaces typed while text was empty 
+    fn backspaces(&self) -> u16;
     // mouse
     /// return the current status of a mouse button (true if pressed)
     fn mouse_button(&self, num: usize) -> bool;
@@ -47,6 +49,7 @@ pub struct DoryenInput {
     mpressed: HashMap<usize, bool>,
     mreleased: HashMap<usize, bool>,
     text: String,
+    backspaces: u16,
     close_request: bool,
     mpos: (f32, f32),
     screen_size: (f32, f32),
@@ -69,6 +72,7 @@ impl DoryenInput {
             mreleased: HashMap::new(),
             mpos: (0.0, 0.0),
             text: String::new(),
+            backspaces: 0,
             close_request: false,
             screen_size: (screen_width as f32, screen_height as f32),
             con_size: (con_width as f32, con_height as f32),
@@ -104,6 +108,7 @@ impl DoryenInput {
         self.kpressed.clear();
         self.close_request = false;
         self.text.clear();
+        self.backspaces = 0;
     }
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
@@ -116,6 +121,18 @@ impl DoryenInput {
             AppEvent::CharEvent(ch) => {
                 if !ch.is_control() {
                     self.text.push(*ch);
+                }
+                // Backspace pressed
+                else if ch.eq(&'\u{8}') {
+                    // Remove last typed char if there's some text 
+                    if !self.text.is_empty() {
+                        self.text.pop();
+                    }
+                    // Save the backspace for later use if no text
+                    else {
+                        self.backspaces += 1;
+                    }
+                    
                 }
             }
             AppEvent::MousePos(ref pos) => {
@@ -179,6 +196,9 @@ impl InputApi for DoryenInput {
     }
     fn text(&self) -> String {
         self.text.to_owned()
+    }
+    fn backspaces(&self) -> u16 {
+        self.backspaces
     }
     fn mouse_button(&self, num: usize) -> bool {
         match self.mdown.get(&num) {
