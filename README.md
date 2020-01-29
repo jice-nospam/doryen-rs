@@ -17,6 +17,7 @@ Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/un
 + [x] subcell resolution
 + [x] PNG image blitting
 + [x] unicode support
++ [x] screenshots
 ```
 
 # demos

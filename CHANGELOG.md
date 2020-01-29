@@ -1,3 +1,6 @@
+# 1.2.4 - 2020 Jan 29
+* added option to return `UpdateEvent::Capture` from the `update()` function to capture screenshots in-game
+
 # 1.2.3 - 2020 Jan 08
 * fixed #22 : mouse coordinates broken when console is resized
 * fixed resizable console not taking hidpi factor into account

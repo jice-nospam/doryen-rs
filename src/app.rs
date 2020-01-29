@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::SystemTime;
 
+use image;
 use uni_app;
 use uni_gl;
 
@@ -107,6 +109,7 @@ impl DoryenApiImpl {
 /// What is returned by the [`Engine::update`] function
 pub enum UpdateEvent {
     /// end the program
+    Capture,
     Exit,
 }
 
@@ -402,8 +405,15 @@ impl App {
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                    if let Some(UpdateEvent::Exit) = engine.update(&mut self.api) {
-                        uni_app::App::exit();
+                    if let Some(event) = engine.update(&mut self.api) {
+                        match event {
+                            UpdateEvent::Capture => capture_screen(
+                                &self.gl,
+                                self.options.screen_width,
+                                self.options.screen_height,
+                            ),
+                            UpdateEvent::Exit => uni_app::App::exit(),
+                        }
                     }
                     next_tick += SKIP_TICKS;
                     skipped_frames += 1;
@@ -420,6 +430,35 @@ impl App {
             }
         });
     }
+}
+
+/// This captures an in-game screenshot and saves it to the root game directory
+fn capture_screen(gl: &uni_gl::WebGLRenderingContext, w: u32, h: u32) {
+    let mut img = image::DynamicImage::new_rgba8(w, h);
+    let pixels = img.as_mut_rgba8().unwrap();
+
+    gl.pixel_storei(uni_gl::PixelStorageMode::PackAlignment, 1);
+    gl.read_pixels(
+        0,
+        0,
+        w,
+        h,
+        uni_gl::PixelFormat::Rgba,
+        uni_gl::PixelType::UnsignedByte,
+        pixels,
+    );
+
+    image::save_buffer(
+        match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+            Ok(n) => format!("screenshot_{}.png", n.as_secs()),
+            _ => "screenshot.png".to_owned(),
+        },
+        &image::imageops::flip_vertical(&img),
+        w,
+        h,
+        image::ColorType::RGBA(8),
+    )
+    .expect("Failed to save buffer to the specified path");
 }
 
 fn create_texture(gl: &uni_gl::WebGLRenderingContext) -> uni_gl::WebGLTexture {
