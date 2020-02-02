@@ -2,12 +2,18 @@ extern crate doryen_rs;
 
 use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
 
+/*
+Apart from the basic real-time walking, this example shows how screenshots can be captured in-game.
+Because it uses UpdateEvent, any combination of keys can be specified to activate it.
+*/
+
 const CONSOLE_WIDTH: u32 = 80;
 const CONSOLE_HEIGHT: u32 = 45;
 
 struct MyRoguelike {
     player_pos: (i32, i32),
     mouse_pos: (f32, f32),
+    screenshot_idx: usize,
 }
 
 impl Engine for MyRoguelike {
@@ -29,6 +35,16 @@ impl Engine for MyRoguelike {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
         self.mouse_pos = input.mouse_pos();
+
+        // capture the screen
+        if input.key("ControlLeft") && input.key_pressed("KeyS") {
+            self.screenshot_idx += 1;
+            return Some(UpdateEvent::Capture(format!(
+                "screenshot_{:03}.png",
+                self.screenshot_idx
+            )));
+        }
+
         None
     }
     fn render(&mut self, api: &mut dyn DoryenApi) {
@@ -56,7 +72,7 @@ impl Engine for MyRoguelike {
         con.print_color(
             (CONSOLE_WIDTH / 2) as i32,
             (CONSOLE_HEIGHT - 1) as i32,
-            "#[white]Move with #[red]arrows",
+            "#[red]arrows#[white] : move - #[red]CTRL-S#[white] : save screenshot",
             TextAlign::Center,
             None,
         );
@@ -90,6 +106,7 @@ impl MyRoguelike {
         Self {
             player_pos: ((CONSOLE_WIDTH / 2) as i32, (CONSOLE_HEIGHT / 2) as i32),
             mouse_pos: (0.0, 0.0),
+            screenshot_idx: 0,
         }
     }
 }

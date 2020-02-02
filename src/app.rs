@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use image;
 use uni_app;
 use uni_gl;
 
@@ -106,6 +107,10 @@ impl DoryenApiImpl {
 
 /// What is returned by the [`Engine::update`] function
 pub enum UpdateEvent {
+    /// Save a screenshot. parameter = file path.
+    /// The file name must have a .png extension.
+    /// This is ignored on WASM platform.
+    Capture(String),
     /// end the program
     Exit,
 }
@@ -402,8 +407,16 @@ impl App {
                 let mut skipped_frames: i32 = -1;
                 let time = uni_app::now();
                 while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                    if let Some(UpdateEvent::Exit) = engine.update(&mut self.api) {
-                        uni_app::App::exit();
+                    if let Some(event) = engine.update(&mut self.api) {
+                        match event {
+                            UpdateEvent::Capture(filepath) => capture_screen(
+                                &self.gl,
+                                self.options.screen_width,
+                                self.options.screen_height,
+                                &filepath,
+                            ),
+                            UpdateEvent::Exit => uni_app::App::exit(),
+                        }
                     }
                     next_tick += SKIP_TICKS;
                     skipped_frames += 1;
@@ -419,6 +432,35 @@ impl App {
                 self.program.render_primitive(&self.gl, &self.api.con);
             }
         });
+    }
+}
+
+/// This captures an in-game screenshot and saves it to the file
+fn capture_screen(gl: &uni_gl::WebGLRenderingContext, w: u32, h: u32, filepath: &str) {
+    let mut img = image::DynamicImage::new_rgba8(w, h);
+    let pixels = img.as_mut_rgba8().unwrap();
+
+    gl.pixel_storei(uni_gl::PixelStorageMode::PackAlignment, 1);
+    gl.read_pixels(
+        0,
+        0,
+        w,
+        h,
+        uni_gl::PixelFormat::Rgba,
+        uni_gl::PixelType::UnsignedByte,
+        pixels,
+    );
+
+    if cfg!(not(target_arch = "wasm32")) {
+        // disabled on wasm target
+        image::save_buffer(
+            filepath,
+            &image::imageops::flip_vertical(&img),
+            w,
+            h,
+            image::ColorType::RGBA(8),
+        )
+        .expect("Failed to save buffer to the specified path");
     }
 }
 
