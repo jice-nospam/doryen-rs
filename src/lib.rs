@@ -1,3 +1,4 @@
+extern crate bracket_lib as bracket;
 extern crate image;
 extern crate uni_app;
 extern crate uni_gl;
@@ -9,7 +10,6 @@ mod file;
 mod font;
 mod img;
 mod input;
-mod program;
 
 pub use self::app::*;
 pub use self::color::*;

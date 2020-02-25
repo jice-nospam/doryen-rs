@@ -1,21 +1,10 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use bracket::prelude::Console;
+use bracket::prelude::*;
 
-use image;
-use uni_app;
-use uni_gl;
-
-use crate::console::Console;
-use crate::font::FontLoader;
-use crate::input::{DoryenInput, InputApi};
-use crate::program::{set_texture_params, Program};
-
-// shaders
-const DORYEN_VS: &str = include_str!("doryen_vs.glsl");
-const DORYEN_FS: &str = include_str!("doryen_fs.glsl");
+use crate::console;
+use crate::input::{InputApi, Keys};
 
 // fps
-const MAX_FRAMESKIP: i32 = 5;
 const TICKS_PER_SECOND: f64 = 60.0;
 const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
@@ -26,7 +15,7 @@ pub const DEFAULT_CONSOLE_HEIGHT: u32 = 45;
 /// This is the complete doryen-rs API provided to you by [`App`] in [`Engine::update`] and [`Engine::render`] methods.
 pub trait DoryenApi {
     /// return the root console that you can use to draw things on the screen
-    fn con(&mut self) -> &mut Console;
+    fn con(&mut self) -> &mut console::Console;
     /// return the input API to check user mouse and keyboard input
     fn input(&mut self) -> &mut dyn InputApi;
     /// return the current framerate
@@ -68,17 +57,84 @@ pub trait DoryenApi {
     fn get_screen_size(&self) -> (u32, u32);
 }
 
-struct DoryenApiImpl {
-    con: Console,
-    input: DoryenInput,
-    fps: u32,
-    average_fps: u32,
-    font_path: Option<String>,
-    screen_size: (u32, u32),
+#[derive(Default)]
+struct BracketInput {
+    pub mouse_pos: (f32, f32),
 }
 
-impl DoryenApi for DoryenApiImpl {
-    fn con(&mut self) -> &mut Console {
+impl BracketInput {
+    pub fn update(&mut self, mpos: (i32, i32)) {
+        self.mouse_pos = (mpos.0 as f32, mpos.1 as f32);
+    }
+}
+
+impl InputApi for BracketInput {
+    fn key(&self, _scan_code: &str) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn keys_pressed(&self) -> Keys {
+        // TODO BRACKET
+        unreachable!()
+    }
+    fn keys_released(&self) -> Keys {
+        // TODO BRACKET
+        unreachable!()
+    }
+    fn key_pressed(&mut self, _scan_code: &str) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn key_released(&mut self, _scan_code: &str) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn text(&self) -> String {
+        // TODO BRACKET
+        String::new()
+    }
+    fn mouse_button(&self, _num: usize) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn mouse_button_pressed(&mut self, _num: usize) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn mouse_button_released(&mut self, _num: usize) -> bool {
+        // TODO BRACKET
+        false
+    }
+    fn mouse_pos(&self) -> (f32, f32) {
+        self.mouse_pos
+    }
+    fn close_requested(&self) -> bool {
+        // TODO BRACKET
+        false
+    }
+}
+
+struct DoryenApiImpl<'a> {
+    con: &'a mut console::Console,
+    pub input: BracketInput,
+    fps: u32,
+    average_fps: u32,
+}
+
+impl<'a> DoryenApiImpl<'a> {
+    pub fn new(con: &'a mut console::Console) -> Self {
+        let input: BracketInput = Default::default();
+        Self {
+            con,
+            input,
+            fps: 0,
+            average_fps: 0,
+        }
+    }
+}
+
+impl<'a, 'b> DoryenApi for DoryenApiImpl<'a> {
+    fn con(&mut self) -> &mut console::Console {
         &mut self.con
     }
     fn input(&mut self) -> &mut dyn InputApi {
@@ -90,18 +146,13 @@ impl DoryenApi for DoryenApiImpl {
     fn average_fps(&self) -> u32 {
         self.average_fps
     }
-    fn set_font_path(&mut self, font_path: &str) {
-        self.font_path = Some(font_path.to_owned());
+    fn set_font_path(&mut self, _font_path: &str) {
+        // TODO BRACKET
     }
 
     fn get_screen_size(&self) -> (u32, u32) {
-        self.screen_size
-    }
-}
-
-impl DoryenApiImpl {
-    pub fn clear_font_path(&mut self) {
-        self.font_path = None;
+        // TODO BRACKET
+        (0, 0)
     }
 }
 
@@ -183,332 +234,87 @@ impl Default for AppOptions {
 
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
 pub struct App {
-    app: Option<uni_app::App>,
-    gl: uni_gl::WebGLRenderingContext,
-    font: uni_gl::WebGLTexture,
-    font_loader: FontLoader,
-    program: Program,
+    ctx: BTerm,
     options: AppOptions,
-    fps: FPS,
-    api: DoryenApiImpl,
     engine: Option<Box<dyn Engine>>,
-    font_width: u32,
-    font_height: u32,
-    char_width: u32,
-    char_height: u32,
-    screen_resolution: (u32, u32),
 }
 
 impl App {
     pub fn new(options: AppOptions) -> Self {
-        let con = Console::new(options.console_width, options.console_height);
-        let app = uni_app::App::new(uni_app::AppConfig {
-            size: (options.screen_width, options.screen_height),
-            title: options.window_title.to_owned(),
-            vsync: options.vsync,
-            show_cursor: options.show_cursor,
-            headless: false,
-            resizable: options.resizable,
-            fullscreen: options.fullscreen,
-            intercept_close_request: options.intercept_close_request,
-        });
-        let real_screen_width = (options.screen_width as f32 * app.hidpi_factor()) as u32;
-        let real_screen_height = (options.screen_height as f32 * app.hidpi_factor()) as u32;
-        let gl = uni_gl::WebGLRenderingContext::new(app.canvas());
-        let screen_resolution = app.get_screen_resolution();
-        let (x_offset, y_offset) = if options.fullscreen && cfg!(not(target_arch = "wasm32")) {
-            let x_offset = (screen_resolution.0 - real_screen_width) as i32 / 2;
-            let y_offset = (screen_resolution.1 - real_screen_height) as i32 / 2;
-            (x_offset, y_offset)
-        } else {
-            (0, 0)
-        };
-        uni_app::App::print(format!(
-            "Screen size {} x {} offset {} x {} GL viewport : {} x {}  hidpi factor : {}\n",
-            options.screen_width,
-            options.screen_height,
-            x_offset,
-            y_offset,
-            real_screen_width,
-            real_screen_height,
-            app.hidpi_factor()
-        ));
-        gl.viewport(x_offset, y_offset, real_screen_width, real_screen_height);
-        gl.enable(uni_gl::Flag::Blend as i32);
-        gl.clear_color(0.0, 0.0, 0.0, 1.0);
-        gl.clear(uni_gl::BufferBit::Color);
-        gl.blend_equation(uni_gl::BlendEquation::FuncAdd);
-        gl.blend_func(
-            uni_gl::BlendMode::SrcAlpha,
-            uni_gl::BlendMode::OneMinusSrcAlpha,
-        );
-        let program = Program::new(&gl, DORYEN_VS, DORYEN_FS);
-        // TODO this should be handled in uni-app
-        let input = if cfg!(target_arch = "wasm32") {
-            DoryenInput::new(
-                (options.screen_width, options.screen_height),
-                (options.console_width, options.console_height),
-                (x_offset as u32, y_offset as u32),
-            )
-        } else {
-            DoryenInput::new(
-                (real_screen_width, real_screen_height),
-                (options.console_width, options.console_height),
-                (x_offset as u32, y_offset as u32),
-            )
-        };
-        let font = create_texture(&gl);
+        let ctx = BTermBuilder::simple(options.console_width, options.console_height)
+            .with_title(options.window_title.clone())
+            .with_vsync(false)
+            .build();
         Self {
-            app: Some(app),
-            gl,
-            font_loader: FontLoader::new(),
-            font,
-            program,
-            api: DoryenApiImpl {
-                input,
-                con,
-                fps: 0,
-                average_fps: 0,
-                font_path: None,
-                screen_size: (options.screen_width, options.screen_height),
-            },
+            ctx,
             options,
-            fps: FPS::new(),
             engine: None,
-            font_width: 0,
-            font_height: 0,
-            char_width: 0,
-            char_height: 0,
-            screen_resolution,
         }
     }
     pub fn set_engine(&mut self, engine: Box<dyn Engine>) {
         self.engine = Some(engine);
     }
 
-    fn load_font_bytes(&mut self) {
-        let img = self.font_loader.img.take().unwrap();
-        if self.font_loader.char_width != 0 {
-            self.char_width = self.font_loader.char_width;
-            self.char_height = self.font_loader.char_height;
-        } else {
-            self.char_width = img.width() as u32 / 16;
-            self.char_height = img.height() as u32 / 16;
+    pub fn run(mut self) {
+        main_loop(
+            self.ctx,
+            State::new(
+                self.options.console_width,
+                self.options.console_height,
+                self.engine.take().unwrap(),
+            ),
+        );
+    }
+}
+
+struct State {
+    engine: Box<dyn Engine>,
+    elapsed: f32,
+    con: console::Console,
+}
+
+impl State {
+    fn new(width: u32, height: u32, engine: Box<dyn Engine>) -> Self {
+        Self {
+            engine,
+            elapsed: 0.0,
+            con: console::Console::new(width, height),
         }
-        self.font_width = img.width() as u32;
-        self.font_height = img.height() as u32;
-        uni_app::App::print(format!(
-            "font size: {:?} char size: {:?}\n",
-            (self.font_width, self.font_height),
-            (self.char_width, self.char_height)
-        ));
-        self.gl.active_texture(0);
-        self.gl.bind_texture(&self.font);
-        self.gl.tex_image2d(
-            uni_gl::TextureBindPoint::Texture2d, // target
-            0,                                   // level
-            img.width() as u16,                  // width
-            img.height() as u16,                 // height
-            uni_gl::PixelFormat::Rgba,           // format
-            uni_gl::PixelType::UnsignedByte,     // type
-            &*img,                               // data
-        );
     }
+}
 
-    fn resize(
-        &mut self,
-        engine: &mut dyn Engine,
-        hidpi_factor: f32,
-        (real_screen_width, real_screen_height): (u32, u32),
-    ) {
-        let (x_offset, y_offset) = if self.options.fullscreen && cfg!(not(target_arch = "wasm32")) {
-            let x_offset = (self.screen_resolution.0 - real_screen_width) as i32 / 2;
-            let y_offset = (self.screen_resolution.1 - real_screen_height) as i32 / 2;
-            (x_offset, y_offset)
-        } else {
-            (0, 0)
-        };
-        self.gl
-            .viewport(x_offset, y_offset, real_screen_width, real_screen_height);
-        self.api.screen_size = (
-            (real_screen_width as f32 / hidpi_factor) as u32,
-            (real_screen_height as f32 / hidpi_factor) as u32,
-        );
-        engine.resize(&mut self.api);
-        let con_size = self.api.con().get_size();
-        if cfg!(target_arch = "wasm32") {
-            self.api.input.resize(
-                (self.options.screen_width, self.options.screen_height),
-                con_size,
-                (x_offset as u32, y_offset as u32),
-            )
-        } else {
-            self.api.input.resize(
-                (real_screen_width, real_screen_height),
-                con_size,
-                (x_offset as u32, y_offset as u32),
-            )
-        };
-    }
-
-    fn handle_input(
-        &mut self,
-        engine: &mut dyn Engine,
-        hidpi_factor: f32,
-        events: Rc<RefCell<Vec<uni_app::AppEvent>>>,
-    ) {
-        for evt in events.borrow().iter() {
-            if let uni_app::AppEvent::Resized(size) = evt {
-                self.resize(engine, hidpi_factor, *size);
-                self.program.bind(
-                    &self.gl,
-                    &self.api.con,
-                    self.font_width,
-                    self.font_height,
-                    self.char_width,
-                    self.char_height,
+impl GameState for State {
+    fn tick(&mut self, ctx: &mut BTerm) {
+        self.elapsed += ctx.frame_time_ms / 1000.0;
+        let mut api = DoryenApiImpl::new(&mut self.con);
+        while self.elapsed > SKIP_TICKS as f32 {
+            api.input.update(ctx.mouse_pos());
+            api.fps = ctx.fps as u32;
+            api.average_fps = ctx.fps as u32;
+            if let Some(event) = self.engine.update(&mut api) {
+                match event {
+                    // TODO BRACKET
+                    UpdateEvent::Capture(_filepath) => (),
+                    UpdateEvent::Exit => ctx.quit(),
+                }
+            }
+            self.elapsed -= SKIP_TICKS as f32;
+        }
+        self.engine.render(&mut api);
+        ctx.cls();
+        for y in 0..self.con.get_height() {
+            for x in 0..self.con.get_width() {
+                let fore = self.con.unsafe_get_fore(x as i32, y as i32);
+                let back = self.con.unsafe_get_back(x as i32, y as i32);
+                let ascii = self.con.unsafe_get_ascii(x as i32, y as i32);
+                ctx.set(
+                    x as i32,
+                    y as i32,
+                    RGB::from_u8(fore.0, fore.1, fore.2),
+                    RGB::from_u8(back.0, back.1, back.2),
+                    ascii as u8,
                 );
             }
-            self.api.input.on_event(&evt);
         }
-    }
-
-    pub fn run(mut self) {
-        self.api.set_font_path(&self.options.font_path);
-        let app = self.app.take().unwrap();
-        let mut engine = self.engine.take().unwrap();
-        let mut next_tick: f64 = uni_app::now();
-        let mut font_loaded = false;
-        engine.init(&mut self.api);
-        app.run(move |app: &mut uni_app::App| {
-            if self.api.font_path.is_some() {
-                let font_path = self.api.font_path.clone().unwrap();
-                self.api.clear_font_path();
-                self.font_loader.load_font(&font_path);
-                font_loaded = false;
-            }
-            if !font_loaded {
-                if self.font_loader.load_font_async() {
-                    self.load_font_bytes();
-                    self.program.bind(
-                        &self.gl,
-                        &self.api.con,
-                        self.font_width,
-                        self.font_height,
-                        self.char_width,
-                        self.char_height,
-                    );
-                    self.program
-                        .set_texture(&self.gl, uni_gl::WebGLTexture(self.font.0));
-                    font_loaded = true;
-                }
-            } else {
-                self.handle_input(&mut *engine, app.hidpi_factor(), app.events.clone());
-                let mut skipped_frames: i32 = -1;
-                let time = uni_app::now();
-                while time > next_tick && skipped_frames < MAX_FRAMESKIP {
-                    if let Some(event) = engine.update(&mut self.api) {
-                        match event {
-                            UpdateEvent::Capture(filepath) => capture_screen(
-                                &self.gl,
-                                self.options.screen_width,
-                                self.options.screen_height,
-                                &filepath,
-                            ),
-                            UpdateEvent::Exit => uni_app::App::exit(),
-                        }
-                    }
-                    next_tick += SKIP_TICKS;
-                    skipped_frames += 1;
-                    self.api.input.on_frame();
-                }
-                if skipped_frames == MAX_FRAMESKIP {
-                    next_tick = time + SKIP_TICKS;
-                }
-                engine.render(&mut self.api);
-                self.fps.step();
-                self.api.fps = self.fps.fps();
-                self.api.average_fps = self.fps.average();
-                self.program.render_primitive(&self.gl, &self.api.con);
-            }
-        });
-    }
-}
-
-/// This captures an in-game screenshot and saves it to the file
-fn capture_screen(gl: &uni_gl::WebGLRenderingContext, w: u32, h: u32, filepath: &str) {
-    let mut img = image::DynamicImage::new_rgba8(w, h);
-    let pixels = img.as_mut_rgba8().unwrap();
-
-    gl.pixel_storei(uni_gl::PixelStorageMode::PackAlignment, 1);
-    gl.read_pixels(
-        0,
-        0,
-        w,
-        h,
-        uni_gl::PixelFormat::Rgba,
-        uni_gl::PixelType::UnsignedByte,
-        pixels,
-    );
-
-    if cfg!(not(target_arch = "wasm32")) {
-        // disabled on wasm target
-        image::save_buffer(
-            filepath,
-            &image::imageops::flip_vertical(&img),
-            w,
-            h,
-            image::ColorType::RGBA(8),
-        )
-        .expect("Failed to save buffer to the specified path");
-    }
-}
-
-fn create_texture(gl: &uni_gl::WebGLRenderingContext) -> uni_gl::WebGLTexture {
-    let tex = gl.create_texture();
-    gl.active_texture(0);
-    gl.bind_texture(&tex);
-    set_texture_params(&gl, true);
-    tex
-}
-
-struct FPS {
-    counter: u32,
-    start: f64,
-    last: f64,
-    total_frames: u64,
-    fps: u32,
-    average: u32,
-}
-
-impl FPS {
-    pub fn new() -> FPS {
-        let now = uni_app::now();
-        FPS {
-            counter: 0,
-            total_frames: 0,
-            start: now,
-            last: now,
-            fps: 0,
-            average: 0,
-        }
-    }
-    pub fn fps(&self) -> u32 {
-        self.fps
-    }
-
-    pub fn step(&mut self) {
-        self.counter += 1;
-        self.total_frames += 1;
-        let curr = uni_app::now();
-        if curr - self.last > 1.0 {
-            self.last = curr;
-            self.fps = self.counter;
-            self.counter = 0;
-            self.average = (self.total_frames as f64 / (self.last - self.start)) as u32;
-        }
-    }
-    pub fn average(&self) -> u32 {
-        self.average
     }
 }

@@ -13,6 +13,7 @@ homepage = "https://jice-nospam.github.io/doryen-rs/index.html"
 [dependencies]
 uni-gl = "0.1.*"
 uni-app = "0.1.*"
+bracket-lib = {git="https://github.com/thebracket/bracket-lib"}
 
 [dependencies.image]
 version = "0.22.*"
