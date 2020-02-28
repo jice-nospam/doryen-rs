@@ -37,7 +37,7 @@ impl Engine for MyRoguelike {
         let mut font_path = None;
         {
             let input = api.input();
-            if input.key_released("PageDown") {
+            if input.key_released("PageDown") || input.mouse_button_released(0) {
                 self.cur_font = (self.cur_font + 1) % FONTS.len();
                 font_path = Some(FONTS[self.cur_font]);
             } else if input.key_released("PageUp") {

@@ -1,3 +1,6 @@
+# 2.0.0 - TBD
+* switched from unrust to bracket-lib
+
 # 1.2.4 - TBD
 ## features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots

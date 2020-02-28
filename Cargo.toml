@@ -1,6 +1,6 @@
 [package]
 name = "doryen-rs"
-version = "1.2.4"
+version = "2.0.0"
 authors = ["jice <jice.nospam@gmail.com>"]
 description = "Pure rust OpenGL accelerated roguelike console API with native/wasm support"
 license = "MIT"
@@ -13,7 +13,8 @@ homepage = "https://jice-nospam.github.io/doryen-rs/index.html"
 [dependencies]
 uni-gl = "0.1.*"
 uni-app = "0.1.*"
-bracket-lib = {git="https://github.com/thebracket/bracket-lib"}
+#bracket-lib = {git="https://github.com/thebracket/bracket-lib"}
+bracket-lib = {path="../bracket-lib"}
 
 [dependencies.image]
 version = "0.22.*"

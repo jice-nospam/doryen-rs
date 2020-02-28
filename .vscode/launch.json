@@ -8,7 +8,7 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/target/debug/examples/basic.exe",
+            "program": "${workspaceFolder}/target/debug/examples/text_input.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

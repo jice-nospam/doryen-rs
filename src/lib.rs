@@ -7,7 +7,7 @@ mod app;
 mod color;
 mod console;
 mod file;
-mod font;
+//mod font;
 mod img;
 mod input;
 
