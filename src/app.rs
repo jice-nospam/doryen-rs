@@ -155,13 +155,13 @@ struct DoryenApiImpl<'a> {
 }
 
 impl<'a> DoryenApiImpl<'a> {
-    pub fn new(con: &'a mut console::Console) -> Self {
+    pub fn new(con: &'a mut console::Console, fps: u32) -> Self {
         let input: BracketInput = Default::default();
         Self {
             con,
             input,
-            fps: 0,
-            average_fps: 0,
+            fps,
+            average_fps: fps,
             font: String::new(),
         }
     }
@@ -378,7 +378,7 @@ fn load_font(path: &str) -> Font {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         self.elapsed += ctx.frame_time_ms / 1000.0;
-        let mut api = DoryenApiImpl::new(&mut self.con);
+        let mut api = DoryenApiImpl::new(&mut self.con, ctx.fps as u32);
         api.font = self.cur_font_name.to_owned();
         if !self.init {
             self.init = true;
@@ -390,8 +390,6 @@ impl GameState for State {
                 ctx.quit();
                 return;
             }
-            api.fps = ctx.fps as u32;
-            api.average_fps = ctx.fps as u32;
         }
         while self.elapsed > SKIP_TICKS as f32 {
             if let Some(event) = self.engine.update(&mut api) {
