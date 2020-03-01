@@ -67,7 +67,9 @@ struct BracketInput {
     pub close_requested: bool,
     pub text: String,
     key_press: HashSet<VirtualKeyCode>,
+    key_release: HashSet<VirtualKeyCode>,
     mouse_press: HashSet<usize>,
+    mouse_release: HashSet<usize>,
 }
 
 impl BracketInput {
@@ -76,12 +78,17 @@ impl BracketInput {
         self.close_requested = false;
         self.key_press.clear();
         self.mouse_press.clear();
+        self.key_release.clear();
+        self.mouse_release.clear();
     }
-    pub fn update(&mut self) {
+    pub fn update(&mut self, char_size: (u32, u32)) {
         self.clear();
         let mut input = INPUT.lock().unwrap();
         let (mx, my) = input.mouse_pixel_pos().into();
-        self.mouse_pos = (mx as f32, my as f32);
+        self.mouse_pos = (
+            mx as f32 / char_size.0 as f32,
+            my as f32 / char_size.1 as f32,
+        );
         self.mouse_left = input.is_mouse_button_pressed(0);
         while let Some(evt) = input.pop() {
             match evt {
@@ -89,11 +96,19 @@ impl BracketInput {
                 BEvent::Character { c } => {
                     self.text.push(c);
                 }
-                BEvent::KeyboardInput { key, .. } => {
-                    self.key_press.insert(key);
+                BEvent::KeyboardInput { key, pressed, .. } => {
+                    if pressed {
+                        self.key_press.insert(key);
+                    } else {
+                        self.key_release.insert(key);
+                    }
                 }
-                BEvent::MouseClick { button } => {
-                    self.mouse_press.insert(button);
+                BEvent::MouseClick { button, pressed } => {
+                    if pressed {
+                        self.mouse_press.insert(button);
+                    } else {
+                        self.mouse_release.insert(button);
+                    }
                 }
                 _ => (),
             }
@@ -120,8 +135,10 @@ impl InputApi for BracketInput {
         }
         false
     }
-    fn key_released(&mut self, _scan_code: &str) -> bool {
-        // TODO BRACKET
+    fn key_released(&mut self, key_code: &str) -> bool {
+        if let Some(key) = translate_virtual_key(key_code) {
+            return self.key_release.contains(&key);
+        }
         false
     }
     fn text(&self) -> String {
@@ -134,9 +151,8 @@ impl InputApi for BracketInput {
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
         self.mouse_press.contains(&num)
     }
-    fn mouse_button_released(&mut self, _num: usize) -> bool {
-        // TODO BRACKET
-        _num == 0 && self.mouse_left
+    fn mouse_button_released(&mut self, num: usize) -> bool {
+        self.mouse_release.contains(&num)
     }
     fn mouse_pos(&self) -> (f32, f32) {
         self.mouse_pos
@@ -309,6 +325,7 @@ impl App {
                 self.engine.take().unwrap(),
                 self.options.intercept_close_request,
                 &self.options.font_path,
+                (8, 8),
             ),
         )
         .unwrap();
@@ -322,6 +339,7 @@ struct State {
     init: bool,
     cur_font: usize,
     cur_font_name: String,
+    char_size: (u32, u32),
     fonts: HashMap<String, usize>,
     intercept_close_request: bool,
 }
@@ -333,6 +351,7 @@ impl State {
         engine: Box<dyn Engine>,
         intercept_close_request: bool,
         font_path: &str,
+        char_size: (u32, u32),
     ) -> Self {
         Self {
             engine,
@@ -343,6 +362,7 @@ impl State {
             cur_font_name: font_path.to_owned(),
             fonts: HashMap::new(),
             intercept_close_request,
+            char_size,
         }
     }
 }
@@ -385,7 +405,7 @@ impl GameState for State {
             self.engine.init(&mut api);
         }
         if self.elapsed > SKIP_TICKS as f32 {
-            api.input.update();
+            api.input.update(self.char_size);
             if api.input().close_requested() && !self.intercept_close_request {
                 ctx.quit();
                 return;
@@ -404,12 +424,15 @@ impl GameState for State {
                 match self.fonts.get(&api.font) {
                     None => {
                         let font = load_font(&api.font);
+                        self.char_size = font.tile_size;
                         self.cur_font = ctx.register_font(font).unwrap();
-                        ctx.consoles[ctx.active_console].font_index = self.cur_font;
+                        // TODO not available anymore
+                        //ctx.consoles[ctx.active_console].font_index = self.cur_font;
                     }
                     Some(index) => {
                         if *index != self.cur_font {
-                            ctx.consoles[ctx.active_console].font_index = self.cur_font;
+                            // TODO not available anymore
+                            // ctx.consoles[ctx.active_console].font_index = self.cur_font;
                         }
                     }
                 }
