@@ -212,7 +212,7 @@ pub(crate) fn translate_scan_code(scan_code: &str) -> u32 {
     }
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_arch = "wasm32"))]
 pub(crate) fn translate_scan_code(scan_code: &str) -> u32 {
     match scan_code {
         "Digit1" => 0x02,
