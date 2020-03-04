@@ -94,7 +94,9 @@ impl BracketInput {
             match evt {
                 BEvent::CloseRequested => self.close_requested = true,
                 BEvent::Character { c } => {
-                    self.text.push(c);
+                    if !c.is_control() {
+                        self.text.push(c);
+                    }
                 }
                 BEvent::KeyboardInput { key, pressed, .. } => {
                     if pressed {
