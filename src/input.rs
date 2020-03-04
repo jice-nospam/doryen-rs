@@ -208,7 +208,7 @@ pub(crate) fn translate_scan_code(scan_code: &str) -> u32 {
         // WebStop => "",
         // Yen => "",
         // Caret => "Caret",
-        _ => "",
+        _ => 0,
     }
 }
 
@@ -524,7 +524,7 @@ pub(crate) fn translate_scan_code(scan_code: &str) -> u32 {
         // WebStop => "",
         // Yen => "",
         // Caret => "Caret",
-        _ => "",
+        _ => 0,
     }
 }
 
