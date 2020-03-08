@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use bracket::prelude::font::Font;
-use bracket::prelude::Console;
 use bracket::prelude::*;
 
 use crate::console;
@@ -298,15 +297,20 @@ pub struct App {
 impl App {
     pub fn new(options: AppOptions) -> Self {
         let (char_width, char_height) = font_char_size(&options.font_path);
-        let path = to_real_path(&options.font_path);
-        println!("loading font {}", path);
-        let ctx = BTermBuilder::simple(options.console_width, options.console_height)
-            .unwrap()
+        let mut ctx = BTermBuilder::new()
+            .with_dimensions(options.console_width, options.console_height)
             .with_title(options.window_title.clone())
             .with_vsync(options.vsync)
-            .with_font(path, char_width, char_height)
-            .build()
-            .unwrap();
+            .with_font(&options.font_path, char_width, char_height)
+            .with_simple_console(
+                options.console_width,
+                options.console_height,
+                &options.font_path,
+            );
+        if cfg!(not(target_arch = "wasm32")) {
+            ctx = ctx.with_resource_path("static");
+        }
+        let ctx = ctx.build().unwrap();
         INPUT.lock().unwrap().activate_event_queue();
         Self {
             ctx,
@@ -385,16 +389,17 @@ fn font_char_size(path: &str) -> (u32, u32) {
 
 fn to_real_path(path: &str) -> String {
     if cfg!(not(target_arch = "wasm32")) && &path[0..1] != "/" && &path[1..2] != ":" {
-        "../static/".to_owned() + path
+        "static/".to_owned() + path
     } else {
         path.to_owned()
     }
 }
 
 fn load_font(path: &str) -> Font {
+    let real_path = to_real_path(path);
     let (char_width, char_height) = font_char_size(path);
     println!("loading font {} size {}x{}", path, char_width, char_height);
-    Font::load(&to_real_path(path), (char_width, char_height))
+    Font::load(&real_path, (char_width, char_height))
 }
 
 impl GameState for State {

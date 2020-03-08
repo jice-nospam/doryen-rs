@@ -45,7 +45,7 @@ impl Engine for MyRoguelike {
             con.print(
                 5,
                 5,
-                "Press ESC to exit",
+                "Press ESC or close window button to exit",
                 TextAlign::Left,
                 Some(WHITE),
                 None,
