@@ -51,7 +51,6 @@ impl Engine for MyRoguelike {
     fn resize(&mut self, api: &mut dyn DoryenApi) {
         self.width = api.get_screen_size().0 / 8;
         self.height = api.get_screen_size().1 / 8;
-        api.con().resize(self.width, self.height);
     }
 }
 
@@ -70,6 +69,7 @@ fn main() {
         window_title: "resizable console".to_owned(),
         console_width: 80,
         console_height: 50,
+        resizable: true,
         ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike::new()));

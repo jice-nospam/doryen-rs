@@ -322,8 +322,8 @@ impl App {
             .with_dimensions(options.console_width, options.console_height)
             .with_title(options.window_title.clone())
             .with_vsync(options.vsync);
-        if !options.resizable {
-            ctx = ctx.with_resize_scaling(false);
+        if options.resizable {
+            ctx = ctx.with_resize_scaling(true);
         }
         if cfg!(not(target_arch = "wasm32")) {
             ctx = ctx.with_resource_path("static");
@@ -447,6 +447,7 @@ impl GameState for State {
                 api.con_size = new_api_size;
                 ctx.set_char_size(new_api_size.0, new_api_size.1);
                 self.engine.resize(&mut api);
+                api.con().resize(new_api_size.0, new_api_size.1);
             }
             if let Some(event) = self.engine.update(&mut api) {
                 match event {
