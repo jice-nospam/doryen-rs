@@ -68,6 +68,8 @@ impl MyRoguelike {
 fn main() {
     let mut app = App::new(AppOptions {
         window_title: "resizable console".to_owned(),
+        console_width: 80,
+        console_height: 50,
         ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike::new()));
