@@ -34,20 +34,13 @@ struct MyRoguelike {
 
 impl Engine for MyRoguelike {
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
-        let mut font_path = None;
-        {
-            let input = api.input();
-            if input.key_released("PageDown") || input.mouse_button_released(0) {
-                self.cur_font = (self.cur_font + 1) % FONTS.len();
-                font_path = Some(FONTS[self.cur_font]);
-            } else if input.key_released("PageUp") {
-                self.cur_font = (self.cur_font + FONTS.len() - 1) % FONTS.len();
-                font_path = Some(FONTS[self.cur_font]);
-            }
-        }
-        if let Some(font_path) = font_path {
-            self.cur_font_name = font_path.to_owned();
-            api.set_font_path(font_path);
+        let input = api.input();
+        if input.key_released("PageDown") || input.mouse_button_released(0) {
+            self.cur_font = (self.cur_font + 1) % FONTS.len();
+            api.set_font_index(self.cur_font);
+        } else if input.key_released("PageUp") {
+            self.cur_font = (self.cur_font + FONTS.len() - 1) % FONTS.len();
+            api.set_font_index(self.cur_font);
         }
         None
     }
@@ -125,6 +118,7 @@ fn main() {
         screen_width: CONSOLE_WIDTH * 24,
         screen_height: CONSOLE_HEIGHT * 24,
         window_title: "doryen-rs font test".to_owned(),
+        font_paths: FONTS.iter().map(|s| s.to_string()).collect(),
         ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike::new()));

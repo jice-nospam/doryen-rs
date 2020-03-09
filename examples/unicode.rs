@@ -35,7 +35,7 @@ fn main() {
         screen_width: CONSOLE_WIDTH * 16,
         screen_height: CONSOLE_HEIGHT * 16,
         window_title: "doryen-rs unicode demo".to_owned(),
-        font_path: "unicode_16x16.png".to_owned(),
+        font_paths: vec!["unicode_16x16.png".to_owned()],
         ..Default::default()
     });
     app.set_engine(Box::new(MyRoguelike {}));

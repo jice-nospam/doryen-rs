@@ -1,6 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use bracket::prelude::font::Font;
 use bracket::prelude::*;
 
 use crate::console;
@@ -12,7 +11,7 @@ const SKIP_TICKS: f64 = 1.0 / TICKS_PER_SECOND;
 
 // default options
 pub const DEFAULT_CONSOLE_WIDTH: u32 = 80;
-pub const DEFAULT_CONSOLE_HEIGHT: u32 = 45;
+pub const DEFAULT_CONSOLE_HEIGHT: u32 = 50;
 
 /// This is the complete doryen-rs API provided to you by [`App`] in [`Engine::update`] and [`Engine::render`] methods.
 pub trait DoryenApi {
@@ -28,7 +27,13 @@ pub trait DoryenApi {
     /// Put your font in the static/ directory of the project to make this work with both `cargo run` and `cargo web start`.
     /// Example
     /// ```compile_fail
-    /// api.set_font_path("terminal.png");
+    /// let mut app = App::new(AppOptions {
+    ///     font_paths:vec!["terminal.png".to_owned(),"terminal2.png".to_owned()],
+    ///     ..Default::default()
+    /// });
+    /// ...
+    /// // Inside your update() function :
+    /// api.set_font_index(1); // switch to terminal2.png font
     /// ```
     /// During development, this references `$PROJECT_ROOT/static/terminal.png`.
     /// Once deployed, `terminal.png` should be in the same directory as your game's executable or `index.html`.
@@ -54,7 +59,7 @@ pub trait DoryenApi {
     /// ![greyscale](http://roguecentral.org/~jice/doryen-rs/greyscale.png)
     /// * RGB : The top-left pixel's color is transparent. The font cannot have semi-transparent pixels but it can have pure grey pixels.
     /// ![rgb](http://roguecentral.org/~jice/doryen-rs/rgb.png)
-    fn set_font_path(&mut self, font_path: &str);
+    fn set_font_index(&mut self, font_index: usize);
     /// return the current screen size
     fn get_screen_size(&self) -> (u32, u32);
 }
@@ -184,7 +189,7 @@ struct DoryenApiImpl<'a> {
     bracket_input: BracketInput,
     fps: u32,
     average_fps: u32,
-    font: String,
+    font_index: usize,
     con_size: (u32, u32),
 }
 
@@ -197,7 +202,7 @@ impl<'a> DoryenApiImpl<'a> {
             bracket_input,
             fps,
             average_fps: fps,
-            font: String::new(),
+            font_index: 0,
             con_size,
         }
     }
@@ -216,8 +221,8 @@ impl<'a, 'b> DoryenApi for DoryenApiImpl<'a> {
     fn average_fps(&self) -> u32 {
         self.average_fps
     }
-    fn set_font_path(&mut self, font_path: &str) {
-        self.font = font_path.to_owned();
+    fn set_font_index(&mut self, font_index: usize) {
+        self.font_index = font_index;
     }
 
     fn get_screen_size(&self) -> (u32, u32) {
@@ -266,8 +271,8 @@ pub struct AppOptions {
     pub screen_height: u32,
     /// the title of the game window (only in native mode)
     pub window_title: String,
-    /// the font to use. See [`DoryenApi::set_font_path`]. Default is 'terminal_8x8.png'
-    pub font_path: String,
+    /// the fonts to use. See [`DoryenApi::set_font_path`]. Default is 'terminal_8x8.png'
+    pub font_paths: Vec<String>,
     /// whether framerate are limited by the screen frequency.
     /// On web platforms, this parameter is ignored and vsync is always enabled.
     /// Default is true.
@@ -291,11 +296,11 @@ impl Default for AppOptions {
             screen_width: DEFAULT_CONSOLE_WIDTH * 8,
             screen_height: DEFAULT_CONSOLE_HEIGHT * 8,
             window_title: "".to_owned(),
-            font_path: "terminal_8x8.png".to_owned(),
+            font_paths: vec!["terminal_8x8.png".to_owned()],
             vsync: true,
             fullscreen: false,
             show_cursor: true,
-            resizable: true,
+            resizable: false,
             intercept_close_request: false,
         }
     }
@@ -310,20 +315,30 @@ pub struct App {
 
 impl App {
     pub fn new(options: AppOptions) -> Self {
-        let (char_width, char_height) = font_char_size(&options.font_path);
+        if options.font_paths.is_empty() {
+            panic!("Error : you should provide at least one font in AppOptions::font_paths");
+        }
         let mut ctx = BTermBuilder::new()
             .with_dimensions(options.console_width, options.console_height)
             .with_title(options.window_title.clone())
-            .with_vsync(options.vsync)
-            .with_font(&options.font_path, char_width, char_height)
-            .with_simple_console(
-                options.console_width,
-                options.console_height,
-                &options.font_path,
-            );
+            .with_vsync(options.vsync);
+        if !options.resizable {
+            ctx = ctx.with_resize_scaling(false);
+        }
         if cfg!(not(target_arch = "wasm32")) {
             ctx = ctx.with_resource_path("static");
         }
+        for font in options.font_paths.iter() {
+            let (char_width, char_height) = font_char_size(font);
+            let real_font = to_real_path(font);
+            println!("loading {}", real_font);
+            ctx = ctx.with_font(font, char_width, char_height);
+        }
+        ctx = ctx.with_simple_console(
+            options.console_width,
+            options.console_height,
+            &options.font_paths[0],
+        );
         let ctx = ctx.build().unwrap();
         INPUT.lock().unwrap().activate_event_queue();
         Self {
@@ -344,8 +359,8 @@ impl App {
                 self.options.console_height,
                 self.engine.take().unwrap(),
                 self.options.intercept_close_request,
-                &self.options.font_path,
                 (8, 8),
+                &self.options.font_paths,
             ),
         )
         .unwrap();
@@ -357,10 +372,9 @@ struct State {
     elapsed: f32,
     con: console::Console,
     init: bool,
-    cur_font: usize,
-    cur_font_name: String,
+    cur_font_index: usize,
     char_size: (u32, u32),
-    fonts: HashMap<String, usize>,
+    pub fonts: Vec<String>,
     intercept_close_request: bool,
 }
 
@@ -370,17 +384,16 @@ impl State {
         height: u32,
         engine: Box<dyn Engine>,
         intercept_close_request: bool,
-        font_path: &str,
         char_size: (u32, u32),
+        fonts: &[String],
     ) -> Self {
         Self {
             engine,
             elapsed: 0.0,
             con: console::Console::new(width, height),
             init: false,
-            cur_font: 0,
-            cur_font_name: font_path.to_owned(),
-            fonts: HashMap::new(),
+            cur_font_index: 0,
+            fonts: fonts.iter().map(|s| s.to_owned()).collect(),
             intercept_close_request,
             char_size,
         }
@@ -409,18 +422,11 @@ fn to_real_path(path: &str) -> String {
     }
 }
 
-fn load_font(path: &str) -> Font {
-    let real_path = to_real_path(path);
-    let (char_width, char_height) = font_char_size(path);
-    println!("loading font {} size {}x{}", path, char_width, char_height);
-    Font::load(&real_path, (char_width, char_height))
-}
-
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         self.elapsed += ctx.frame_time_ms / 1000.0;
         let mut api = DoryenApiImpl::new(&mut self.con, ctx.fps as u32, self.char_size);
-        api.font = self.cur_font_name.to_owned();
+        api.font_index = self.cur_font_index;
         if !self.init {
             self.init = true;
             self.engine.init(&mut api);
@@ -450,22 +456,9 @@ impl GameState for State {
                 }
             }
             api.bracket_input.clear();
-            if api.font != self.cur_font_name {
-                match self.fonts.get(&api.font) {
-                    None => {
-                        let font = load_font(&api.font);
-                        self.char_size = font.tile_size;
-                        self.cur_font = ctx.register_font(font).unwrap();
-                        ctx.set_active_font(self.cur_font);
-                    }
-                    Some(index) => {
-                        if *index != self.cur_font {
-                            self.cur_font = *index;
-                            ctx.set_active_font(self.cur_font);
-                        }
-                    }
-                }
-                self.cur_font_name = api.font.to_owned();
+            if api.font_index != self.cur_font_index {
+                ctx.set_active_font(api.font_index);
+                self.cur_font_index = api.font_index;
             }
             self.elapsed -= SKIP_TICKS as f32;
         }

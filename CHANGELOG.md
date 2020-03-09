@@ -1,5 +1,7 @@
 # 2.0.0 - TBD
 * switched from unrust to bracket-lib
+## API breaks
+* fonts path are defined in `AppOptions::font_paths`. `DoryenApi::set_font_path` replaced with `DoryenApi::set_font_index`
 
 # 1.2.4 - TBD
 ## features
