@@ -280,6 +280,10 @@ impl App {
             .with_title(options.window_title.clone())
             .with_vsync(options.vsync)
             .with_automatic_console_resize(options.resizable)
+            .with_tile_dimensions(
+                options.screen_width / options.console_width,
+                options.screen_height / options.console_height,
+            )
             .with_simple_console(
                 options.console_width,
                 options.console_height,
@@ -288,13 +292,8 @@ impl App {
         if cfg!(not(target_arch = "wasm32")) {
             ctx = ctx.with_resource_path("static");
         }
-        let mut first = true;
         for font in options.font_paths.iter() {
             let (char_width, char_height) = font_char_size(font);
-            if first {
-                first = false;
-                ctx = ctx.with_tile_dimensions(char_width, char_height);
-            }
             let real_font = to_real_path(font);
             println!("loading {}", real_font);
             ctx = ctx.with_font(font, char_width, char_height);
