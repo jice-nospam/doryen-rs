@@ -29,7 +29,6 @@ const FONTS: [&str; 19] = [
 
 struct MyRoguelike {
     cur_font: usize,
-    cur_font_name: String,
 }
 
 impl Engine for MyRoguelike {
@@ -86,7 +85,7 @@ impl Engine for MyRoguelike {
         con.print(
             (CONSOLE_WIDTH / 2) as i32,
             (CONSOLE_HEIGHT / 2) as i32,
-            &self.cur_font_name,
+            FONTS[self.cur_font],
             TextAlign::Center,
             Some((255, 255, 255, 255)),
             None,
@@ -104,10 +103,7 @@ impl Engine for MyRoguelike {
 
 impl MyRoguelike {
     pub fn new() -> Self {
-        Self {
-            cur_font: 0,
-            cur_font_name: FONTS[0].to_owned(),
-        }
+        Self { cur_font: 0 }
     }
 }
 

@@ -124,7 +124,7 @@ fn main() {
         vsync: true,
         fullscreen: false,
         show_cursor: true,
-        resizable: true,
+        resizable: false,
         intercept_close_request: false,
     });
     app.set_engine(Box::new(MyRoguelike::new()));

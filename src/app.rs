@@ -129,8 +129,14 @@ impl BracketInput {
                         self.mouse_release.insert(button);
                     }
                 }
-                BEvent::Resized { new_size } => {
-                    self.new_size = (new_size.x as u32, new_size.y as u32)
+                BEvent::Resized {
+                    new_size,
+                    dpi_scale_factor,
+                } => {
+                    self.new_size = (
+                        (new_size.x as f32 / dpi_scale_factor) as u32,
+                        (new_size.y as f32 / dpi_scale_factor) as u32,
+                    )
                 }
                 _ => (),
             }
@@ -321,24 +327,27 @@ impl App {
         let mut ctx = BTermBuilder::new()
             .with_dimensions(options.console_width, options.console_height)
             .with_title(options.window_title.clone())
-            .with_vsync(options.vsync);
-        if options.resizable {
-            ctx = ctx.with_resize_scaling(true);
-        }
+            .with_vsync(options.vsync)
+            .with_resize_scaling(options.resizable)
+            .with_simple_console(
+                options.console_width,
+                options.console_height,
+                &options.font_paths[0],
+            );
         if cfg!(not(target_arch = "wasm32")) {
             ctx = ctx.with_resource_path("static");
         }
+        let mut first = true;
         for font in options.font_paths.iter() {
             let (char_width, char_height) = font_char_size(font);
+            if first {
+                first = false;
+                ctx = ctx.with_tile_dimensions(char_width, char_height);
+            }
             let real_font = to_real_path(font);
             println!("loading {}", real_font);
             ctx = ctx.with_font(font, char_width, char_height);
         }
-        ctx = ctx.with_simple_console(
-            options.console_width,
-            options.console_height,
-            &options.font_paths[0],
-        );
         let ctx = ctx.build().unwrap();
         INPUT.lock().unwrap().activate_event_queue();
         Self {
