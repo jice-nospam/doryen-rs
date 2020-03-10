@@ -29,9 +29,6 @@ pub enum TextAlign {
 pub struct Console {
     width: u32,
     height: u32,
-    // power of 2 size (for textures)
-    pot_width: u32,
-    pot_height: u32,
     ascii: Vec<u32>,
     back: Vec<Color>,
     fore: Vec<Color>,
@@ -43,30 +40,13 @@ impl Console {
     /// create a new offscreen console that you can blit on another console
     /// width and height are in cells (characters), not pixels.
     pub fn new(width: u32, height: u32) -> Self {
-        let mut back = Vec::new();
-        let mut fore = Vec::new();
-        let mut ascii = Vec::new();
-        let mut pot_width = 1;
-        let mut pot_height = 1;
-        while pot_width < width {
-            pot_width *= 2;
-        }
-        while pot_height < height {
-            pot_height *= 2;
-        }
-        for _ in 0..(pot_width * pot_height) as usize {
-            back.push((0, 0, 0, 255));
-            fore.push((255, 255, 255, 255));
-            ascii.push(' ' as u32);
-        }
+        let cell_count = (width * height) as usize;
         Self {
             width,
             height,
-            ascii,
-            back,
-            fore,
-            pot_width,
-            pot_height,
+            ascii: vec![' ' as u32; cell_count],
+            back: vec![(0, 0, 0, 255); cell_count],
+            fore: vec![(255, 255, 255, 255); cell_count],
             colors: HashMap::new(),
             color_stack: Vec::new(),
         }
@@ -75,20 +55,11 @@ impl Console {
     pub fn resize(&mut self, width: u32, height: u32) {
         self.width = width;
         self.height = height;
-        let mut pot_width = 1;
-        let mut pot_height = 1;
-        while pot_width < width {
-            pot_width *= 2;
-        }
-        while pot_height < height {
-            pot_height *= 2;
-        }
-        self.pot_height = pot_height;
-        self.pot_width = pot_width;
+        // avoid reallocation
         self.back.clear();
         self.fore.clear();
         self.ascii.clear();
-        for _ in 0..(pot_width * pot_height) as usize {
+        for _ in 0..(width * height) as usize {
             self.back.push((0, 0, 0, 255));
             self.fore.push((255, 255, 255, 255));
             self.ascii.push(' ' as u32);
@@ -114,12 +85,6 @@ impl Console {
     }
     pub fn get_size(&self) -> (u32, u32) {
         (self.width, self.height)
-    }
-    pub fn get_pot_width(&self) -> u32 {
-        self.pot_width
-    }
-    pub fn get_pot_height(&self) -> u32 {
-        self.pot_height
     }
     /// for fast reading of the characters values
     pub fn borrow_ascii(&self) -> &Vec<u32> {
@@ -182,7 +147,7 @@ impl Console {
         self.ascii[off] as u16
     }
     fn offset(&self, x: i32, y: i32) -> usize {
-        x as usize + y as usize * self.pot_width as usize
+        x as usize + y as usize * self.width as usize
     }
     fn check_coords(&self, x: i32, y: i32) -> bool {
         (x as u32) < self.width && (y as u32) < self.height
@@ -435,7 +400,7 @@ impl Console {
         let down = y + (h as i32);
         if let Some(fillchar) = fillchar {
             for iy in y.max(0)..down.min(self.height as i32) {
-                let off = iy * self.pot_width as i32;
+                let off = iy * self.width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
                     self.ascii[(off + ix) as usize] = u32::from(fillchar);
                 }
@@ -443,7 +408,7 @@ impl Console {
         }
         if let Some(fore) = fore {
             for iy in y.max(0)..down.min(self.height as i32) {
-                let off = iy * self.pot_width as i32;
+                let off = iy * self.width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
                     self.fore[(off + ix) as usize] = fore;
                 }
@@ -451,7 +416,7 @@ impl Console {
         }
         if let Some(back) = back {
             for iy in y.max(0)..down.min(self.height as i32) {
-                let off = iy * self.pot_width as i32;
+                let off = iy * self.width as i32;
                 for ix in x.max(0)..right.min(self.width as i32) {
                     self.back[(off + ix) as usize] = back;
                 }
@@ -522,8 +487,8 @@ impl Console {
         key_color: Option<Color>,
     ) {
         for y in 0..hsrc - ysrc {
-            let off = (y + ysrc) * self.pot_width as i32;
-            let doff = (y + ydst) * destination.pot_width as i32;
+            let off = (y + ysrc) * self.width as i32;
+            let doff = (y + ydst) * destination.width as i32;
             for x in 0..wsrc - xsrc {
                 if self.check_coords(xsrc + x, ysrc + y)
                     && destination.check_coords(xdst + x, ydst + y)

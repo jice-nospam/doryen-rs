@@ -101,7 +101,7 @@ impl Image {
             let maxy = (y + height).min(con.get_height() as i32);
             let offx = if x < 0 { -x } else { 0 };
             let offy = if y < 0 { -y } else { 0 };
-            let con_width = con.get_pot_width();
+            let con_width = con.get_width();
             let back = con.borrow_mut_background();
             for cx in minx..maxx {
                 for cy in miny..maxy {
@@ -177,7 +177,7 @@ impl Image {
         let maxy = (ry + rh).min(con.get_height() as i32);
         let invscalex = 1.0 / scalex;
         let invscaley = 1.0 / scaley;
-        let con_width = con.get_pot_width();
+        let con_width = con.get_width();
         let back = con.borrow_mut_background();
         if let Some(ref img) = self.img {
             for cx in minx..maxx {

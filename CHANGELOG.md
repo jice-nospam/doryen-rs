@@ -3,7 +3,7 @@
 ## API breaks
 * fonts path are defined in `AppOptions.font_paths`. `DoryenApi.set_font_path` replaced with `DoryenApi.set_font_index`
 * On native target, the window is always resizeable. If `AppOptions.resizeable` is true, the console is resized with the window, else it's scaled (default behavior). You don't have to call `Console.resize`anymore (see resize example).
-* `DoryenApi.average_fps()` was removed. Use `DoryenAPi.fps()` instead.
+* `DoryenApi.average_fps()` was removed. Use `DoryenApi.fps()` instead.
 * `Engine.resize()` was removed. Console resizing is done automatically when `AppOptions.resizable` is true
 
 # 1.2.4 - TBD
