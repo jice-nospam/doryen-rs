@@ -215,10 +215,6 @@ pub trait Engine {
     /// The framerate is not reliable so don't update time related stuff in this function.
     /// The screen will display the content of the root console provided by `api.con()`
     fn render(&mut self, api: &mut dyn DoryenApi);
-    /// This is called when the size of the game window has changed.
-    /// You can override this method if your game display or logic depends on the window size.
-    /// You get the new window size with `api.con().get_screen_size()`. See the resize example
-    fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
 pub struct AppOptions {
@@ -303,7 +299,8 @@ impl App {
             println!("loading {}", real_font);
             ctx = ctx.with_font(font, char_width, char_height);
         }
-        let ctx = ctx.build().unwrap();
+        let mut ctx = ctx.build().unwrap();
+        ctx.set_translation_mode(0, CharacterTranslationMode::Unicode);
         INPUT.lock().unwrap().activate_event_queue();
         Self {
             ctx,
@@ -413,6 +410,7 @@ fn to_real_path(path: &str) -> String {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         self.elapsed += ctx.frame_time_ms / 1000.0;
+
         let mut engine = self.engine.take().unwrap();
         if !self.init {
             self.init = true;
@@ -432,9 +430,6 @@ impl GameState for State {
                 self.bracket_input.new_size.1 / self.char_size.1,
             );
             if self.con.get_width() != new_con_size.0 || self.con.get_height() != new_con_size.1 {
-                println!("resizing to {:?}", new_con_size);
-                ctx.set_char_size(new_con_size.0, new_con_size.1);
-                engine.resize(self);
                 self.con.resize(new_con_size.0, new_con_size.1);
             }
             if let Some(event) = engine.update(self) {
@@ -446,7 +441,7 @@ impl GameState for State {
             }
             self.bracket_input.clear();
             if let Some(new_font_index) = self.new_font_index.take() {
-                ctx.set_active_font(new_font_index);
+                ctx.set_active_font(new_font_index, false);
             }
             self.elapsed -= SKIP_TICKS as f32;
         }
@@ -462,7 +457,7 @@ impl GameState for State {
                     y as i32,
                     RGB::from_u8(fore.0, fore.1, fore.2),
                     RGB::from_u8(back.0, back.1, back.2),
-                    ascii as u8,
+                    ascii,
                 );
             }
         }

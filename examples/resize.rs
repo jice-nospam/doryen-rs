@@ -3,8 +3,6 @@ extern crate doryen_rs;
 use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
 
 struct MyRoguelike {
-    width: u32,
-    height: u32,
     mouse_pos: (f32, f32),
 }
 
@@ -16,14 +14,16 @@ impl Engine for MyRoguelike {
     }
     fn render(&mut self, api: &mut dyn DoryenApi) {
         let con = api.con();
+        let width = con.get_width();
+        let height = con.get_height();
         con.rectangle(
             0,
             0,
-            self.width,
-            self.height,
+            width,
+            height,
             Some((128, 128, 128, 255)),
             Some((0, 0, 0, 255)),
-            Some(' ' as u16),
+            Some('.' as u16),
         );
         con.area(
             10,
@@ -35,9 +35,9 @@ impl Engine for MyRoguelike {
             Some('&' as u16),
         );
         con.print(
-            (self.width / 2) as i32,
-            (self.height / 2) as i32,
-            &format!("{} x {}", self.width, self.height),
+            (width / 2) as i32,
+            (height / 2) as i32,
+            &format!("{} x {}", width, height),
             TextAlign::Center,
             None,
             None,
@@ -48,17 +48,11 @@ impl Engine for MyRoguelike {
             (255, 255, 255, 255),
         );
     }
-    fn resize(&mut self, api: &mut dyn DoryenApi) {
-        self.width = api.get_screen_size().0 / 8;
-        self.height = api.get_screen_size().1 / 8;
-    }
 }
 
 impl MyRoguelike {
     pub fn new() -> Self {
         Self {
-            width: 80,
-            height: 50,
             mouse_pos: (0.0, 0.0),
         }
     }

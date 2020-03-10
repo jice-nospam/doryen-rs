@@ -56,11 +56,6 @@ impl Engine for PerfTest {
             None,
         );
     }
-    fn resize(&mut self, api: &mut dyn DoryenApi) {
-        let new_width = api.get_screen_size().0 / 8;
-        let new_height = api.get_screen_size().1 / 8;
-        api.con().resize(new_width, new_height);
-    }
 }
 
 impl PerfTest {
@@ -77,6 +72,7 @@ fn main() {
     let mut app = App::new(AppOptions {
         window_title: "doryen-rs performance test".to_owned(),
         vsync: false,
+        resizable: true,
         ..Default::default()
     });
     app.set_engine(Box::new(PerfTest::new()));
