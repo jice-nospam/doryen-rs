@@ -21,8 +21,6 @@ pub trait DoryenApi {
     fn input(&mut self) -> &mut dyn InputApi;
     /// return the current framerate
     fn fps(&self) -> u32;
-    /// return the average framerate since the start of the game
-    fn average_fps(&self) -> u32;
     /// replace the current font by a new one.
     /// Put your font in the static/ directory of the project to make this work with both `cargo run` and `cargo web start`.
     /// Example
@@ -344,7 +342,6 @@ struct State {
     intercept_close_request: bool,
     bracket_input: BracketInput,
     fps: u32,
-    average_fps: u32,
 }
 
 impl DoryenApi for State {
@@ -356,9 +353,6 @@ impl DoryenApi for State {
     }
     fn fps(&self) -> u32 {
         self.fps
-    }
-    fn average_fps(&self) -> u32 {
-        self.average_fps
     }
     fn set_font_index(&mut self, font_index: usize) {
         self.new_font_index = Some(font_index);
@@ -390,7 +384,6 @@ impl State {
             intercept_close_request,
             char_size,
             fps: 0,
-            average_fps: 0,
         }
     }
 }
@@ -432,6 +425,7 @@ impl GameState for State {
                 return;
             }
         }
+        self.fps = ctx.fps as u32;
         while self.elapsed > SKIP_TICKS as f32 {
             let new_con_size = (
                 self.bracket_input.new_size.0 / self.char_size.0,
