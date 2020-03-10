@@ -74,6 +74,7 @@ struct BracketInput {
     mouse_press: HashSet<usize>,
     mouse_release: HashSet<usize>,
     pub new_size: (u32, u32),
+    pub scale_factor: f32,
 }
 
 impl BracketInput {
@@ -88,6 +89,7 @@ impl BracketInput {
             mouse_press: HashSet::new(),
             mouse_release: HashSet::new(),
             new_size: con_size,
+            scale_factor: 1.0,
         }
     }
     pub fn clear(&mut self) {
@@ -103,8 +105,8 @@ impl BracketInput {
         let mut input = INPUT.lock().unwrap();
         let (mx, my) = input.mouse_pixel_pos().into();
         self.mouse_pos = (
-            mx as f32 / char_size.0 as f32,
-            my as f32 / char_size.1 as f32,
+            mx as f32 / char_size.0 as f32 / self.scale_factor,
+            my as f32 / char_size.1 as f32 / self.scale_factor,
         );
         self.mouse_left = input.is_mouse_button_pressed(0);
         while let Some(evt) = input.pop() {
@@ -133,6 +135,7 @@ impl BracketInput {
                     new_size,
                     dpi_scale_factor,
                 } => {
+                    self.scale_factor = dpi_scale_factor;
                     self.new_size = (
                         (new_size.x as f32 / dpi_scale_factor) as u32,
                         (new_size.y as f32 / dpi_scale_factor) as u32,
@@ -187,52 +190,6 @@ impl InputApi for BracketInput {
     }
     fn close_requested(&self) -> bool {
         self.close_requested
-    }
-}
-
-struct DoryenApiImpl<'a> {
-    con: &'a mut console::Console,
-    bracket_input: BracketInput,
-    fps: u32,
-    average_fps: u32,
-    font_index: usize,
-    con_size: (u32, u32),
-}
-
-impl<'a> DoryenApiImpl<'a> {
-    pub fn new(con: &'a mut console::Console, fps: u32, char_size: (u32, u32)) -> Self {
-        let con_size = (con.get_width(), con.get_height());
-        let bracket_input = BracketInput::new((con_size.0 * char_size.0, con_size.1 * char_size.1));
-        Self {
-            con,
-            bracket_input,
-            fps,
-            average_fps: fps,
-            font_index: 0,
-            con_size,
-        }
-    }
-}
-
-impl<'a, 'b> DoryenApi for DoryenApiImpl<'a> {
-    fn con(&mut self) -> &mut console::Console {
-        &mut self.con
-    }
-    fn input(&mut self) -> &mut dyn InputApi {
-        &mut self.bracket_input
-    }
-    fn fps(&self) -> u32 {
-        self.fps
-    }
-    fn average_fps(&self) -> u32 {
-        self.average_fps
-    }
-    fn set_font_index(&mut self, font_index: usize) {
-        self.font_index = font_index;
-    }
-
-    fn get_screen_size(&self) -> (u32, u32) {
-        self.bracket_input.new_size
     }
 }
 
@@ -328,7 +285,7 @@ impl App {
             .with_dimensions(options.console_width, options.console_height)
             .with_title(options.window_title.clone())
             .with_vsync(options.vsync)
-            .with_resize_scaling(options.resizable)
+            .with_automatic_console_resize(options.resizable)
             .with_simple_console(
                 options.console_width,
                 options.console_height,
@@ -377,14 +334,39 @@ impl App {
 }
 
 struct State {
-    engine: Box<dyn Engine>,
+    engine: Option<Box<dyn Engine>>,
     elapsed: f32,
     con: console::Console,
     init: bool,
-    cur_font_index: usize,
+    new_font_index: Option<usize>,
     char_size: (u32, u32),
     pub fonts: Vec<String>,
     intercept_close_request: bool,
+    bracket_input: BracketInput,
+    fps: u32,
+    average_fps: u32,
+}
+
+impl DoryenApi for State {
+    fn con(&mut self) -> &mut console::Console {
+        &mut self.con
+    }
+    fn input(&mut self) -> &mut dyn InputApi {
+        &mut self.bracket_input
+    }
+    fn fps(&self) -> u32 {
+        self.fps
+    }
+    fn average_fps(&self) -> u32 {
+        self.average_fps
+    }
+    fn set_font_index(&mut self, font_index: usize) {
+        self.new_font_index = Some(font_index);
+    }
+
+    fn get_screen_size(&self) -> (u32, u32) {
+        self.bracket_input.new_size
+    }
 }
 
 impl State {
@@ -396,15 +378,19 @@ impl State {
         char_size: (u32, u32),
         fonts: &[String],
     ) -> Self {
+        let bracket_input = BracketInput::new((width * char_size.0, height * char_size.1));
         Self {
-            engine,
+            engine: Some(engine),
             elapsed: 0.0,
             con: console::Console::new(width, height),
+            bracket_input,
             init: false,
-            cur_font_index: 0,
+            new_font_index: None,
             fonts: fonts.iter().map(|s| s.to_owned()).collect(),
             intercept_close_request,
             char_size,
+            fps: 0,
+            average_fps: 0,
         }
     }
 }
@@ -434,45 +420,43 @@ fn to_real_path(path: &str) -> String {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         self.elapsed += ctx.frame_time_ms / 1000.0;
-        let mut api = DoryenApiImpl::new(&mut self.con, ctx.fps as u32, self.char_size);
-        api.font_index = self.cur_font_index;
+        let mut engine = self.engine.take().unwrap();
         if !self.init {
             self.init = true;
-            self.engine.init(&mut api);
+            engine.init(self);
         }
         if self.elapsed > SKIP_TICKS as f32 {
-            api.bracket_input.update(self.char_size);
-            if api.input().close_requested() && !self.intercept_close_request {
+            self.bracket_input.update(self.char_size);
+            if self.input().close_requested() && !self.intercept_close_request {
                 ctx.quit();
                 return;
             }
         }
         while self.elapsed > SKIP_TICKS as f32 {
-            let new_api_size = (
-                api.bracket_input.new_size.0 / self.char_size.0,
-                api.bracket_input.new_size.1 / self.char_size.1,
+            let new_con_size = (
+                self.bracket_input.new_size.0 / self.char_size.0,
+                self.bracket_input.new_size.1 / self.char_size.1,
             );
-            if api.con_size != new_api_size {
-                api.con_size = new_api_size;
-                ctx.set_char_size(new_api_size.0, new_api_size.1);
-                self.engine.resize(&mut api);
-                api.con().resize(new_api_size.0, new_api_size.1);
+            if self.con.get_width() != new_con_size.0 || self.con.get_height() != new_con_size.1 {
+                println!("resizing to {:?}", new_con_size);
+                ctx.set_char_size(new_con_size.0, new_con_size.1);
+                engine.resize(self);
+                self.con.resize(new_con_size.0, new_con_size.1);
             }
-            if let Some(event) = self.engine.update(&mut api) {
+            if let Some(event) = engine.update(self) {
                 match event {
                     // TODO BRACKET
                     UpdateEvent::Capture(_filepath) => (),
                     UpdateEvent::Exit => ctx.quit(),
                 }
             }
-            api.bracket_input.clear();
-            if api.font_index != self.cur_font_index {
-                ctx.set_active_font(api.font_index);
-                self.cur_font_index = api.font_index;
+            self.bracket_input.clear();
+            if let Some(new_font_index) = self.new_font_index.take() {
+                ctx.set_active_font(new_font_index);
             }
             self.elapsed -= SKIP_TICKS as f32;
         }
-        self.engine.render(&mut api);
+        engine.render(self);
         ctx.cls();
         for y in 0..self.con.get_height() {
             for x in 0..self.con.get_width() {
@@ -488,5 +472,6 @@ impl GameState for State {
                 );
             }
         }
+        self.engine = Some(engine);
     }
 }
