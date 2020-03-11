@@ -433,8 +433,7 @@ impl GameState for State {
             }
             if let Some(event) = engine.update(self) {
                 match event {
-                    // TODO BRACKET
-                    UpdateEvent::Capture(_filepath) => (),
+                    UpdateEvent::Capture(filepath) => ctx.screenshot(filepath),
                     UpdateEvent::Exit => ctx.quit(),
                 }
             }
