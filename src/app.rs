@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use bracket::prelude::*;
+use image;
 
 use crate::console;
 use crate::input::{translate_scan_code, translate_virtual_key, InputApi, Keys};
@@ -263,6 +264,29 @@ impl Default for AppOptions {
     }
 }
 
+fn load_font(path: &str, ctx: BTermBuilder) -> BTermBuilder {
+    let (char_width, char_height) = font_char_size(path);
+    let real_path = to_real_path(path);
+    println!("loading {}", real_path);
+    let pix = if let Ok(img) = image::open(real_path) {
+        let rgba_img = img.to_rgba();
+        let pix = rgba_img.get_pixel(0, 0);
+        if pix[3] == 0 {
+            None
+        } else {
+            let bg = RGB::from_u8(pix[0], pix[1], pix[2]);
+            Some(bg)
+        }
+    } else {
+        None
+    };
+    if let Some(bg) = pix {
+        ctx.with_font_bg(path, char_width, char_height, bg)
+    } else {
+        ctx.with_font(path, char_width, char_height)
+    }
+}
+
 /// This is the game application. It handles the creation of the game window, the window events including player input events and runs the main game loop.
 pub struct App {
     ctx: BTerm,
@@ -293,10 +317,7 @@ impl App {
             ctx = ctx.with_resource_path("static");
         }
         for font in options.font_paths.iter() {
-            let (char_width, char_height) = font_char_size(font);
-            let real_font = to_real_path(font);
-            println!("loading {}", real_font);
-            ctx = ctx.with_font(font, char_width, char_height);
+            ctx = load_font(font, ctx);
         }
         let mut ctx = ctx.build().unwrap();
         ctx.set_translation_mode(0, CharacterTranslationMode::Unicode);
