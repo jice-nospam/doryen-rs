@@ -99,13 +99,13 @@ impl BracketInput {
         self.key_release.clear();
         self.mouse_release.clear();
     }
-    pub fn update(&mut self, char_size: (u32, u32)) {
+    pub fn update(&mut self, char_size: (f32, f32)) {
         self.clear();
         let mut input = INPUT.lock();
         let (mx, my) = input.mouse_pixel_pos().into();
         self.mouse_pos = (
-            mx as f32 / char_size.0 as f32 / self.scale_factor,
-            my as f32 / char_size.1 as f32 / self.scale_factor,
+            mx as f32 / char_size.0 / self.scale_factor,
+            my as f32 / char_size.1 / self.scale_factor,
         );
         self.mouse_left = input.is_mouse_button_pressed(0);
         while let Some(evt) = input.pop() {
@@ -340,7 +340,8 @@ impl App {
                 self.options.console_height,
                 self.engine.take().unwrap(),
                 self.options.intercept_close_request,
-                (8, 8),
+                self.options.resizable,
+                (8.0, 8.0),
                 &self.options.font_paths,
             ),
         )
@@ -354,9 +355,10 @@ struct State {
     con: console::Console,
     init: bool,
     new_font_index: Option<usize>,
-    char_size: (u32, u32),
+    char_size: (f32, f32),
     pub fonts: Vec<String>,
     intercept_close_request: bool,
+    auto_resize: bool,
     bracket_input: BracketInput,
     fps: u32,
 }
@@ -386,10 +388,12 @@ impl State {
         height: u32,
         engine: Box<dyn Engine>,
         intercept_close_request: bool,
-        char_size: (u32, u32),
+        auto_resize: bool,
+        char_size: (f32, f32),
         fonts: &[String],
     ) -> Self {
-        let bracket_input = BracketInput::new((width * char_size.0, height * char_size.1));
+        let bracket_input =
+            BracketInput::new((width * char_size.0 as u32, height * char_size.1 as u32));
         Self {
             engine: Some(engine),
             elapsed: 0.0,
@@ -399,6 +403,7 @@ impl State {
             new_font_index: None,
             fonts: fonts.iter().map(|s| s.to_owned()).collect(),
             intercept_close_request,
+            auto_resize,
             char_size,
             fps: 0,
         }
@@ -446,11 +451,21 @@ impl GameState for State {
         self.fps = ctx.fps as u32;
         while self.elapsed > SKIP_TICKS as f32 {
             let new_con_size = (
-                self.bracket_input.new_size.0 / self.char_size.0,
-                self.bracket_input.new_size.1 / self.char_size.1,
+                self.bracket_input.new_size.0 as f32 / self.char_size.0,
+                self.bracket_input.new_size.1 as f32 / self.char_size.1,
             );
-            if self.con.get_width() != new_con_size.0 || self.con.get_height() != new_con_size.1 {
-                self.con.resize(new_con_size.0, new_con_size.1);
+            if self.con.get_width() != new_con_size.0 as u32
+                || self.con.get_height() != new_con_size.1 as u32
+            {
+                if self.auto_resize {
+                    self.con
+                        .resize(new_con_size.0 as u32, new_con_size.1 as u32);
+                } else {
+                    self.char_size.0 =
+                        self.bracket_input.new_size.0 as f32 / self.con.get_width() as f32;
+                    self.char_size.1 =
+                        self.bracket_input.new_size.1 as f32 / self.con.get_height() as f32;
+                }
             }
             if let Some(event) = engine.update(self) {
                 match event {
