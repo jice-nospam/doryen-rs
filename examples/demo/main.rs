@@ -71,7 +71,10 @@ impl Engine for DoryenDemo {
             api.con().print_color(
                 (CONSOLE_WIDTH / 2) as i32,
                 (CONSOLE_HEIGHT - 2) as i32,
-                &format!("#[white]Move with #[red]arrows or WSAD #[white]Fire with #[red]mouse   {:4} fps",fps),
+                &format!(
+                    "#[white]Move with #[red]arrows or WSAD #[white]   {:4} fps",
+                    fps
+                ),
                 TextAlign::Center,
                 None,
             );

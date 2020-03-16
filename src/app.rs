@@ -100,7 +100,7 @@ impl BracketInput {
     }
     pub fn update(&mut self, char_size: (u32, u32)) {
         self.clear();
-        let mut input = INPUT.lock().unwrap();
+        let mut input = INPUT.lock();
         let (mx, my) = input.mouse_pixel_pos().into();
         self.mouse_pos = (
             mx as f32 / char_size.0 as f32 / self.scale_factor,
@@ -147,7 +147,7 @@ impl BracketInput {
 
 impl InputApi for BracketInput {
     fn key(&self, scan_code: &str) -> bool {
-        let input = INPUT.lock().unwrap();
+        let input = INPUT.lock();
         input.is_scancode_pressed(translate_scan_code(scan_code))
     }
     fn keys_pressed(&self) -> Keys {
@@ -174,7 +174,7 @@ impl InputApi for BracketInput {
         self.text.clone()
     }
     fn mouse_button(&self, num: usize) -> bool {
-        let input = INPUT.lock().unwrap();
+        let input = INPUT.lock();
         input.is_mouse_button_pressed(num)
     }
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
@@ -300,7 +300,7 @@ impl App {
         }
         let mut ctx = ctx.build().unwrap();
         ctx.set_translation_mode(0, CharacterTranslationMode::Unicode);
-        INPUT.lock().unwrap().activate_event_queue();
+        INPUT.lock().activate_event_queue();
         Self {
             ctx,
             options,

@@ -56,13 +56,10 @@ Uses the uni-gl and uni-app crates from the [unrust](http://github.com/unrust/un
         <img src="https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/subcell.png"/>
     </a>
 </td></tr><tr><td>
-    <a href="https://jice-nospam.github.io/doryen-rs/docs/alpha/">Transparent console demo<br/>
-        <img src="https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/alpha.png"/>
-    </a>
-</td><td>
     <a href="https://jice-nospam.github.io/doryen-rs/docs/text_input/">Text input demo<br/>
         <img src="https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/demo_miniatures/text_input.png"/>
     </a>
+</td><td>
 </td></tr></table>
 
 # usage

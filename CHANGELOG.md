@@ -5,6 +5,7 @@
 * On native target, the window is always resizeable. If `AppOptions.resizeable` is true, the console is resized with the window, else it's scaled (default behavior). You don't have to call `Console.resize`anymore (see resize example).
 * `DoryenApi.average_fps()` was removed. Use `DoryenApi.fps()` instead.
 * `Engine.resize()` was removed. Console resizing is done automatically when `AppOptions.resizable` is true
+* the alpha example was removed, along with the ability to draw on top of the previous frame
 
 # 1.2.4 - TBD
 ## features
