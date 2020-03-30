@@ -1,6 +1,7 @@
 # 1.2.4 - TBD
 ## features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots
+* added `max_fps` to `AppOptions` to lower the frame rate even below the screen vsync frequency. See lowfps example.
 
 # 1.2.3 - 2020 Jan 08
 ## fixed

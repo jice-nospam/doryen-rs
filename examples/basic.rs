@@ -126,6 +126,7 @@ fn main() {
         show_cursor: true,
         resizable: true,
         intercept_close_request: false,
+        max_fps: 0,
     });
     app.set_engine(Box::new(MyRoguelike::new()));
     app.run();

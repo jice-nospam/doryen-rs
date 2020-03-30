@@ -161,6 +161,9 @@ pub struct AppOptions {
     /// Intercepts clicks on the window close button. Can be checked with [`InputApi::close_requested`]
     /// Default is false (clicking on the window close button exits the game)
     pub intercept_close_request: bool,
+    /// Limit the number of frames per second to lower CPU consumption. Use 0 for unlimited.
+    /// Not that if vsync = true, frames per second cannot go over the screen refresh rate.
+    pub max_fps: usize,
 }
 
 impl Default for AppOptions {
@@ -177,6 +180,7 @@ impl Default for AppOptions {
             show_cursor: true,
             resizable: true,
             intercept_close_request: false,
+            max_fps: 0,
         }
     }
 }
@@ -378,6 +382,7 @@ impl App {
         let app = self.app.take().unwrap();
         let mut engine = self.engine.take().unwrap();
         let mut next_tick: f64 = uni_app::now();
+        let mut next_frame = next_tick;
         let mut font_loaded = false;
         engine.init(&mut self.api);
         app.run(move |app: &mut uni_app::App| {
@@ -425,11 +430,16 @@ impl App {
                 if skipped_frames == MAX_FRAMESKIP {
                     next_tick = time + SKIP_TICKS;
                 }
-                engine.render(&mut self.api);
-                self.fps.step();
-                self.api.fps = self.fps.fps();
-                self.api.average_fps = self.fps.average();
-                self.program.render_primitive(&self.gl, &self.api.con);
+                if self.options.max_fps == 0 || time > next_frame {
+                    engine.render(&mut self.api);
+                    self.fps.step();
+                    self.api.fps = self.fps.fps();
+                    self.api.average_fps = self.fps.average();
+                    self.program.render_primitive(&self.gl, &self.api.con);
+                    if self.options.max_fps > 0 {
+                        next_frame += 1.0 / self.options.max_fps as f64;
+                    }
+                }
             }
         });
     }
