@@ -7,7 +7,7 @@ use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign};
 This example shows how you can lower the number of frames per second to limit CPU consumption
 using the max_fps field in the AppOptions parameter.
 Note that this has no effect on the tickrate at which update() is called which still is 60 times per second.
-You can lower the tickrate by calling your world updating code only every once every n calls.
+You can lower the tickrate by calling your world updating code only once every n calls.
 */
 
 struct MyRoguelike;

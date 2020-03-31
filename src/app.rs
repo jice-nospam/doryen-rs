@@ -162,7 +162,7 @@ pub struct AppOptions {
     /// Default is false (clicking on the window close button exits the game)
     pub intercept_close_request: bool,
     /// Limit the number of frames per second to lower CPU consumption. Use 0 for unlimited.
-    /// Not that if vsync = true, frames per second cannot go over the screen refresh rate.
+    /// Note that if vsync = true, frames per second cannot go over the screen refresh rate.
     pub max_fps: usize,
 }
 
