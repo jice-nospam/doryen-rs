@@ -57,12 +57,9 @@ pub trait DoryenApi {
     /// * If the top-left pixel alpha value is 255 and its color is black, this is a greyscale font.
     /// * Else, it's an RGB font.
     ///
-    /// * RGBA : transparency is stored in alpha channel. It can have semi-transparent pixels of any color. The picture below shows on the left the font image and on the right how it appears when the characters are drawn on a blue background.
-    /// ![rgba](http://roguecentral.org/~jice/doryen-rs/rgba.png)
+    /// * RGBA : transparency is stored in alpha channel. It can have semi-transparent pixels of any color.
     /// * greyscale : black pixels are transparent. Grey pixels are replaced by white semi-transparent pixels. Colored pixels are opaque. The font cannot have pure grey colors.
-    /// ![greyscale](http://roguecentral.org/~jice/doryen-rs/greyscale.png)
     /// * RGB : The top-left pixel's color is transparent. The font cannot have semi-transparent pixels but it can have pure grey pixels.
-    /// ![rgb](http://roguecentral.org/~jice/doryen-rs/rgb.png)
     fn set_font_path(&mut self, font_path: &str);
     /// return the current screen size
     fn get_screen_size(&self) -> (u32, u32);

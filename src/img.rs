@@ -215,15 +215,15 @@ impl Image {
     /// blit an image on the console, using the subcell characters to achieve twice the normal resolution.
     /// This uses the CHAR_SUBCELL_* ascii codes (from 226 to 232):
     ///
-    /// ![subcell_chars](http://roguecentral.org/~jice/doryen-rs/subcell_chars.png)
+    /// ![subcell_chars](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/subcell/subcell.png)
     ///
-    /// COmparison before/after subcell in the chronicles of Doryen :
+    /// Comparison before/after subcell in the chronicles of Doryen :
     ///
-    /// ![subcell_comp](http://roguecentral.org/~jice/doryen-rs/subcell_comp.png)
+    /// ![subcell_comp](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/subcell/subcell_comp.png)
     ///
     /// Pyromancer! screenshot, making full usage of subcell resolution:
     ///
-    /// ![subcell_pyro](http://roguecentral.org/~jice/doryen-rs/subcell_pyro.png)
+    /// ![subcell_pyro](https://raw.githubusercontent.com/jice-nospam/doryen-rs/master/docs/subcell/subcell_pyro.png)
     pub fn blit_2x(
         &mut self,
         con: &mut Console,

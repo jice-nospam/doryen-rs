@@ -89,7 +89,7 @@ impl Light {
                 if map.is_in_fov((x - minx) as usize, (y - miny) as usize) {
                     let dx = x as f32 - px;
                     let dy = y as f32 - py;
-                    // good looking lights. see http://roguecentral.org/doryen/articles/lights-in-full-color-roguelikes/
+                    // good looking lights.
                     let squared_dist = dx * dx + dy * dy;
                     let intensity_coef = 1.0 / (1.0 + squared_dist / 20.0);
                     let intensity_coef = intensity_coef - radius_coef;
