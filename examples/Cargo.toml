@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 path = "unicode.rs"
 
 [dependencies]
-uni-app = { path = "../../uni-app" }
+uni-app = "0.2.*"
 doryen-rs = { path = ".." }
 unicode-segmentation = "1.6.0"
 

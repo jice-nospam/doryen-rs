@@ -91,13 +91,9 @@ fn compile_shader_wasm_native(
     source: &str,
 ) -> WebGLShader {
     if IS_GL_ES {
-        compile_shader(
-            &gl,
-            shader_kind,
-            &("#version 300 es\n".to_string() + source),
-        )
+        compile_shader(gl, shader_kind, &("#version 300 es\n".to_string() + source))
     } else {
-        compile_shader(&gl, shader_kind, &("#version 150\n".to_string() + source))
+        compile_shader(gl, shader_kind, &("#version 150\n".to_string() + source))
     }
 }
 
@@ -107,9 +103,9 @@ fn create_program(
     fragment_source: &str,
 ) -> WebGLProgram {
     App::print("compiling VS\n");
-    let vert_shader = compile_shader_wasm_native(&gl, ShaderKind::Vertex, vertex_source);
+    let vert_shader = compile_shader_wasm_native(gl, ShaderKind::Vertex, vertex_source);
     App::print("compiling FS\n");
-    let frag_shader = compile_shader_wasm_native(&gl, ShaderKind::Fragment, fragment_source);
+    let frag_shader = compile_shader_wasm_native(gl, ShaderKind::Fragment, fragment_source);
     App::print("linking\n");
     let shader_program = gl.create_program();
     gl.attach_shader(&shader_program, &vert_shader);
@@ -187,7 +183,7 @@ impl Program {
             if let Some(ref loc) = self.vertex_pos_location {
                 set_buffer_data(
                     gl,
-                    &buf,
+                    buf,
                     Some(self.data.pos_data.clone()),
                     *loc,
                     AttributeSize::Two,
@@ -198,7 +194,7 @@ impl Program {
             if let Some(ref loc) = self.vertex_uv_location {
                 set_buffer_data(
                     gl,
-                    &buf,
+                    buf,
                     Some(self.data.tex_data.clone()),
                     *loc,
                     AttributeSize::Two,
@@ -269,7 +265,7 @@ impl Program {
                 PixelType::UnsignedByte,     // type
                 data,                        // data
             );
-            set_texture_params(&gl, true);
+            set_texture_params(gl, true);
             gl.uniform_1i(location, tex_num as i32);
         }
     }

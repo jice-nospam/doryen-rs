@@ -1,6 +1,4 @@
 use crate::file::FileLoader;
-use image;
-use uni_app;
 
 pub struct FontLoader {
     loader: FileLoader,

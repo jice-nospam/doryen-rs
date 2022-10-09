@@ -150,16 +150,10 @@ impl DoryenInput {
 
 impl InputApi for DoryenInput {
     fn key(&self, scan_code: &str) -> bool {
-        match self.kdown.get(scan_code) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.kdown.get(scan_code), Some(&true))
     }
     fn key_pressed(&mut self, scan_code: &str) -> bool {
-        match self.kpressed.get(scan_code) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.kpressed.get(scan_code), Some(&true))
     }
     fn keys_pressed(&self) -> Keys {
         Keys {
@@ -167,10 +161,7 @@ impl InputApi for DoryenInput {
         }
     }
     fn key_released(&mut self, scan_code: &str) -> bool {
-        match self.kreleased.get(scan_code) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.kreleased.get(scan_code), Some(&true))
     }
     fn keys_released(&self) -> Keys {
         Keys {
@@ -181,22 +172,13 @@ impl InputApi for DoryenInput {
         self.text.to_owned()
     }
     fn mouse_button(&self, num: usize) -> bool {
-        match self.mdown.get(&num) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.mdown.get(&num), Some(&true))
     }
     fn mouse_button_pressed(&mut self, num: usize) -> bool {
-        match self.mpressed.get(&num) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.mpressed.get(&num), Some(&true))
     }
     fn mouse_button_released(&mut self, num: usize) -> bool {
-        match self.mreleased.get(&num) {
-            Some(&true) => true,
-            _ => false,
-        }
+        matches!(self.mreleased.get(&num), Some(&true))
     }
     fn mouse_pos(&self) -> (f32, f32) {
         self.mpos

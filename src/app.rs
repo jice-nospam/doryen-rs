@@ -1,10 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use image;
-use uni_app;
-use uni_gl;
-
 use crate::console::Console;
 use crate::font::FontLoader;
 use crate::input::{DoryenInput, InputApi};
@@ -190,7 +186,7 @@ pub struct App {
     font_loader: FontLoader,
     program: Program,
     options: AppOptions,
-    fps: FPS,
+    fps: Fps,
     api: DoryenApiImpl,
     engine: Option<Box<dyn Engine>>,
     font_width: u32,
@@ -274,7 +270,7 @@ impl App {
                 screen_size: (options.screen_width, options.screen_height),
             },
             options,
-            fps: FPS::new(),
+            fps: Fps::new(),
             engine: None,
             font_width: 0,
             font_height: 0,
@@ -370,7 +366,7 @@ impl App {
                     self.char_height,
                 );
             }
-            self.api.input.on_event(&evt);
+            self.api.input.on_event(evt);
         }
     }
 
@@ -475,11 +471,11 @@ fn create_texture(gl: &uni_gl::WebGLRenderingContext) -> uni_gl::WebGLTexture {
     let tex = gl.create_texture();
     gl.active_texture(0);
     gl.bind_texture(&tex);
-    set_texture_params(&gl, true);
+    set_texture_params(gl, true);
     tex
 }
 
-struct FPS {
+struct Fps {
     counter: u32,
     start: f64,
     last: f64,
@@ -488,10 +484,10 @@ struct FPS {
     average: u32,
 }
 
-impl FPS {
-    pub fn new() -> FPS {
+impl Fps {
+    pub fn new() -> Fps {
         let now = uni_app::now();
-        FPS {
+        Fps {
             counter: 0,
             total_frames: 0,
             start: now,
