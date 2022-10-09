@@ -330,8 +330,8 @@ impl Console {
         let spans = self.get_color_spans(text, &mut str_len);
         let mut ix = match align {
             TextAlign::Left => x,
-            TextAlign::Right => (x - str_len + 1),
-            TextAlign::Center => (x - str_len / 2),
+            TextAlign::Right => x - str_len + 1,
+            TextAlign::Center => x - str_len / 2,
         };
         for (color, span) in spans {
             self.print_line(ix, y, &span, TextAlign::Left, Some(color), back);
@@ -369,8 +369,8 @@ impl Console {
         let mut start = 0;
         let mut ix = match align {
             TextAlign::Left => x,
-            TextAlign::Right => (x - str_len + 1),
-            TextAlign::Center => (x - str_len / 2),
+            TextAlign::Right => x - str_len + 1,
+            TextAlign::Center => x - str_len / 2,
         };
         if ix < 0 {
             str_len += ix;

@@ -83,10 +83,29 @@ cargo run --example basic
 ```
 
 * web compilation
+Install wasm32 target :
 ```
-cargo install --force cargo-web
-cargo web start --example basic
+rustup target install wasm32-unknown-unknown
 ```
+Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+and [npm](https://www.npmjs.com/get-npm)
+
+Change the `path` variable in examples/Cargo.toml to select an example.
+
+Compile the demo with
+```
+wasm-pack build examples
+```
+This creates a wasm package in examples/pkg
+
+Run the demo with
+```
+cd www
+npm install
+npm run start
+```
+
+Open your browser at http://localhost:8080/
 
 # license
 
