@@ -71,7 +71,7 @@ impl Image {
         false
     }
     fn intialize_image(&mut self, buf: &[u8]) {
-        self.img = Some(image::load_from_memory(buf).unwrap().to_rgba());
+        self.img = Some(image::load_from_memory(buf).unwrap().to_rgba8());
     }
     /// If the image has already been loaded, return its size, else return None
     pub fn try_get_size(&mut self) -> Option<(u32, u32)> {

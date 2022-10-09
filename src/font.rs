@@ -49,7 +49,7 @@ impl FontLoader {
     }
 
     fn load_font_bytes(&mut self, buf: &[u8]) {
-        let mut img = image::load_from_memory(buf).unwrap().to_rgba();
+        let mut img = image::load_from_memory(buf).unwrap().to_rgba8();
         self.process_image(&mut img);
         self.img = Some(img);
     }

@@ -461,7 +461,7 @@ fn capture_screen(gl: &uni_gl::WebGLRenderingContext, w: u32, h: u32, filepath: 
             &image::imageops::flip_vertical(&img),
             w,
             h,
-            image::ColorType::RGBA(8),
+            image::ColorType::Rgba8,
         )
         .expect("Failed to save buffer to the specified path");
     }

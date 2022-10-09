@@ -16,9 +16,9 @@ uni-gl = "0.2.*"
 uni-app = "0.2.*"
 
 [dependencies.image]
-version = "0.22.*"
+version = "0.23.*"
 default-features = false
-features = ["png_codec"]
+features = ["png"]
 
 [dev-dependencies]
 unicode-segmentation = "1.6.0"

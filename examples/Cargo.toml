@@ -6,7 +6,7 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 # change this to compile another example with wasm-pack
-path = "unicode.rs"
+path = "subcell.rs"
 
 [dependencies]
 uni-app = "0.2.*"
