@@ -9,6 +9,7 @@ documentation = "https://docs.rs/doryen-rs"
 repository = "https://github.com/jice-nospam/doryen-rs"
 keywords = ["roguelike", "console", "opengl", "wasm"]
 homepage = "https://jice-nospam.github.io/doryen-rs/index.html"
+exclude = ["www/*"]
 
 [dependencies]
 #uni-gl = "0.1.*"
