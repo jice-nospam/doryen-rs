@@ -1,8 +1,8 @@
-# 1.3.0 - TBD
+# 1.3.0 - 2020 Oct 10
 ## features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots
 * added `max_fps` to `AppOptions` to lower the frame rate even below the screen vsync frequency. See lowfps example.
-* switched to unrust 0.2 to run on the latest winit/glutin/wasm_bindgen versions
+* switched to unrust 0.2 to run on the latest winit/glutin/wasm_bindgen/web-sys versions
 
 # 1.2.3 - 2020 Jan 08
 ## fixed
