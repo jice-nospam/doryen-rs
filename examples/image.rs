@@ -2,6 +2,16 @@ extern crate doryen_rs;
 
 use doryen_rs::{App, AppOptions, DoryenApi, Engine, Image, UpdateEvent};
 
+// this part makes it possible to compile to wasm32 target
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn main_js() -> Result<(), JsValue> {
+    main();
+    Ok(())
+}
+
 struct MyRoguelike {
     skull: Image,
     angle: f32,

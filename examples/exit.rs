@@ -4,6 +4,16 @@ use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEven
 
 const WHITE: Color = (255, 255, 255, 255);
 
+// this part makes it possible to compile to wasm32 target
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn main_js() -> Result<(), JsValue> {
+    main();
+    Ok(())
+}
+
 /*
 * This example show how you can intercept the user trying to close the game window.
 * All you have to do is to add the `intercept_close_request: true` option when creating the application

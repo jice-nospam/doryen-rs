@@ -4,6 +4,16 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
 
+// this part makes it possible to compile to wasm32 target
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn main_js() -> Result<(), JsValue> {
+    main();
+    Ok(())
+}
+
 const WHITE: Color = (255, 255, 255, 255);
 
 struct MyRoguelike {
