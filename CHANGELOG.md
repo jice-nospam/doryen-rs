@@ -1,25 +1,27 @@
-# 1.3.0 - 2020 Oct 10
-## features
+# Changelog
+
+## 1.3.0 - 2022 Oct 10
+### features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots
 * added `max_fps` to `AppOptions` to lower the frame rate even below the screen vsync frequency. See lowfps example.
 * switched to unrust 0.2 to run on the latest winit/glutin/wasm_bindgen/web-sys versions
 * upgraded to image 0.23.14 to fix a vulnerability
 
-# 1.2.3 - 2020 Jan 08
-## fixed
+## 1.2.3 - 2020 Jan 08
+### fixed
 * fixed #22 : mouse coordinates broken when console is resized
 * fixed resizable console not taking hidpi factor into account
 
-# 1.2.2 - 2020 Jan 03
-## fixed
+## 1.2.2 - 2020 Jan 03
+### fixed
 * fixed #21 : keyboard/mouse events lost when framerate > tickrate
 
-# 1.2.1 - 2019 Dec 08
-## fixed
+## 1.2.1 - 2019 Dec 08
+### fixed
 * `Console.blit` not taking source console alpha value into account
 * fixed #19 : rendering unicode characters >= 0x00FF
 * fixed #10 : console not centered in fullscreen and wrong mouse coordinates
-## features
+### features
 * `AppOptions` now implements `Default`
 * added `InputApi.keys_released()` and `InputApi.keys_pressed()` that return iterators on key events since last update
 * added text input support through `InputApi.text()` (see text_input example)
@@ -28,33 +30,33 @@
 * new Image methods : `new_empty()`, `pixel()`, `put_pixel()`
 * added a visual demo showcasing subcell resolution + dynamic lighting in a real time roguelike
 
-# 1.2.0 - 2019 Nov 22
-## fixed
+## 1.2.0 - 2019 Nov 22
+### fixed
 * fix #13 Console.print_color with text containing ']'
-## API breaks
+### API breaks
 * added `AppOptions.intercept_close_request` to intercept clicks on the window close button (native only). See 'exit' example
-## features
+### features
 * added `Console.text_color_len()`
 
-# 1.1.0 - 2019 Sep 18
-## fixes
+## 1.1.0 - 2019 Sep 18
+### fixes
 * fix mouse coordinates on HiDpi screens
 * web : fix #8 black borders on HiDpi screens
-## API breaks
+### API breaks
 * `Image.is_loaded()` : renamed to `Image.try_load()` (see https://rust-lang.github.io/rust-clippy/master/index.html#wrong_self_convention)
 * `Image.get_size()` : renamed to `Image.try_get_size()`
 * `FileLoader.is_file_ready()` : renamed to `FileLoader.check_file_ready()`
 * `Color` parameter in `color_blend()` and `color_dist()` are now passed by value (see https://rust-lang.github.io/rust-clippy/master/index.html#trivially_copy_pass_by_ref)
 
-# 1.0.1 - 2019 Feb 15
-## fixes
+## 1.0.1 - 2019 Feb 15
+### fixes
 * fix HiDpi display on Mac
 * fix panic on start when font is too slow to load
 
-# 1.0.0 - 2019 Feb 1
-## API breaks
+## 1.0.0 - 2019 Feb 1
+### API breaks
 * `Console.print_color()` : replace %{} color marker with #[]
 * `resize()` function added to `Engine` trait to allow console resize
 
-# 0.1.0 - 2018 Aug 3
+## 0.1.0 - 2018 Aug 3
 First release
