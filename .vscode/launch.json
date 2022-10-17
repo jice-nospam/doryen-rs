@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "lldb",
+            "request": "launch",
+            "name": "(Linux) Launch",
+            "program": "${workspaceFolder}/target/debug/examples/basic",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",

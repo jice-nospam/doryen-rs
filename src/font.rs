@@ -30,9 +30,14 @@ impl FontLoader {
             self.char_width = 0;
             self.char_height = 0;
         }
-        if let Ok(id) = self.loader.load_file(path) {
-            self.id = id;
-            self.load_font_async();
+        match self.loader.load_file(path) {
+            Ok(id) => {
+                self.id = id;
+                self.load_font_async();
+            }
+            Err(msg)=> {
+                eprint!("Error while loading file {} : {}",path,msg);
+            }
         }
     }
 
