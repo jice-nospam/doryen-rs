@@ -79,7 +79,7 @@ Check the [examples](https://github.com/jice-nospam/doryen-rs/tree/master/exampl
 
 * native compilation
 ```
-cargo run --example basic
+cd www && cargo run --example basic
 ```
 
 * web compilation

@@ -30,14 +30,10 @@ pub trait DoryenApi {
     /// return the average framerate since the start of the game
     fn average_fps(&self) -> u32;
     /// replace the current font by a new one.
-    /// Put your font in the static/ directory of the project to make this work with both `cargo run` and `cargo web start`.
     /// Example
     /// ```compile_fail
     /// api.set_font_path("terminal.png");
     /// ```
-    /// During development, this references `$PROJECT_ROOT/static/terminal.png`.
-    /// Once deployed, `terminal.png` should be in the same directory as your game's executable or `index.html`.
-    ///
     /// By default, doryen-rs will assume the font has a 16x16 extended ASCII layout. The character size will be calculated with :
     /// ```text
     /// char_width = font_image_width / 16

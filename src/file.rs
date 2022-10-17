@@ -70,11 +70,6 @@ impl FileLoader {
 }
 
 fn open_file(filename: &str) -> Result<uni_app::fs::File, std::io::Error> {
-    let ffilename =
-        if cfg!(not(target_arch = "wasm32")) && &filename[0..1] != "/" && &filename[1..2] != ":" {
-            "www/".to_owned() + filename
-        } else {
-            filename.to_owned()
-        };
+    let ffilename = filename.to_owned();
     uni_app::fs::FileSystem::open(&ffilename)
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 - Unreleased
+### API breaks
+* FileLoader no longer prepend "www/" to the file path in native mode.
+
 ## 1.3.0 - 2022 Oct 10
 ### features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots
