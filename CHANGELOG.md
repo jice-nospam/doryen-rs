@@ -4,6 +4,11 @@
 ### API breaks
 * FileLoader no longer prepend "www/" to the file path in native mode.
 
+## 1.3.1 - 2023 Jan 13
+### changes
+* added `KeyEvent`s instead of using `String` for handling keys
+* changed examples so they use `KeyEvent`
+
 ## 1.3.0 - 2022 Oct 10
 ### features
 * added option to return `UpdateEvent::Capture` from the `update()` function to capture in-game screenshots

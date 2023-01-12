@@ -16,4 +16,4 @@ pub use self::color::*;
 pub use self::console::*;
 pub use self::file::FileLoader;
 pub use self::img::*;
-pub use self::input::{InputApi, Keys};
+pub use self::input::{InputApi, KeyEvent, Keys};

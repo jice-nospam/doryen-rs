@@ -9,3 +9,4 @@
 * Daniel Rivas (drivasperez)
 * Alexander Krivács Schrøder (alexschrod)
 * Joshua Wong (imoea)
+* Koen Beerta (slavjuan)
