@@ -292,8 +292,6 @@ pub enum KeyEvent {
 }
 
 fn keycode_to_key_event(code: &str) -> KeyEvent {
-    println!("KeyCode: {}", code);
-
     match code {
         c if c.contains("Digit") => {
             let c = char::from(c.as_bytes()[5] as char);
