@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::iter::Filter;
 
-use uni_app::AppEvent;
+use uni_app::{AppEvent, ScanCode, MouseButton};
 
 /// Provides information about user input.
 /// Possible values for the `key` scancode parameter can be found in unrust/uni-app's `translate_scan_code`
@@ -15,24 +15,24 @@ use uni_app::AppEvent;
 pub trait InputApi {
     // keyboard
     /// return the current status of a key (true if pressed)
-    fn key(&self, key: &str) -> bool;
+    fn key(&self, key: ScanCode) -> bool;
     /// return true if a key was pressed since last update.
-    fn key_pressed(&mut self, key: &str) -> bool;
+    fn key_pressed(&mut self, key: ScanCode) -> bool;
     /// return an iterator over all the keys that were pressed since last update.
     fn keys_pressed(&self) -> Keys;
     /// return true if a key was released since last update.
-    fn key_released(&mut self, key: &str) -> bool;
+    fn key_released(&mut self, key: ScanCode) -> bool;
     /// return an iterator over all the keys that were released since last update.
     fn keys_released(&self) -> Keys;
     /// characters typed since last update
     fn text(&self) -> String;
     // mouse
     /// return the current status of a mouse button (true if pressed)
-    fn mouse_button(&self, num: usize) -> bool;
+    fn mouse_button(&self, button: MouseButton) -> bool;
     /// return true if a mouse button was pressed since last update.
-    fn mouse_button_pressed(&mut self, num: usize) -> bool;
+    fn mouse_button_pressed(&mut self, button: MouseButton) -> bool;
     /// return true if a mouse button was released since last update.
-    fn mouse_button_released(&mut self, num: usize) -> bool;
+    fn mouse_button_released(&mut self, button: MouseButton) -> bool;
     /// return the current mouse position in console cells coordinates (float value to have subcell precision)
     fn mouse_pos(&self) -> (f32, f32);
     /// Whether the window close button was clicked
@@ -40,12 +40,12 @@ pub trait InputApi {
 }
 
 pub struct DoryenInput {
-    kdown: HashMap<String, bool>,
-    kpressed: HashMap<String, bool>,
-    kreleased: HashMap<String, bool>,
-    mdown: HashMap<usize, bool>,
-    mpressed: HashMap<usize, bool>,
-    mreleased: HashMap<usize, bool>,
+    kdown: HashMap<ScanCode, bool>,
+    kpressed: HashMap<ScanCode, bool>,
+    kreleased: HashMap<ScanCode, bool>,
+    mdown: HashMap<MouseButton, bool>,
+    mpressed: HashMap<MouseButton, bool>,
+    mreleased: HashMap<MouseButton, bool>,
     text: String,
     close_request: bool,
     mpos: (f32, f32),
@@ -75,24 +75,24 @@ impl DoryenInput {
             mouse_offset: (x_offset as f32, y_offset as f32),
         }
     }
-    fn on_key_down(&mut self, scan_code: &str) {
+    fn on_key_down(&mut self, scan_code: ScanCode) {
         if !self.key(scan_code) {
-            self.kpressed.insert(scan_code.to_owned(), true);
-            self.kdown.insert(scan_code.to_owned(), true);
+            self.kpressed.insert(scan_code, true);
+            self.kdown.insert(scan_code, true);
         }
     }
-    fn on_key_up(&mut self, scan_code: &str) {
-        self.kpressed.insert(scan_code.to_owned(), false);
-        self.kdown.insert(scan_code.to_owned(), false);
-        self.kreleased.insert(scan_code.to_owned(), true);
+    fn on_key_up(&mut self, scan_code: ScanCode) {
+        self.kpressed.insert(scan_code, false);
+        self.kdown.insert(scan_code, false);
+        self.kreleased.insert(scan_code, true);
     }
-    fn on_mouse_down(&mut self, button: usize) {
+    fn on_mouse_down(&mut self, button: MouseButton) {
         if !self.mouse_button(button) {
             self.mpressed.insert(button, true);
             self.mdown.insert(button, true);
         }
     }
-    fn on_mouse_up(&mut self, button: usize) {
+    fn on_mouse_up(&mut self, button: MouseButton) {
         self.mpressed.insert(button, false);
         self.mdown.insert(button, false);
         self.mreleased.insert(button, true);
@@ -108,10 +108,10 @@ impl DoryenInput {
     pub fn on_event(&mut self, event: &AppEvent) {
         match event {
             AppEvent::KeyDown(ref key) => {
-                self.on_key_down(&key.code);
+                self.on_key_down(key.code);
             }
             AppEvent::KeyUp(ref key) => {
-                self.on_key_up(&key.code);
+                self.on_key_up(key.code);
             }
             AppEvent::CharEvent(ch) => {
                 if !ch.is_control() {
@@ -149,19 +149,19 @@ impl DoryenInput {
 }
 
 impl InputApi for DoryenInput {
-    fn key(&self, scan_code: &str) -> bool {
-        matches!(self.kdown.get(scan_code), Some(&true))
+    fn key(&self, scan_code: ScanCode) -> bool {
+        matches!(self.kdown.get(&scan_code), Some(&true))
     }
-    fn key_pressed(&mut self, scan_code: &str) -> bool {
-        matches!(self.kpressed.get(scan_code), Some(&true))
+    fn key_pressed(&mut self, scan_code: ScanCode) -> bool {
+        matches!(self.kpressed.get(&scan_code), Some(&true))
     }
     fn keys_pressed(&self) -> Keys {
         Keys {
             inner: self.kpressed.iter().filter(|&(_, &v)| v),
         }
     }
-    fn key_released(&mut self, scan_code: &str) -> bool {
-        matches!(self.kreleased.get(scan_code), Some(&true))
+    fn key_released(&mut self, scan_code: ScanCode) -> bool {
+        matches!(self.kreleased.get(&scan_code), Some(&true))
     }
     fn keys_released(&self) -> Keys {
         Keys {
@@ -171,14 +171,14 @@ impl InputApi for DoryenInput {
     fn text(&self) -> String {
         self.text.to_owned()
     }
-    fn mouse_button(&self, num: usize) -> bool {
-        matches!(self.mdown.get(&num), Some(&true))
+    fn mouse_button(&self, button: MouseButton) -> bool {
+        matches!(self.mdown.get(&button), Some(&true))
     }
-    fn mouse_button_pressed(&mut self, num: usize) -> bool {
-        matches!(self.mpressed.get(&num), Some(&true))
+    fn mouse_button_pressed(&mut self, button: MouseButton) -> bool {
+        matches!(self.mpressed.get(&button), Some(&true))
     }
-    fn mouse_button_released(&mut self, num: usize) -> bool {
-        matches!(self.mreleased.get(&num), Some(&true))
+    fn mouse_button_released(&mut self, button: MouseButton) -> bool {
+        matches!(self.mreleased.get(&button), Some(&true))
     }
     fn mouse_pos(&self) -> (f32, f32) {
         self.mpos
@@ -189,7 +189,7 @@ impl InputApi for DoryenInput {
 }
 
 type KeyMapFilter<'a> =
-    Filter<std::collections::hash_map::Iter<'a, String, bool>, fn(&(&'a String, &'a bool)) -> bool>;
+    Filter<std::collections::hash_map::Iter<'a, ScanCode, bool>, fn(&(&'a ScanCode, &'a bool)) -> bool>;
 
 /// An iterator visiting all keys in arbitrary order.
 pub struct Keys<'a> {
@@ -197,9 +197,9 @@ pub struct Keys<'a> {
 }
 
 impl<'a> Iterator for Keys<'a> {
-    type Item = &'a str;
+    type Item = &'a ScanCode;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|(k, _)| k.as_ref())
+        self.inner.next().map(|(k, _)| k)
     }
 }

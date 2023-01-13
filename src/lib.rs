@@ -2,6 +2,8 @@ extern crate image;
 extern crate uni_app;
 extern crate uni_gl;
 
+pub use uni_app::{ ScanCode, MouseButton };
+
 mod app;
 mod color;
 mod console;

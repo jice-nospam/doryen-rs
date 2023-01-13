@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent, ScanCode};
 
 // this part makes it possible to compile to wasm32 target
 #[cfg(target_arch = "wasm32")]
@@ -34,20 +34,20 @@ impl Engine for MyRoguelike {
     }
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         let input = api.input();
-        if input.key("ArrowLeft") {
+        if input.key(ScanCode::Left) {
             self.player_pos.0 = (self.player_pos.0 - 1).max(1);
-        } else if input.key("ArrowRight") {
+        } else if input.key(ScanCode::Right) {
             self.player_pos.0 = (self.player_pos.0 + 1).min(CONSOLE_WIDTH as i32 - 2);
         }
-        if input.key("ArrowUp") {
+        if input.key(ScanCode::Up) {
             self.player_pos.1 = (self.player_pos.1 - 1).max(1);
-        } else if input.key("ArrowDown") {
+        } else if input.key(ScanCode::Down) {
             self.player_pos.1 = (self.player_pos.1 + 1).min(CONSOLE_HEIGHT as i32 - 2);
         }
         self.mouse_pos = input.mouse_pos();
 
         // capture the screen
-        if input.key("ControlLeft") && input.key_pressed("KeyS") {
+        if input.key(ScanCode::LCtrl) && input.key_pressed(ScanCode::S) {
             self.screenshot_idx += 1;
             return Some(UpdateEvent::Capture(format!(
                 "screenshot_{:03}.png",

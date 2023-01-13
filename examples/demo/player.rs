@@ -1,4 +1,4 @@
-use doryen_rs::{Color, DoryenApi};
+use doryen_rs::{Color, DoryenApi, ScanCode};
 
 pub struct Player {
     pos: (f32, f32),
@@ -15,14 +15,14 @@ impl Player {
     pub fn move_from_input(&self, api: &mut dyn DoryenApi) -> (i32, i32) {
         let input = api.input();
         let mut mov = (0, 0);
-        if input.key("ArrowLeft") || input.key("KeyA") {
+        if input.key(ScanCode::Left) || input.key(ScanCode::A) {
             mov.0 = -1;
-        } else if input.key("ArrowRight") || input.key("KeyD") {
+        } else if input.key(ScanCode::Right) || input.key(ScanCode::D) {
             mov.0 = 1;
         }
-        if input.key("ArrowUp") || input.key("KeyW") {
+        if input.key(ScanCode::Up) || input.key(ScanCode::W) {
             mov.1 = -1;
-        } else if input.key("ArrowDown") || input.key("KeyS") {
+        } else if input.key(ScanCode::Down) || input.key(ScanCode::S) {
             mov.1 = 1;
         }
         mov

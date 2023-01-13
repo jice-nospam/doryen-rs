@@ -13,7 +13,7 @@ exclude = ["www/*"]
 
 [dependencies]
 uni-gl = "0.2.*"
-uni-app = "0.2.*"
+uni-app = "0.3.*"
 
 [dependencies.image]
 version = "0.23.*"
