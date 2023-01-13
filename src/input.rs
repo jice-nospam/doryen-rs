@@ -77,14 +77,14 @@ impl DoryenInput {
     }
     fn on_key_down(&mut self, scan_code: ScanCode) {
         if !self.key(scan_code) {
-            self.kpressed.insert(scan_code.to_owned(), true);
-            self.kdown.insert(scan_code.to_owned(), true);
+            self.kpressed.insert(scan_code, true);
+            self.kdown.insert(scan_code, true);
         }
     }
     fn on_key_up(&mut self, scan_code: ScanCode) {
-        self.kpressed.insert(scan_code.to_owned(), false);
-        self.kdown.insert(scan_code.to_owned(), false);
-        self.kreleased.insert(scan_code.to_owned(), true);
+        self.kpressed.insert(scan_code, false);
+        self.kdown.insert(scan_code, false);
+        self.kreleased.insert(scan_code, true);
     }
     fn on_mouse_down(&mut self, button: MouseButton) {
         if !self.mouse_button(button) {
