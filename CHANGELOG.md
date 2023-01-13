@@ -3,6 +3,7 @@
 ## 1.4.0 - Unreleased
 ### API breaks
 * FileLoader no longer prepend "www/" to the file path in native mode.
+* upgraded to uni-app 0.3 with new keyboard ScanCode API
 
 ## 1.3.0 - 2022 Oct 10
 ### features

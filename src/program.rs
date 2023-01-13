@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::mem::size_of;
 use std::slice;
 
-use uni_app::App;
 use uni_gl::{
     AttributeSize, BufferKind, DataType, DrawMode, PixelFormat, PixelType, Primitives, ShaderKind,
     TextureBindPoint, TextureKind, TextureMagFilter, TextureMinFilter, TextureParameter,
@@ -102,11 +101,8 @@ fn create_program(
     vertex_source: &str,
     fragment_source: &str,
 ) -> WebGLProgram {
-    App::print("compiling VS\n");
     let vert_shader = compile_shader_wasm_native(gl, ShaderKind::Vertex, vertex_source);
-    App::print("compiling FS\n");
     let frag_shader = compile_shader_wasm_native(gl, ShaderKind::Fragment, fragment_source);
-    App::print("linking\n");
     let shader_program = gl.create_program();
     gl.attach_shader(&shader_program, &vert_shader);
     gl.attach_shader(&shader_program, &frag_shader);

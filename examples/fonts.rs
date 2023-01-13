@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, DoryenApi, Engine, ScanCode, TextAlign, UpdateEvent};
 
 // this part makes it possible to compile to wasm32 target
 #[cfg(target_arch = "wasm32")]
@@ -47,10 +47,10 @@ impl Engine for MyRoguelike {
         let mut font_path = None;
         {
             let input = api.input();
-            if input.key_released("PageDown") {
+            if input.key_released(ScanCode::PageDown) {
                 self.cur_font = (self.cur_font + 1) % FONTS.len();
                 font_path = Some(FONTS[self.cur_font]);
-            } else if input.key_released("PageUp") {
+            } else if input.key_released(ScanCode::PageUp) {
                 self.cur_font = (self.cur_font + FONTS.len() - 1) % FONTS.len();
                 font_path = Some(FONTS[self.cur_font]);
             }

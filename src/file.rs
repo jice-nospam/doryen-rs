@@ -14,7 +14,7 @@ impl FileLoader {
     }
     /// request to load a file. returns an id you can use with other methods
     pub fn load_file(&mut self, path: &str) -> Result<usize, String> {
-        uni_app::App::print(format!("loading file {}\n", path));
+        uni_app::App::print(format!("loading file {}", path));
         match open_file(path) {
             Ok(mut f) => {
                 if f.is_ready() {
@@ -28,7 +28,7 @@ impl FileLoader {
                         Err(e) => Err(format!("Could not read file {} : {}\n", path, e)),
                     }
                 } else {
-                    uni_app::App::print(format!("loading async file {}\n", path));
+                    uni_app::App::print(format!("loading async file {}", path));
                     self.files_to_load
                         .insert(self.seq, AsyncFile(path.to_owned(), f, None));
                     self.seq += 1;

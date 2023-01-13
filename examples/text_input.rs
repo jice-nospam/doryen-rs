@@ -2,7 +2,7 @@ extern crate doryen_rs;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, ScanCode, TextAlign, UpdateEvent};
 
 // this part makes it possible to compile to wasm32 target
 #[cfg(target_arch = "wasm32")]
@@ -30,7 +30,7 @@ impl Engine for MyRoguelike {
             self.txt.push_str(&txt);
         }
         // handle backspace
-        if input.key_released("Backspace") && !self.txt.is_empty() {
+        if input.key_released(ScanCode::Backspace) && !self.txt.is_empty() {
             // convoluted way to remove the last character of the string
             // in a way that also works with utf-8 graphemes
             // where one character != one byte
@@ -39,7 +39,7 @@ impl Engine for MyRoguelike {
             self.txt = graphemes.rev().collect();
         }
         // handle tab
-        if input.key_released("Tab") {
+        if input.key_released(ScanCode::Tab) {
             self.txt.push_str("   ");
         }
         self.cursor += 1;

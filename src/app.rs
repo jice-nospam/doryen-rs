@@ -217,7 +217,7 @@ impl App {
             (0, 0)
         };
         uni_app::App::print(format!(
-            "Screen size {} x {} offset {} x {} GL viewport : {} x {}  hidpi factor : {}\n",
+            "Screen size {} x {} offset {} x {} GL viewport : {} x {}  hidpi factor : {}",
             options.screen_width,
             options.screen_height,
             x_offset,
@@ -291,7 +291,7 @@ impl App {
         self.font_width = img.width() as u32;
         self.font_height = img.height() as u32;
         uni_app::App::print(format!(
-            "font size: {:?} char size: {:?}\n",
+            "font size: {:?} char size: {:?}",
             (self.font_width, self.font_height),
             (self.char_width, self.char_height)
         ));

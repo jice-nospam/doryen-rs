@@ -66,7 +66,7 @@ impl FontLoader {
             let transparent_color = (pixel[0], pixel[1], pixel[2]);
             let greyscale = transparent_color == (0, 0, 0);
             uni_app::App::print(format!(
-                "{}transparent color: {:?}\n",
+                "{}transparent color: {:?}",
                 if greyscale { "greyscale " } else { "" },
                 transparent_color
             ));

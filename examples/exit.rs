@@ -1,6 +1,6 @@
 extern crate doryen_rs;
 
-use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, TextAlign, UpdateEvent};
+use doryen_rs::{App, AppOptions, Color, DoryenApi, Engine, ScanCode, TextAlign, UpdateEvent};
 
 const WHITE: Color = (255, 255, 255, 255);
 
@@ -29,12 +29,12 @@ impl Engine for MyRoguelike {
     fn update(&mut self, api: &mut dyn DoryenApi) -> Option<UpdateEvent> {
         let input = api.input();
         if self.close_requested {
-            if input.key("KeyY") {
+            if input.key(ScanCode::Y) {
                 return Some(UpdateEvent::Exit);
-            } else if input.key("KeyN") {
+            } else if input.key(ScanCode::N) {
                 self.close_requested = false;
             }
-        } else if input.key("Escape") || input.close_requested() {
+        } else if input.key(ScanCode::Escape) || input.close_requested() {
             self.close_requested = true;
         }
         None
