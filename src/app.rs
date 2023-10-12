@@ -124,6 +124,7 @@ pub trait Engine {
     fn resize(&mut self, _api: &mut dyn DoryenApi) {}
 }
 
+#[derive(Debug, Clone)]
 pub struct AppOptions {
     /// the console width in characters. Default is 80
     pub console_width: u32,

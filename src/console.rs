@@ -26,6 +26,7 @@ pub enum TextAlign {
 }
 
 /// This contains the data for a console (including the one displayed on the screen) and methods to draw on it.
+#[derive(Debug)]
 pub struct Console {
     width: u32,
     height: u32,
